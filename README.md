@@ -21,6 +21,7 @@ Thin, reusable enterprise foundation shared by VyrnForge products.
 | `contracts` | Phase 0 JSON Schema 2020-12 contracts and examples packaged as resources. |
 | `kernel-core` | Framework-neutral contexts plus EventEnvelope, AuditEvent, FileReference, idempotency, and cross-cutting ports. |
 | `kernel-testkit` | In-memory adapters for consumer, tenant-isolation, reliability, and idempotency tests. |
+| `kernel-observability` | Correlation propagation, privacy-aware telemetry attributes, and health/readiness aggregation. |
 | `kernel-http` | Framework-neutral HTTP edge adapter for credential, tenant, correlation, response metadata, and safe error mapping. |
 | `consumer-tests/asset-reference` | Test-only Asset reference consumer that validates the kernel from the downstream product side. |
 
@@ -36,12 +37,13 @@ HTTP request
   -> module entitlement guard
   -> domain authorization hook
   -> ResolvedRequestContext
+  -> structured telemetry context
   -> response request/correlation metadata
 ```
 
 ## Reliability contracts
 
-The kernel now exposes transport/storage-neutral contracts for:
+The kernel exposes transport/storage-neutral contracts for:
 
 - `EventEnvelope<T>` + `EventIntentPort`;
 - `AuditEvent` + `AuditIntentPort`;
@@ -50,7 +52,20 @@ The kernel now exposes transport/storage-neutral contracts for:
 
 These interfaces define semantics and guarantees without selecting Kafka, PostgreSQL, an outbox table, central audit deployment, or File Storage implementation. See `docs/contracts/reliability-semantics.md`.
 
-The core module deliberately has no Spring, database, broker, IAM SDK, or Asset dependency. The HTTP module is also framework-neutral; Spring/Jakarta/other adapters may wrap it later.
+## Observability and health
+
+`platform-kernel-observability` standardizes business correlation and safe contextual telemetry without selecting a logging or tracing SDK.
+
+- business `correlation_id` is preserved across requests/events/jobs;
+- each request/consumer invocation receives a fresh `request_id`;
+- trace context remains opaque W3C metadata;
+- tenant/actor telemetry dimensions require explicit policy opt-in;
+- liveness and readiness are separate;
+- health probe exceptions are converted to safe machine-readable failure codes.
+
+See `docs/observability/observability-health.md`.
+
+The core module deliberately has no Spring, database, broker, IAM SDK, or Asset dependency. The HTTP and observability modules are framework-neutral; framework/OpenTelemetry adapters may wrap them later.
 
 The V1 HTTP adapter ships configurable defaults such as `Authorization`, `X-Tenant-Id`, `X-Correlation-Id`, `X-Request-Id`, `traceparent`, and `tracestate`. These are adapter defaults, not permanent architecture invariants.
 

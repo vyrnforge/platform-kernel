@@ -6,6 +6,7 @@ import io.vyrnforge.platform.kernel.context.TenantContext;
 import io.vyrnforge.platform.kernel.errors.KernelAccessException;
 import io.vyrnforge.platform.kernel.errors.KernelFailure;
 import io.vyrnforge.platform.kernel.ids.UuidV7;
+import io.vyrnforge.platform.kernel.observability.CorrelationPropagation;
 import io.vyrnforge.platform.kernel.pipeline.EndpointPolicy;
 import io.vyrnforge.platform.kernel.pipeline.RequestContextInput;
 import io.vyrnforge.platform.kernel.pipeline.RequestContextPipeline;
@@ -73,21 +74,18 @@ public final class HttpRequestContextAdapter<C> {
     }
 
     private CorrelationContext resolveCorrelation(HttpRequestMetadata request) {
-        UUID requestId = UuidV7.generate();
         String suppliedCorrelation = request.singleOptional(headers.correlationIdHeader());
-        UUID correlationId = suppliedCorrelation == null || suppliedCorrelation.isBlank()
-                ? UuidV7.generate()
-                : parseCanonicalUuidV7(suppliedCorrelation, "correlation");
-
         String traceparent = request.singleOptional(headers.traceparentHeader());
         String tracestate = request.singleOptional(headers.tracestateHeader());
 
-        return new CorrelationContext(
-                requestId,
-                correlationId,
-                null,
-                blankToNull(traceparent),
-                blankToNull(tracestate));
+        if (suppliedCorrelation == null || suppliedCorrelation.isBlank()) {
+            return CorrelationPropagation.root(traceparent, tracestate);
+        }
+
+        return CorrelationPropagation.continueInbound(
+                parseCanonicalUuidV7(suppliedCorrelation, "correlation"),
+                traceparent,
+                tracestate);
     }
 
     private UUID parseCanonicalUuidV7(String value, String kind) {
@@ -95,9 +93,5 @@ public final class HttpRequestContextAdapter<C> {
             throw new IllegalArgumentException(kind + " identifier must be canonical UUIDv7");
         }
         return UUID.fromString(value);
-    }
-
-    private String blankToNull(String value) {
-        return value == null || value.isBlank() ? null : value;
     }
 }
