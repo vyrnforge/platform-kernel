@@ -1,0 +1,52 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.shared-platform.local/phase0/v0.1/api-error.schema.json",
+  "title": "ApiError",
+  "type": "object",
+  "required": ["code", "message", "request_id", "correlation_id"],
+  "properties": {
+    "code": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 128,
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]*$",
+      "description": "Stable machine-readable error code."
+    },
+    "message": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 2048,
+      "description": "Safe human-readable message."
+    },
+    "request_id": {
+      "type": "string",
+      "format": "uuid",
+      "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-7[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$",
+      "description": "Canonical lowercase UUIDv7 identifier."
+    },
+    "correlation_id": {
+      "type": "string",
+      "format": "uuid",
+      "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-7[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$",
+      "description": "Canonical lowercase UUIDv7 identifier."
+    },
+    "field_errors": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["field", "code", "message"],
+        "properties": {
+          "field": {"type": "string", "minLength": 1, "maxLength": 512},
+          "code": {"type": "string", "minLength": 1, "maxLength": 128},
+          "message": {"type": "string", "minLength": 1, "maxLength": 1024}
+        },
+        "additionalProperties": true
+      }
+    },
+    "details": {
+      "type": ["object", "null"],
+      "description": "Optional safe details only; secrets, tokens and sensitive payloads are prohibited."
+    }
+  },
+  "additionalProperties": true
+}

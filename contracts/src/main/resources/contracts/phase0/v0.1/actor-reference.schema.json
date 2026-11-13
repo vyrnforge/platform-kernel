@@ -1,0 +1,33 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.shared-platform.local/phase0/v0.1/actor-reference.schema.json",
+  "title": "ActorReference",
+  "description": "Stable actor reference safe for events and audit. Provider-specific raw token claims are not part of this contract.",
+  "type": "object",
+  "required": ["actor_type", "actor_id"],
+  "properties": {
+    "actor_type": {
+      "type": "string",
+      "enum": ["user", "service", "system"]
+    },
+    "actor_id": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 512,
+      "description": "Stable normalized actor identifier. UUIDv7 is used for platform-owned identifiers; external identities may remain opaque."
+    },
+    "identity": {
+      "anyOf": [
+        {"$ref": "identity-reference.schema.json"},
+        {"type": "null"}
+      ],
+      "description": "Identity provenance when applicable; may be null for pure internal system actors."
+    },
+    "display_name": {
+      "type": ["string", "null"],
+      "maxLength": 256,
+      "description": "Optional non-authoritative display projection."
+    }
+  },
+  "additionalProperties": true
+}

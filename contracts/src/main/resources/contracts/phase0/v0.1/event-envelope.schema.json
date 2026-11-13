@@ -1,0 +1,77 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.shared-platform.local/phase0/v0.1/event-envelope.schema.json",
+  "title": "EventEnvelope",
+  "description": "Transport-neutral domain/platform event envelope. The broker/outbox/storage implementation is deliberately not part of this contract.",
+  "type": "object",
+  "required": [
+    "event_id", "event_type", "event_version", "occurred_at", "tenant_id",
+    "producer", "subject_type", "subject_id", "correlation_id", "causation_id",
+    "actor", "payload"
+  ],
+  "properties": {
+    "event_id": {
+      "type": "string",
+      "format": "uuid",
+      "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-7[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$",
+      "description": "Canonical lowercase UUIDv7 identifier."
+    },
+    "event_type": {
+      "type": "string",
+      "minLength": 3,
+      "maxLength": 192,
+      "pattern": "^[a-z][a-z0-9_-]*(\\.[a-z][a-z0-9_-]*){1,}$"
+    },
+    "event_version": {"type": "integer", "minimum": 1},
+    "occurred_at": {
+      "type": "string",
+      "format": "date-time",
+      "pattern": "Z$",
+      "description": "RFC 3339 date-time normalized to UTC (Z suffix)."
+    },
+    "tenant_id": {
+      "anyOf": [
+        {
+          "type": "string",
+          "format": "uuid",
+          "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-7[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$",
+          "description": "Canonical lowercase UUIDv7 identifier."
+        },
+        {"type": "null"}
+      ]
+    },
+    "producer": {"type": "string", "minLength": 1, "maxLength": 128, "pattern": "^[a-z][a-z0-9_.:-]*$"},
+    "subject_type": {"type": "string", "minLength": 1, "maxLength": 128, "pattern": "^[a-z][a-z0-9_.:-]*$"},
+    "subject_id": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 512,
+      "description": "Stable opaque identifier. Existing external foundations may use non-UUID identifiers."
+    },
+    "correlation_id": {
+      "type": "string",
+      "format": "uuid",
+      "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-7[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$",
+      "description": "Canonical lowercase UUIDv7 identifier."
+    },
+    "causation_id": {
+      "anyOf": [
+        {
+          "type": "string",
+          "format": "uuid",
+          "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-7[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$",
+          "description": "Canonical lowercase UUIDv7 identifier."
+        },
+        {"type": "null"}
+      ]
+    },
+    "actor": {
+      "anyOf": [
+        {"$ref": "actor-reference.schema.json"},
+        {"type": "null"}
+      ]
+    },
+    "payload": {"type": "object"}
+  },
+  "additionalProperties": true
+}
