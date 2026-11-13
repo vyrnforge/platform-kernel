@@ -18,6 +18,12 @@
   <dependencies>
     <dependency>
       <groupId>io.vyrnforge.platform</groupId>
+      <artifactId>platform-kernel-controls</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+
+    <dependency>
+      <groupId>io.vyrnforge.platform</groupId>
       <artifactId>platform-kernel-http</artifactId>
       <version>${project.version}</version>
     </dependency>
