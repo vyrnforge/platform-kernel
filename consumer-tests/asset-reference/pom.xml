@@ -24,6 +24,12 @@
 
     <dependency>
       <groupId>io.vyrnforge.platform</groupId>
+      <artifactId>platform-kernel-observability</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+
+    <dependency>
+      <groupId>io.vyrnforge.platform</groupId>
       <artifactId>platform-kernel-testkit</artifactId>
       <version>${project.version}</version>
     </dependency>

@@ -5,7 +5,7 @@ OUT="$ROOT/target/local-verify"
 rm -rf "$OUT"
 mkdir -p "$OUT/classes"
 
-mapfile -t SOURCES < <(find   "$ROOT/kernel-core/src/main/java"   "$ROOT/kernel-testkit/src/main/java"   "$ROOT/kernel-http/src/main/java"   -name '*.java' -print | sort)
+mapfile -t SOURCES < <(find   "$ROOT/kernel-core/src/main/java"   "$ROOT/kernel-testkit/src/main/java"   "$ROOT/kernel-observability/src/main/java"   "$ROOT/kernel-http/src/main/java"   -name '*.java' -print | sort)
 
 javac --release 21 -d "$OUT/classes" "${SOURCES[@]}" "$ROOT/verification/GoldenPathSmokeTest.java"
 java -cp "$OUT/classes" GoldenPathSmokeTest
