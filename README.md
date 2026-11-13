@@ -21,20 +21,27 @@ Thin, reusable enterprise foundation shared by VyrnForge products.
 | `contracts` | Phase 0 JSON Schema 2020-12 contracts and examples packaged as resources. |
 | `kernel-core` | Framework-neutral IDs, Actor/Tenant/Correlation contexts, ports, guards, and request-context pipeline. |
 | `kernel-testkit` | In-memory adapters for consumer contract tests and tenant-isolation tests. |
+| `kernel-http` | Framework-neutral HTTP edge adapter for credential, tenant, correlation, response metadata, and safe error mapping. |
+| `consumer-tests/asset-reference` | Test-only Asset reference consumer that validates the kernel from the downstream product side. |
 
 ## Milestone 1 golden path
 
 ```text
-credential + requested tenant + correlation
+HTTP request
+  -> configurable HTTP edge adapter
+  -> credential + requested tenant + correlation
   -> IdentityAdapter
   -> ActorContext
   -> tenant membership guard
   -> module entitlement guard
   -> domain authorization hook
   -> ResolvedRequestContext
+  -> response request/correlation metadata
 ```
 
-The core module deliberately has no Spring, database, broker, IAM SDK, or Asset dependency.
+The core module deliberately has no Spring, database, broker, IAM SDK, or Asset dependency. The HTTP module is also framework-neutral; Spring/Jakarta/other adapters may wrap it later.
+
+The V1 HTTP adapter ships configurable defaults such as `Authorization`, `X-Tenant-Id`, `X-Correlation-Id`, `X-Request-Id`, `traceparent`, and `tracestate`. These are adapter defaults, not permanent architecture invariants.
 
 ## Build
 
