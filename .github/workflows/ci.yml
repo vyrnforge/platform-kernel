@@ -17,7 +17,7 @@ jobs:
   verify:
     name: verify
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 20
 
     steps:
       - name: Checkout
@@ -32,6 +32,9 @@ jobs:
           distribution: temurin
           java-version: '21'
           cache: maven
+
+      - name: Contract compatibility baseline
+        run: python3 scripts/check-contract-compatibility.py
 
       - name: Dependency-free core smoke verification
         run: bash scripts/verify-core.sh

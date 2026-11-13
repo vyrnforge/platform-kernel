@@ -1,0 +1,15 @@
+{
+  "actor-context.schema.json": "5d6907624c8e30d9c219757d107d9b94771a7980",
+  "actor-reference.schema.json": "e45eb5dc25f0b10e34a4fdca1d3d00af83c424dd",
+  "api-error.schema.json": "d664f69a32c4efb25c069f36889a4372490eb793",
+  "audit-event.schema.json": "6a1450737fec8e16eb5c402a9b20b18629264e84",
+  "contract-manifest.json": "8e45cbb2d6469299d28733e0a9e7cfe9dfb8fc71",
+  "correlation-context.schema.json": "d1b05156d10284cd6853b45974dff55ba0bc672d",
+  "event-envelope.schema.json": "80c948014a28029721b01ad56eb47a57c7e52c2b",
+  "examples.json": "9ab3ae01e7050e4a44a9e02dbbbaf13b67e22caf",
+  "file-reference.schema.json": "dcd21e494823b65abbfcef2ccd5e5b1f0e96c3a1",
+  "identity-reference.schema.json": "7ce9e35ef27f583ff115093c1cf48cace0318fb0",
+  "module-entitlement.schema.json": "d08dda30286377d1159ad94e83bf8d34a660c880",
+  "resource-reference.schema.json": "cc1ff4e3d0a3d92a4c8172782176cd77455166b0",
+  "tenant-context.schema.json": "937f5631777b548fb9e984fe61ab336531cfdb56"
+}

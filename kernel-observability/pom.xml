@@ -7,7 +7,7 @@
   <parent>
     <groupId>io.vyrnforge.platform</groupId>
     <artifactId>platform-kernel-parent</artifactId>
-    <version>0.1.0-SNAPSHOT</version>
+    <version>0.2.0</version>
   </parent>
 
   <artifactId>platform-kernel-observability</artifactId>
