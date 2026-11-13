@@ -19,8 +19,8 @@ Thin, reusable enterprise foundation shared by VyrnForge products.
 | Module | Purpose |
 | --- | --- |
 | `contracts` | Phase 0 JSON Schema 2020-12 contracts and examples packaged as resources. |
-| `kernel-core` | Framework-neutral IDs, Actor/Tenant/Correlation contexts, ports, guards, and request-context pipeline. |
-| `kernel-testkit` | In-memory adapters for consumer contract tests and tenant-isolation tests. |
+| `kernel-core` | Framework-neutral contexts plus EventEnvelope, AuditEvent, FileReference, idempotency, and cross-cutting ports. |
+| `kernel-testkit` | In-memory adapters for consumer, tenant-isolation, reliability, and idempotency tests. |
 | `kernel-http` | Framework-neutral HTTP edge adapter for credential, tenant, correlation, response metadata, and safe error mapping. |
 | `consumer-tests/asset-reference` | Test-only Asset reference consumer that validates the kernel from the downstream product side. |
 
@@ -38,6 +38,17 @@ HTTP request
   -> ResolvedRequestContext
   -> response request/correlation metadata
 ```
+
+## Reliability contracts
+
+The kernel now exposes transport/storage-neutral contracts for:
+
+- `EventEnvelope<T>` + `EventIntentPort`;
+- `AuditEvent` + `AuditIntentPort`;
+- `FileReference`;
+- tenant-scoped `IdempotencyPort<R>`.
+
+These interfaces define semantics and guarantees without selecting Kafka, PostgreSQL, an outbox table, central audit deployment, or File Storage implementation. See `docs/contracts/reliability-semantics.md`.
 
 The core module deliberately has no Spring, database, broker, IAM SDK, or Asset dependency. The HTTP module is also framework-neutral; Spring/Jakarta/other adapters may wrap it later.
 
