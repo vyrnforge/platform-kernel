@@ -1,0 +1,35 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.shared-platform.local/phase0/v0.1/module-entitlement.schema.json",
+  "title": "ModuleEntitlement",
+  "description": "Tenant-level product/module availability only. This contract is not a user or resource-level authorization decision.",
+  "type": "object",
+  "required": ["tenant_id", "module_key", "enabled"],
+  "properties": {
+    "tenant_id": {
+      "type": "string",
+      "format": "uuid",
+      "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-7[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$",
+      "description": "Canonical lowercase UUIDv7 identifier."
+    },
+    "module_key": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 128,
+      "pattern": "^[a-z][a-z0-9_.:-]*$"
+    },
+    "enabled": {"type": "boolean"},
+    "effective_at": {
+      "anyOf": [
+        {
+          "type": "string",
+          "format": "date-time",
+          "pattern": "Z$",
+          "description": "RFC 3339 date-time normalized to UTC (Z suffix)."
+        },
+        {"type": "null"}
+      ]
+    }
+  },
+  "additionalProperties": true
+}

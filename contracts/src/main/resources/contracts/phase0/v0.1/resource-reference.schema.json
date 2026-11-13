@@ -1,0 +1,35 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.shared-platform.local/phase0/v0.1/resource-reference.schema.json",
+  "title": "ResourceReference",
+  "type": "object",
+  "required": ["resource_type", "resource_id"],
+  "properties": {
+    "resource_type": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 128,
+      "pattern": "^[a-z][a-z0-9_.:-]*$",
+      "description": "Stable namespaced resource type, e.g. asset.asset or itsm.incident."
+    },
+    "resource_id": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 512,
+      "description": "Stable opaque identifier. Existing external foundations may use non-UUID identifiers."
+    },
+    "tenant_id": {
+      "anyOf": [
+        {
+          "type": "string",
+          "format": "uuid",
+          "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-7[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$",
+          "description": "Canonical lowercase UUIDv7 identifier."
+        },
+        {"type": "null"}
+      ],
+      "description": "Optional tenant context for the referenced resource."
+    }
+  },
+  "additionalProperties": true
+}

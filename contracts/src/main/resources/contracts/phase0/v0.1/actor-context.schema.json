@@ -1,0 +1,46 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.shared-platform.local/phase0/v0.1/actor-context.schema.json",
+  "title": "ActorContext",
+  "description": "Provider-neutral authenticated actor context consumed by products. Authorization projections are inputs; domain authorization remains with the resource-owning application.",
+  "type": "object",
+  "required": ["actor", "tenant"],
+  "properties": {
+    "actor": {"$ref": "actor-reference.schema.json"},
+    "tenant": {"$ref": "tenant-context.schema.json"},
+    "authorization": {
+      "type": "object",
+      "properties": {
+        "groups": {"type": "array", "items": {"type": "string"}, "uniqueItems": true},
+        "roles": {"type": "array", "items": {"type": "string"}, "uniqueItems": true},
+        "permissions": {"type": "array", "items": {"type": "string"}, "uniqueItems": true}
+      },
+      "additionalProperties": true,
+      "description": "Documented normalized projections only. Consumers must not depend on undocumented provider-specific claims."
+    },
+    "authentication": {
+      "type": "object",
+      "properties": {
+        "authenticated_at": {
+          "anyOf": [
+            {
+              "type": "string",
+              "format": "date-time",
+              "pattern": "Z$",
+              "description": "RFC 3339 date-time normalized to UTC (Z suffix)."
+            },
+            {"type": "null"}
+          ]
+        },
+        "methods": {
+          "type": "array",
+          "items": {"type": "string"},
+          "uniqueItems": true,
+          "description": "Optional normalized authentication method indicators."
+        }
+      },
+      "additionalProperties": true
+    }
+  },
+  "additionalProperties": true
+}
