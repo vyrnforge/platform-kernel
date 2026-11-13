@@ -20,8 +20,7 @@ Thin, reusable enterprise foundation shared by VyrnForge products.
 | --- | --- |
 | `contracts` | Phase 0 JSON Schema 2020-12 contracts and examples packaged as resources. |
 | `kernel-core` | Framework-neutral contexts plus EventEnvelope, AuditEvent, FileReference, idempotency, and cross-cutting ports. |
-| `kernel-controls` | Product module registry, feature-flag abstraction, and namespaced non-secret configuration primitives. |
-| `kernel-testkit` | In-memory adapters for consumer, tenant-isolation, reliability, idempotency, feature/configuration tests. |
+| `kernel-testkit` | In-memory adapters for consumer, tenant-isolation, reliability, and idempotency tests. |
 | `kernel-observability` | Correlation propagation, privacy-aware telemetry attributes, and health/readiness aggregation. |
 | `kernel-http` | Framework-neutral HTTP edge adapter for credential, tenant, correlation, response metadata, and safe error mapping. |
 | `consumer-tests/asset-reference` | Test-only Asset reference consumer that validates the kernel from the downstream product side. |
@@ -41,18 +40,6 @@ HTTP request
   -> structured telemetry context
   -> response request/correlation metadata
 ```
-
-## Platform controls
-
-The kernel keeps registration, entitlement, feature activation, configuration, and authorization separate:
-
-- module registry: known technical product/module;
-- entitlement: module enabled for a tenant;
-- feature flag: implementation feature active for an explicit scope;
-- configuration: non-secret namespaced setting for an explicit scope;
-- authorization: domain-owned user/resource/action decision.
-
-Feature/configuration keys are namespaced. V1 does not select a feature-flag provider, centralized config service, persistence model, cache, rollout engine, or secret store. See `docs/controls/module-feature-config.md`.
 
 ## Reliability contracts
 
@@ -78,7 +65,7 @@ These interfaces define semantics and guarantees without selecting Kafka, Postgr
 
 See `docs/observability/observability-health.md`.
 
-The core module deliberately has no Spring, database, broker, IAM SDK, or Asset dependency. HTTP, observability, and controls remain replaceable/framework-neutral layers.
+The core module deliberately has no Spring, database, broker, IAM SDK, or Asset dependency. The HTTP and observability modules are framework-neutral; framework/OpenTelemetry adapters may wrap them later.
 
 The V1 HTTP adapter ships configurable defaults such as `Authorization`, `X-Tenant-Id`, `X-Correlation-Id`, `X-Request-Id`, `traceparent`, and `tracestate`. These are adapter defaults, not permanent architecture invariants.
 
