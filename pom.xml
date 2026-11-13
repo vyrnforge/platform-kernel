@@ -17,6 +17,8 @@
     <module>contracts</module>
     <module>kernel-core</module>
     <module>kernel-testkit</module>
+    <module>kernel-http</module>
+    <module>consumer-tests/asset-reference</module>
   </modules>
 
   <properties>
