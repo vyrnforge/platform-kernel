@@ -1,0 +1,7 @@
+# Default repository owner.
+* @draglide
+
+# Security-sensitive repository configuration.
+/.github/ @draglide
+/SECURITY.md @draglide
+/docs/security/ @draglide
