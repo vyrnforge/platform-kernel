@@ -16,6 +16,7 @@
   <modules>
     <module>contracts</module>
     <module>kernel-core</module>
+    <module>kernel-controls</module>
     <module>kernel-testkit</module>
     <module>kernel-observability</module>
     <module>kernel-http</module>
