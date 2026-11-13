@@ -2,7 +2,7 @@
 
 Thin, reusable enterprise foundation shared by VyrnForge products.
 
-> **Status:** early V1 implementation. Public contracts are draft until validated by the first real consumer (Asset Management).
+> **Status:** Kernel V2 milestone — artifact version `0.2.0`. Asset reference validation is included. File Storage integration is explicitly deferred.
 
 ## Principles
 
@@ -85,7 +85,7 @@ bash scripts/verify-core.sh
 
 ## Versioning
 
-Current artifacts use `0.1.0-SNAPSHOT`. Breaking consumer-facing changes require explicit contract versioning and migration guidance.
+Kernel V2 artifacts use `0.2.0`. The existing Phase 0 `v0.1` JSON contracts are immutable in CI; breaking consumer-facing changes require a new contract version plus migration guidance.
 
 ## License
 
