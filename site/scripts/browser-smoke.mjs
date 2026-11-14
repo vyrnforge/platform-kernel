@@ -44,7 +44,7 @@ try{
   await send('Runtime.enable');
   await send('Emulation.setDeviceMetricsOverride',{width:1440,height:1000,deviceScaleFactor:1,mobile:false});
   await wait('!!document.querySelector("[data-testid=flow-studio]")','React Flow Studio did not render');
-  assert.match(await evaluate('document.body.innerText'),/0\.2\.1 RELEASED/);
+  assert.match(await evaluate('document.body.innerText'),/0\.3\.0 RELEASED/);
   assert.equal(await evaluate('document.querySelectorAll("[data-mode]").length'),4);
   // Traverse every scenario, inspect the terminal step and prove restart works.
   for(const f of flows){
@@ -90,7 +90,7 @@ try{
   assert.equal(await evaluate('document.querySelector(".fs-graph animateMotion")!==null'),false,'Reduced motion must suppress packet animation');
   await click('[data-testid="play"]');
   assert.deepEqual(errors,[],'Browser JavaScript exceptions');
-  console.log('Browser smoke: motion, pause, stepping, expanded view, mobile layout, reduced motion and v0.2.1 outcomes passed');
+  console.log('Browser smoke: motion, pause, stepping, expanded view, mobile layout, reduced motion and v0.3.0 outcomes passed');
 } finally {
   ws?.close();chrome.kill('SIGTERM');server.close();await sleep(200);await rm(profile,{recursive:true,force:true}).catch(()=>{});
 }

@@ -2,7 +2,7 @@
 
 Thin, reusable enterprise foundation shared by VyrnForge products.
 
-> **Status:** Source version `0.3.0` — three-JAR distribution (DEC-K015). Published releases: [GitHub Releases](https://github.com/vyrnforge/platform-kernel/releases). File Storage integration remains deferred.
+> **Status:** [Kernel v0.3.0](https://github.com/vyrnforge/platform-kernel/releases/tag/v0.3.0) — three-JAR distribution (DEC-K015), published and verified. File Storage integration remains deferred.
 
 Explore the [interactive Kernel Flow Studio](https://vyrnforge.github.io/platform-kernel/#demo) for animated request, mutation, event and operations walkthroughs.
 
