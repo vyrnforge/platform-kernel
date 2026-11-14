@@ -24,29 +24,9 @@ jobs:
           persist-credentials: false
           fetch-depth: 1
 
-      - name: Check dependency graph availability
-        id: dependency-graph
-        env:
-          GH_TOKEN: ${{ github.token }}
-          BASE_SHA: ${{ github.event.pull_request.base.sha }}
-          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
-        run: |
-          status="$(curl --silent --show-error --output "$RUNNER_TEMP/dependency-graph.json"             --write-out '%{http_code}'             --header 'Accept: application/vnd.github+json'             --header "Authorization: Bearer $GH_TOKEN"             --header 'X-GitHub-Api-Version: 2026-03-10'             "https://api.github.com/repos/$GITHUB_REPOSITORY/dependency-graph/compare/$BASE_SHA...$HEAD_SHA")"
-
-          if [ "$status" = "200" ]; then
-            echo "enabled=true" >> "$GITHUB_OUTPUT"
-          else
-            echo "enabled=false" >> "$GITHUB_OUTPUT"
-            echo "::warning::Dependency Graph is not enabled yet; Dependency Review enforcement is staged but inactive."
-          fi
-
       - name: Review dependency changes
-        if: steps.dependency-graph.outputs.enabled == 'true'
         uses: actions/dependency-review-action@a1d282b36b6f3519aa1f3fc636f609c47dddb294 # v5.0.0
         with:
           fail-on-severity: moderate
           fail-on-scopes: development,runtime
 
-      - name: Dependency Review staged
-        if: steps.dependency-graph.outputs.enabled != 'true'
-        run: echo "Enable Dependency Graph in repository security settings to activate this gate."
