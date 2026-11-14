@@ -44,9 +44,9 @@ transport authentication and per-product load/SLO targets before production.
 
 ## Acceptance
 
-- PostgreSQL regression tests: lost response/replay, expired lease rollback,
+- PostgreSQL regression tests: lost response/replay, expired lease rollback, concurrent retry serialization, fatal-work rollback,
   stale worker fencing and exhausted crash recovery.
-- Negative tenant policy regression; existing core and HTTP tests remain green.
+- Negative tenant policy regressions at core and HTTP boundaries.
 - Asset reference uses the atomic path (test-only; no real Asset integration).
 - Protected Maven CI, CodeQL, Dependency Review and schema baseline pass.
 

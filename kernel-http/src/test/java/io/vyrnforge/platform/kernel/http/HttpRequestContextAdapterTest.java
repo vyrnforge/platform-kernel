@@ -113,6 +113,19 @@ class HttpRequestContextAdapterTest {
     }
 
     @Test
+    void tenantlessEndpointRejectsActiveTenantHeaderBeforeDomainAuthorization() {
+        var headers = HttpHeaderConfiguration.v1Defaults();
+        var adapter = adapter(headers, false, false, Set.of("asset.read"));
+        var exception = assertThrows(HttpContextException.class, () -> adapter.resolve(
+                request("native-token", TENANT_A, null),
+                EndpointPolicy.tenantless("asset.read"),
+                new ResourceReference("asset.asset", "asset-1", TENANT_A)));
+        var error = new HttpKernelErrorMapper(headers).map(exception);
+        assertEquals(400, error.status());
+        assertEquals(KernelFailure.INVALID_CONTEXT.code(), error.body().code());
+    }
+
+    @Test
     void customHeaderNamesAreSupported() {
         var headers = new HttpHeaderConfiguration(
                 "Authorization",
