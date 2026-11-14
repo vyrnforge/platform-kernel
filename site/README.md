@@ -1,6 +1,6 @@
 # Platform Kernel product showcase
 
-A standalone React product site for the released Kernel V2 library. The Java modules and Maven release pipeline are independent of this site.
+A standalone React product site for the released Kernel V2 library (v0.3.1). The Java modules and Maven release pipeline are independent of this site.
 
 ## Local development
 

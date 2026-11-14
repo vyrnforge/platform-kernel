@@ -1,7 +1,7 @@
 export const repo='https://github.com/vyrnforge/platform-kernel';
-export const commit='bea384dfd411de09670cb482267d901db9d6fdf7';
-export const version='0.3.0';
-export const releaseRun='43583972110';
+export const commit='337cfd8f2737ef395b90315f8fe9a40882c60729';
+export const version='0.3.1';
+export const releaseRun='43603172847';
 export const source=(path)=>repo+'/'+(path.endsWith('/')?'tree':'blob')+'/'+commit+'/'+path;
 export const capabilities=[
 {title:'Identity & tenancy',category:'Security',status:'Integration required',summary:'Provider-neutral identity, explicit tenant and membership guard.',ships:'ValidatedIdentityAdapter and RequestContextPipeline normalize trusted identity and enforce tenant/module gates. The hardened kernel rejects active tenant context on explicitly tenantless endpoints.',needs:'Trusted token verifier, membership store and product authorization policy.',path:'platform-kernel/src/main/java/io/vyrnforge/platform/kernel/'},

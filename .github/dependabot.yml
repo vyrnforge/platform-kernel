@@ -21,6 +21,11 @@ updates:
 
   - package-ecosystem: npm
     directory: /site
+    groups:
+      react-runtime:
+        patterns:
+          - react
+          - react-dom
     schedule:
       interval: weekly
       day: monday

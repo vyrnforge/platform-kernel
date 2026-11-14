@@ -4,7 +4,7 @@ DEC-K015 / DEC-K016: three-JAR packaging and organization-level Maven publicatio
 
 ## Maven dependencies
 
-Use Maven Central (default Maven repository) once v0.3.1 is published. GitHub Packages remains a mirror; it requires authenticated Maven settings (server ID github). Never commit tokens.
+v0.3.1 is published on Maven Central (default Maven repository); all three libraries and parent metadata are available without custom repository settings or credentials. GitHub Packages remains a mirror; it requires authenticated Maven settings (server ID github). Never commit tokens.
 
 ```xml
 <dependencies>
@@ -49,5 +49,7 @@ The main JAR contains no JDBC, Flyway, Jackson, JUnit, testkit or domain impleme
 There are exactly three kernel library JARs plus parent POM metadata and supplementary sources/Javadoc archives. The test-only Asset reference is not distributed. No database migration is added by this release; existing V1–V3 remain intact. See [production hardening](../v2/production-hardening.md) for the existing V3 rollout and reliability requirements.
 
 ## Verification
+
+The [release recovery run](https://github.com/vyrnforge/platform-kernel/actions/runs/43603172847) confirmed the original deployment, verified all 13 signed payloads and resolved all three libraries in an isolated anonymous Maven consumer. The published release source remains pinned to commit `337cfd8f2737ef395b90315f8fe9a40882c60729`.
 
 `mvn clean verify` runs the existing core, HTTP, controls, observability, JDBC/PostgreSQL, testkit and Asset reference tests. HTTP integration tests using testkit fixtures now live in the testkit test suite to prevent a main-to-testkit cyclic Maven dependency. `python3 scripts/check-distribution.py` checks exact JAR inventory, expected classes/resources, frozen schema/migration bytes and runs the standalone consumer smoke against the physical JARs.
