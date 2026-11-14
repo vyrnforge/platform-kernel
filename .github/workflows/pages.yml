@@ -26,6 +26,9 @@ jobs:
       - name: Install dependencies
         working-directory: site
         run: npm install
+      - name: Record generated lockfile (temporary)
+        working-directory: site
+        run: cat package-lock.json
       - name: Test content and build
         working-directory: site
         run: |
