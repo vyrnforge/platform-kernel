@@ -1,40 +1,19 @@
 # Identity integration boundary
 
-Status: V2 release boundary.
+The kernel works with any trusted application authentication mechanism that can produce its normalized identity contract. It is not an identity provider, token verifier, user directory or authentication server. No VyrnForge IAM product is required.
 
-The kernel intentionally does **not** implement provider-specific raw token validation. Signature algorithms, issuer metadata, JWKS discovery, audience rules, token formats, API-key validation, and credential revocation are owned by the native IAM/runtime authentication layer or by the supported external identity-provider adapter.
+## General integration
 
-## Kernel entry point
+1. Validate the caller in your own trusted authentication layer, for example OIDC/JWT verification, service authentication or an authenticated session.
+2. Map the verified identity into a stable `ActorReference` (actor type USER, SERVICE or SYSTEM, application actor ID, optional issuer + subject, optional display name), normalized `AuthorizationProjection` and `AuthenticationContext`.
+3. Construct `ValidatedIdentityCredential` from that trusted result, then use `ValidatedIdentityAdapter` with `RequestContextPipeline`. Alternatively implement `IdentityAdapter<C>` for your credential type and perform authentication in that adapter.
+4. For tenant-scoped endpoints, supply authoritative membership and module-entitlement ports. For explicitly tenantless endpoints, membership and entitlement are not evaluated, and active tenant context is rejected.
+5. Supply a `DomainAuthorizationHook` for the action and resource. It is always required in the request pipeline. Groups, roles and permissions are inputs to your policy, not automatic authorization decisions.
 
-After provider authentication succeeds, trusted middleware produces a `ValidatedIdentityCredential` containing only:
+Signature verification, issuer/JWKS discovery, audience/expiry checks, sessions, revocation and account lifecycle belong to the authentication layer. Never construct a validated credential from an unverified token or accept a caller-supplied actor projection. Do not log raw credentials. Preserve duplicate HTTP header values for validation; do not trust caller-supplied resource tenant IDs.
 
-- normalized `ActorReference`;
-- documented group/role/permission projections where appropriate;
-- normalized authentication metadata.
+## Provider neutrality
 
-`ValidatedIdentityAdapter` converts that trusted result into `ActorContext` for the requested tenant.
+The same contract can be used with an existing enterprise IdP, custom authenticated session, service authentication or a native IAM product. The kernel does not parse provider-specific claims or interpret provider administrative roles as application permissions. `StaticIdentityAdapter` is test-only.
 
-This is a production integration hook, unlike `StaticIdentityAdapter`, which remains test-only.
-
-## Native Wyrmgate IAM
-
-The Wyrmgate security baseline distinguishes bearer authentication from administrative/domain authorization. The kernel preserves that separation:
-
-1. Wyrmgate authentication middleware validates the credential under Wyrmgate's current runtime authentication contract.
-2. The middleware emits a provider-neutral validated identity projection.
-3. The kernel establishes `ActorContext`.
-4. Tenant membership is validated separately.
-5. Tenant module entitlement is validated separately.
-6. The owning product performs domain authorization.
-
-The kernel does not interpret Wyrmgate control-plane roles/scopes as Asset/ITSM domain authorization.
-
-## External identity providers
-
-The same adapter accepts validated projections from supported standards-based external IdPs. Product/domain code therefore does not depend on provider-specific token claim shapes.
-
-## Security requirement
-
-`ValidatedIdentityCredential` must only be constructed from a trusted authentication boundary. Applications must never decode an unverified token and directly construct this credential.
-
-A future Wyrmgate SDK may provide the concrete verifier/mapper when its stable runtime token/JWKS contract is published. Adding that verifier does not change the kernel `ActorContext` contract.
+See the [Java quickstart](quickstart.md) for a complete plain-Java example and HTTP wiring. The existing identity contract and security guarantees remain unchanged.

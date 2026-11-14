@@ -52,4 +52,9 @@ with tempfile.TemporaryDirectory() as out:
     cp = ":".join(str(root / locations[a] / "target" / f"{a}-{version}.jar") for a in ("platform-kernel", "platform-kernel-testkit"))
     subprocess.run(["javac", "--release", "21", "-cp", cp, "-d", out, str(root / "verification/GoldenPathSmokeTest.java")], check=True)
     subprocess.run(["java", "-cp", out+":"+cp, "GoldenPathSmokeTest"], check=True)
+# Prove general adoption needs the main library alone, without the testkit or a domain module.
+with tempfile.TemporaryDirectory() as out:
+    cp = str(root / "platform-kernel" / "target" / f"platform-kernel-{version}.jar")
+    subprocess.run(["javac", "--release", "21", "-cp", cp, "-d", out, str(root / "verification/GeneralUsageExample.java")], check=True)
+    subprocess.run(["java", "-cp", out+":"+cp, "GeneralUsageExample"], check=True)
 print("Three physical JARs, preserved resources, dependency isolation and packaged consumer OK")
