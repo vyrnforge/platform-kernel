@@ -2,7 +2,7 @@
 
 Thin, reusable enterprise foundation shared by VyrnForge products.
 
-> **Status:** Kernel V2 milestone — artifact version `0.2.0`. Asset reference validation is included. File Storage integration is explicitly deferred.
+> **Status:** Kernel V2 release candidate — artifact version `0.2.0`. Implementation/security validation is included; publication closes when `v0.2.0` is tagged and the packages are published. File Storage integration is explicitly deferred.
 
 ## Principles
 
@@ -19,10 +19,12 @@ Thin, reusable enterprise foundation shared by VyrnForge products.
 | Module | Purpose |
 | --- | --- |
 | `contracts` | Phase 0 JSON Schema 2020-12 contracts and examples packaged as resources. |
-| `kernel-core` | Framework-neutral contexts plus EventEnvelope, AuditEvent, FileReference, idempotency, and cross-cutting ports. |
+| `kernel-core` | Framework-neutral contexts, validated-identity integration, EventEnvelope, AuditEvent, FileReference, idempotency, and cross-cutting ports. |
+| `kernel-controls` | Product/module registry, feature flags, and namespaced non-secret configuration primitives. |
 | `kernel-testkit` | In-memory adapters for consumer, tenant-isolation, reliability, and idempotency tests. |
 | `kernel-observability` | Correlation propagation, privacy-aware telemetry attributes, and health/readiness aggregation. |
 | `kernel-http` | Framework-neutral HTTP edge adapter for credential, tenant, correlation, response metadata, and safe error mapping. |
+| `kernel-persistence-jdbc` | Optional PostgreSQL/Flyway V2 adapter for durable audit, outbox, and idempotency reliability. |
 | `consumer-tests/asset-reference` | Test-only Asset reference consumer that validates the kernel from the downstream product side. |
 
 ## Milestone 1 golden path
@@ -65,7 +67,7 @@ These interfaces define semantics and guarantees without selecting Kafka, Postgr
 
 See `docs/observability/observability-health.md`.
 
-The core module deliberately has no Spring, database, broker, IAM SDK, or Asset dependency. The HTTP and observability modules are framework-neutral; framework/OpenTelemetry adapters may wrap them later.
+The core module deliberately has no Spring, database, broker, IAM SDK, or Asset dependency. Native IAM or external-IdP authentication middleware validates credentials and can hand the normalized result to `ValidatedIdentityAdapter`; the kernel does not depend on undocumented token claims. The JDBC persistence adapter is optional and replaceable.
 
 The V1 HTTP adapter ships configurable defaults such as `Authorization`, `X-Tenant-Id`, `X-Correlation-Id`, `X-Request-Id`, `traceparent`, and `tracestate`. These are adapter defaults, not permanent architecture invariants.
 
@@ -85,7 +87,7 @@ bash scripts/verify-core.sh
 
 ## Versioning
 
-Kernel V2 artifacts use `0.2.0`. The existing Phase 0 `v0.1` JSON contracts are immutable in CI; breaking consumer-facing changes require a new contract version plus migration guidance.
+Kernel V2 artifacts use `0.2.0`. Phase 0 `v0.1` remains an immutable historical draft; `v0.2` is the released wire-compatible V2 contract package. Breaking consumer-facing changes require a new contract version plus migration guidance.
 
 ## License
 

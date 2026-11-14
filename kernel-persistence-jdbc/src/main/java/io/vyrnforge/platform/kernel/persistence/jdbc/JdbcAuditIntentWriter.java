@@ -6,20 +6,26 @@ import io.vyrnforge.platform.kernel.context.ActorReference;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
+import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Timestamp;
 import java.util.Objects;
 
 final class JdbcAuditIntentWriter implements AuditIntentPort {
-    private static final String SQL = """
+    private static final String INSERT_SQL = """
         INSERT INTO platform_audit_event (
           audit_id,audit_fingerprint,occurred_at,tenant_id,
           actor_type,actor_id,identity_issuer,identity_subject,actor_display_name,
           action,resource_type,resource_id,resource_tenant_id,outcome,source,
           correlation_id,reason,changes_json
         ) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?::jsonb)
-        ON CONFLICT (audit_id) DO UPDATE SET audit_id = EXCLUDED.audit_id
-        WHERE platform_audit_event.audit_fingerprint = EXCLUDED.audit_fingerprint
+        ON CONFLICT (audit_id) DO NOTHING
+        """;
+
+    private static final String EXISTING_FINGERPRINT_SQL = """
+        SELECT audit_fingerprint
+        FROM platform_audit_event
+        WHERE audit_id = ?
         """;
 
     private final Connection connection;
@@ -33,10 +39,11 @@ final class JdbcAuditIntentWriter implements AuditIntentPort {
     @Override
     public void accept(AuditEvent audit) {
         Objects.requireNonNull(audit, "audit");
-        String changes = audit.changes()==null ? null : codec.encode(audit.changes());
-        String fingerprint = SqlSupport.sha256(audit.toString() + "|" + changes);
-        try (PreparedStatement ps = connection.prepareStatement(SQL)) {
-            int i=1;
+        String changes = audit.changes() == null ? null : codec.encode(audit.changes());
+        String fingerprint = fingerprint(audit, changes);
+
+        try (PreparedStatement ps = connection.prepareStatement(INSERT_SQL)) {
+            int i = 1;
             ps.setObject(i++, audit.auditId());
             ps.setString(i++, fingerprint);
             ps.setTimestamp(i++, Timestamp.from(audit.occurredAt()));
@@ -51,23 +58,75 @@ final class JdbcAuditIntentWriter implements AuditIntentPort {
             ps.setObject(i++, audit.correlationId());
             ps.setString(i++, audit.reason());
             ps.setString(i, changes);
-            int changed = ps.executeUpdate();
-            if (changed == 0) throw new IllegalStateException("audit_id already exists with different content");
+
+            if (ps.executeUpdate() == 1) {
+                return;
+            }
+
+            if (!existingFingerprint(audit).equals(fingerprint)) {
+                throw new IllegalStateException(
+                        "audit_id already exists with different content");
+            }
         } catch (SQLException e) {
             throw SqlSupport.failure("audit intent write", e);
         }
     }
 
-    private int bindActor(PreparedStatement ps, int i, ActorReference actor) throws SQLException {
+    private String existingFingerprint(AuditEvent audit) throws SQLException {
+        try (PreparedStatement ps =
+                     connection.prepareStatement(EXISTING_FINGERPRINT_SQL)) {
+            ps.setObject(1, audit.auditId());
+            try (ResultSet rs = ps.executeQuery()) {
+                if (!rs.next()) {
+                    throw new IllegalStateException(
+                            "audit record disappeared during duplicate check");
+                }
+                return rs.getString(1);
+            }
+        }
+    }
+
+    private int bindActor(
+            PreparedStatement ps,
+            int i,
+            ActorReference actor) throws SQLException {
         if (actor == null) {
-            for (int n=0;n<5;n++) ps.setString(i++, null);
+            for (int n = 0; n < 5; n++) {
+                ps.setString(i++, null);
+            }
             return i;
         }
         ps.setString(i++, actor.actorType().name());
         ps.setString(i++, actor.actorId());
-        ps.setString(i++, actor.identity()==null?null:actor.identity().issuer());
-        ps.setString(i++, actor.identity()==null?null:actor.identity().subject());
+        ps.setString(i++, actor.identity() == null
+                ? null : actor.identity().issuer());
+        ps.setString(i++, actor.identity() == null
+                ? null : actor.identity().subject());
         ps.setString(i++, actor.displayName());
         return i;
+    }
+
+    private String fingerprint(AuditEvent audit, String changes) {
+        ActorReference actor = audit.actor();
+        return SqlSupport.sha256(String.join("|",
+                audit.auditId().toString(),
+                audit.occurredAt().toString(),
+                String.valueOf(audit.tenantId()),
+                actor == null ? "null" : actor.actorType().name(),
+                actor == null ? "null" : actor.actorId(),
+                actor == null || actor.identity() == null
+                        ? "null" : actor.identity().issuer(),
+                actor == null || actor.identity() == null
+                        ? "null" : actor.identity().subject(),
+                actor == null ? "null" : String.valueOf(actor.displayName()),
+                audit.action(),
+                audit.resource().resourceType(),
+                audit.resource().resourceId(),
+                String.valueOf(audit.resource().tenantId()),
+                audit.outcome().name(),
+                audit.source(),
+                audit.correlationId().toString(),
+                String.valueOf(audit.reason()),
+                String.valueOf(changes)));
     }
 }

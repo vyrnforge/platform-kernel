@@ -10,5 +10,5 @@
   </parent>
   <artifactId>platform-kernel-contracts</artifactId>
   <name>Platform Kernel Contracts</name>
-  <description>Transport-neutral Phase 0 JSON schemas and examples.</description>
+  <description>Versioned transport-neutral JSON schemas and examples; v0.1 is historical draft and v0.2 is the V2 released contract package.</description>
 </project>

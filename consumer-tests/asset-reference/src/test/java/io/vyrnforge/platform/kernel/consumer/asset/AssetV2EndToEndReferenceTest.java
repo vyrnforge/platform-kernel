@@ -172,7 +172,7 @@ class AssetV2EndToEndReferenceTest {
 
         JacksonRecordCodec codec = new JacksonRecordCodec();
         JdbcReliabilityTransaction transaction =
-                new JdbcReliabilityTransaction(dataSource, codec);
+                new JdbcReliabilityTransaction(dataSource, codec, clock);
 
         transaction.execute((connection, events, audits) -> {
             try (PreparedStatement statement = connection.prepareStatement("""

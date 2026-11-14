@@ -1,0 +1,71 @@
+{
+  "ActorContext": {
+    "actor": {
+      "actor_type": "user",
+      "actor_id": "019a7f0e-1234-7abc-8def-1234567890ab",
+      "identity": {
+        "issuer": "https://idp.example.com",
+        "subject": "00u123"
+      }
+    },
+    "tenant": {
+      "scope": "tenant",
+      "tenant_id": "019a7f0e-2234-7abc-8def-1234567890ab"
+    },
+    "authorization": {
+      "groups": ["asset-operators"],
+      "roles": ["asset_manager"],
+      "permissions": ["asset.read", "asset.update"]
+    }
+  },
+  "TenantlessActorContext": {
+    "actor": {
+      "actor_type": "user",
+      "actor_id": "019a7f0e-3234-7abc-8def-1234567890ab",
+      "identity": {
+        "issuer": "https://idp.example.com",
+        "subject": "00u456"
+      }
+    },
+    "tenant": {
+      "scope": "none",
+      "tenant_id": null
+    }
+  },
+  "EventEnvelope": {
+    "event_id": "019a7f0e-4234-7abc-8def-1234567890ab",
+    "event_type": "asset.asset.assigned",
+    "event_version": 1,
+    "occurred_at": "2026-11-13T07:30:00Z",
+    "tenant_id": "019a7f0e-2234-7abc-8def-1234567890ab",
+    "producer": "asset",
+    "subject_type": "asset.asset",
+    "subject_id": "019a7f0e-5234-7abc-8def-1234567890ab",
+    "correlation_id": "019a7f0e-6234-7abc-8def-1234567890ab",
+    "causation_id": null,
+    "actor": {
+      "actor_type": "user",
+      "actor_id": "019a7f0e-1234-7abc-8def-1234567890ab",
+      "identity": {
+        "issuer": "https://idp.example.com",
+        "subject": "00u123"
+      }
+    },
+    "payload": {
+      "assigned_to": "019a7f0e-7234-7abc-8def-1234567890ab"
+    }
+  },
+  "ApiError": {
+    "code": "ASSET_VALIDATION_FAILED",
+    "message": "The request contains invalid fields.",
+    "request_id": "019a7f0e-8234-7abc-8def-1234567890ab",
+    "correlation_id": "019a7f0e-6234-7abc-8def-1234567890ab",
+    "field_errors": [
+      {
+        "field": "serial_number",
+        "code": "INVALID_FORMAT",
+        "message": "Invalid serial number format."
+      }
+    ]
+  }
+}

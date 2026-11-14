@@ -4,13 +4,24 @@ import io.vyrnforge.platform.kernel.event.EventEnvelope;
 import io.vyrnforge.platform.kernel.event.EventIntentPort;
 
 import javax.sql.DataSource;
+import java.time.Clock;
 import java.util.Objects;
 
 public final class JdbcEventIntentPort implements EventIntentPort {
     private final JdbcReliabilityTransaction transactions;
 
-    public JdbcEventIntentPort(DataSource dataSource, JacksonRecordCodec codec) {
-        this.transactions = new JdbcReliabilityTransaction(dataSource, codec);
+    public JdbcEventIntentPort(
+            DataSource dataSource,
+            JacksonRecordCodec codec) {
+        this(dataSource, codec, Clock.systemUTC());
+    }
+
+    public JdbcEventIntentPort(
+            DataSource dataSource,
+            JacksonRecordCodec codec,
+            Clock clock) {
+        this.transactions =
+                new JdbcReliabilityTransaction(dataSource, codec, clock);
     }
 
     @Override

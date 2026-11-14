@@ -1,0 +1,62 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.shared-platform.local/phase0/v0.2/audit-event.schema.json",
+  "title": "AuditEvent",
+  "description": "Accountability/governance evidence contract. Distinct from operational logging and user-facing activity history.",
+  "type": "object",
+  "required": [
+    "audit_id", "occurred_at", "tenant_id", "actor", "action",
+    "resource", "outcome", "source", "correlation_id"
+  ],
+  "properties": {
+    "audit_id": {
+      "type": "string",
+      "format": "uuid",
+      "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-7[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$",
+      "description": "Canonical lowercase UUIDv7 identifier."
+    },
+    "occurred_at": {
+      "type": "string",
+      "format": "date-time",
+      "pattern": "Z$",
+      "description": "RFC 3339 date-time normalized to UTC (Z suffix)."
+    },
+    "tenant_id": {
+      "anyOf": [
+        {
+          "type": "string",
+          "format": "uuid",
+          "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-7[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$",
+          "description": "Canonical lowercase UUIDv7 identifier."
+        },
+        {"type": "null"}
+      ]
+    },
+    "actor": {
+      "anyOf": [
+        {"$ref": "actor-reference.schema.json"},
+        {"type": "null"}
+      ]
+    },
+    "action": {"type": "string", "minLength": 1, "maxLength": 192, "pattern": "^[a-z][a-z0-9_.:-]*$"},
+    "resource": {"$ref": "resource-reference.schema.json"},
+    "outcome": {"type": "string", "enum": ["success", "failure", "denied"]},
+    "source": {"type": "string", "minLength": 1, "maxLength": 128, "pattern": "^[a-z][a-z0-9_.:-]*$"},
+    "correlation_id": {
+      "type": "string",
+      "format": "uuid",
+      "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-7[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$",
+      "description": "Canonical lowercase UUIDv7 identifier."
+    },
+    "reason": {
+      "type": ["string", "null"],
+      "maxLength": 2048,
+      "description": "Optional safe reason/context. Do not place secrets or sensitive payloads here."
+    },
+    "changes": {
+      "type": ["object", "null"],
+      "description": "Optional redacted before/after or changed-field summary; shape remains domain-specific."
+    }
+  },
+  "additionalProperties": true
+}

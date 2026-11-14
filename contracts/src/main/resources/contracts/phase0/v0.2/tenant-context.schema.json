@@ -1,0 +1,45 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.shared-platform.local/phase0/v0.2/tenant-context.schema.json",
+  "title": "TenantContext",
+  "description": "Active tenant scope for an operation. Identity may exist tenantless; tenant-owned data access requires tenant scope.",
+  "type": "object",
+  "required": ["scope", "tenant_id"],
+  "properties": {
+    "scope": {
+      "type": "string",
+      "enum": ["tenant", "none"]
+    },
+    "tenant_id": {
+      "anyOf": [
+        {
+          "type": "string",
+          "format": "uuid",
+          "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-7[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$",
+          "description": "Canonical lowercase UUIDv7 identifier."
+        },
+        {"type": "null"}
+      ]
+    }
+  },
+  "allOf": [
+    {
+      "if": {"properties": {"scope": {"const": "tenant"}}},
+      "then": {
+        "properties": {
+          "tenant_id": {
+            "type": "string",
+            "format": "uuid",
+            "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-7[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$",
+            "description": "Canonical lowercase UUIDv7 identifier."
+          }
+        }
+      }
+    },
+    {
+      "if": {"properties": {"scope": {"const": "none"}}},
+      "then": {"properties": {"tenant_id": {"type": "null"}}}
+    }
+  ],
+  "additionalProperties": true
+}

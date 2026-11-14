@@ -1,0 +1,44 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.shared-platform.local/phase0/v0.2/file-reference.schema.json",
+  "title": "FileReference",
+  "description": "Reference to a file owned by File Storage. Snapshot metadata is explicitly non-authoritative.",
+  "type": "object",
+  "required": ["file_id", "owner_tenant_id", "storage_service"],
+  "properties": {
+    "file_id": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 512,
+      "description": "Stable opaque identifier. Existing external foundations may use non-UUID identifiers."
+    },
+    "owner_tenant_id": {
+      "anyOf": [
+        {
+          "type": "string",
+          "format": "uuid",
+          "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-7[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$",
+          "description": "Canonical lowercase UUIDv7 identifier."
+        },
+        {"type": "null"}
+      ]
+    },
+    "storage_service": {"type": "string", "minLength": 1, "maxLength": 128, "pattern": "^[a-z][a-z0-9_.:-]*$"},
+    "name": {"type": ["string", "null"], "maxLength": 1024, "description": "Non-authoritative display snapshot."},
+    "mime_type": {"type": ["string", "null"], "maxLength": 255, "description": "Non-authoritative snapshot."},
+    "size": {"type": ["integer", "null"], "minimum": 0, "description": "Non-authoritative byte-size snapshot."},
+    "created_at": {
+      "anyOf": [
+        {
+          "type": "string",
+          "format": "date-time",
+          "pattern": "Z$",
+          "description": "RFC 3339 date-time normalized to UTC (Z suffix)."
+        },
+        {"type": "null"}
+      ],
+      "description": "Non-authoritative snapshot."
+    }
+  },
+  "additionalProperties": true
+}

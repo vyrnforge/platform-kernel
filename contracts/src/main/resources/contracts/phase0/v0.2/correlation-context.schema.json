@@ -1,0 +1,41 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.shared-platform.local/phase0/v0.2/correlation-context.schema.json",
+  "title": "CorrelationContext",
+  "description": "Diagnostic flow identifiers. request_id identifies one request; correlation_id links a business flow; trace context remains observability-specific.",
+  "type": "object",
+  "required": ["request_id", "correlation_id"],
+  "properties": {
+    "request_id": {
+      "type": "string",
+      "format": "uuid",
+      "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-7[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$",
+      "description": "Canonical lowercase UUIDv7 identifier."
+    },
+    "correlation_id": {
+      "type": "string",
+      "format": "uuid",
+      "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-7[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$",
+      "description": "Canonical lowercase UUIDv7 identifier."
+    },
+    "causation_id": {
+      "anyOf": [
+        {
+          "type": "string",
+          "format": "uuid",
+          "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-7[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$",
+          "description": "Canonical lowercase UUIDv7 identifier."
+        },
+        {"type": "null"}
+      ],
+      "description": "Identifier of the immediate causal predecessor when applicable."
+    },
+    "traceparent": {
+      "type": ["string", "null"],
+      "maxLength": 128,
+      "description": "Optional W3C traceparent; not a replacement for correlation_id."
+    },
+    "tracestate": {"type": ["string", "null"], "maxLength": 512}
+  },
+  "additionalProperties": true
+}
