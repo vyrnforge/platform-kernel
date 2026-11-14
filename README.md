@@ -2,7 +2,7 @@
 
 Thin, reusable enterprise foundation shared by VyrnForge products.
 
-> **Status:** [Kernel v0.3.0](https://github.com/vyrnforge/platform-kernel/releases/tag/v0.3.0) — three-JAR distribution (DEC-K015), published and verified. File Storage integration remains deferred.
+> **Status:** source version 0.3.1; public Maven Central distribution setup. See [published releases](https://github.com/vyrnforge/platform-kernel/releases). File Storage integration remains deferred.
 
 Explore the [interactive Kernel Flow Studio](https://vyrnforge.github.io/platform-kernel/#demo) for animated request, mutation, event and operations walkthroughs.
 
@@ -87,7 +87,7 @@ bash scripts/verify-core.sh
 
 ## Versioning
 
-Kernel artifacts use `0.3.0`. The released wire contract package remains `v0.2` (`0.2.0` schema manifest); no wire contract changes are introduced. Phase 0 `v0.1` remains an immutable historical draft; `v0.2` is the released wire-compatible V2 contract package. Breaking consumer-facing changes require a new contract version plus migration guidance.
+Kernel artifacts use `0.3.1`; Maven group ID is `io.github.vyrnforge`. The released wire contract package remains `v0.2` (`0.2.0` schema manifest); no wire contract changes are introduced. Phase 0 `v0.1` remains an immutable historical draft; `v0.2` is the released wire-compatible V2 contract package. Breaking consumer-facing changes require a new contract version plus migration guidance.
 
 ## License
 

@@ -7,6 +7,12 @@ baseline = json.loads((root / "scripts/distribution-v021-baseline.json").read_te
 locations = {"platform-kernel": "platform-kernel", "platform-kernel-jdbc": "kernel-persistence-jdbc", "platform-kernel-testkit": "kernel-testkit"}
 expected = {root / module / "target" / f"{artifact}-{version}.jar" for artifact, module in locations.items()}
 actual = {p for p in root.glob("**/target/*.jar") if "node_modules" not in p.parts}
+docs = {root / module / "target" / f"{artifact}-{version}-{kind}.jar" for artifact, module in locations.items() for kind in ("sources", "javadoc")}
+if "--release-docs" in __import__("sys").argv:
+    expected |= docs
+    for p in docs:
+        with zipfile.ZipFile(p) as z:
+            assert any(n.endswith(".java" if "-sources.jar" in p.name else ".html") for n in z.namelist()), f"Empty documentation archive: {p}"
 assert actual == expected, f"Unexpected JAR inventory: missing={expected-actual}, extra={actual-expected}"
 seen = set()
 for artifact, module in locations.items():
@@ -40,8 +46,8 @@ for artifact, module in locations.items():
     if artifact == "platform-kernel":
         assert not deps, f"Main JAR gained runtime dependencies: {deps}"
     else:
-        assert ("io.vyrnforge.platform", "platform-kernel") in deps
-        assert all(g != "io.vyrnforge.platform" or a == "platform-kernel" for g,a in deps)
+        assert ("io.github.vyrnforge", "platform-kernel") in deps
+        assert all(g != "io.github.vyrnforge" or a == "platform-kernel" for g,a in deps)
 with tempfile.TemporaryDirectory() as out:
     cp = ":".join(str(root / locations[a] / "target" / f"{a}-{version}.jar") for a in ("platform-kernel", "platform-kernel-testkit"))
     subprocess.run(["javac", "--release", "21", "-cp", cp, "-d", out, str(root / "verification/GoldenPathSmokeTest.java")], check=True)

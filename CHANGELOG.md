@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.3.1 — Maven Central distribution
+
+- Move Maven coordinates to the verified organization namespace `io.github.vyrnforge`; Java imports and APIs are unchanged.
+- Generate sources and Javadoc archives, sign the four POMs and nine JARs, and publish approved releases to Maven Central and GitHub Packages.
+- Preserve all three runtime/test libraries, wire schemas, migrations and v0.3.0 artifacts. No new runtime capabilities.
+- See `docs/releases/central-publication.md` for release and recovery procedures.
+
 ## 0.3.0 — Three-JAR distribution
 
 - Physically consolidate core, HTTP, controls, observability and JSON schemas into `platform-kernel`.

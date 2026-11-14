@@ -1,34 +1,36 @@
-# Kernel 0.3.0 — three-JAR distribution
+# Kernel 0.3.1 — three-JAR distribution
 
 DEC-K015: distribution simplification, not new capabilities or an architecture change.
 
 ## Maven dependencies
 
-Repository: `https://maven.pkg.github.com/vyrnforge/platform-kernel`. Use your GitHub Packages credentials via Maven settings (server ID github); never commit tokens.
+Use Maven Central (default Maven repository) once v0.3.1 is published. GitHub Packages remains a mirror; it requires authenticated Maven settings (server ID github). Never commit tokens.
 
 ```xml
 <dependencies>
   <dependency>
-    <groupId>io.vyrnforge.platform</groupId>
+    <groupId>io.github.vyrnforge</groupId>
     <artifactId>platform-kernel</artifactId>
-    <version>0.3.0</version>
+    <version>0.3.1</version>
   </dependency>
   <!-- Optional: omit for products without JDBC reliability -->
   <dependency>
-    <groupId>io.vyrnforge.platform</groupId>
+    <groupId>io.github.vyrnforge</groupId>
     <artifactId>platform-kernel-jdbc</artifactId>
-    <version>0.3.0</version>
+    <version>0.3.1</version>
   </dependency>
   <dependency>
-    <groupId>io.vyrnforge.platform</groupId>
+    <groupId>io.github.vyrnforge</groupId>
     <artifactId>platform-kernel-testkit</artifactId>
-    <version>0.3.0</version>
+    <version>0.3.1</version>
     <scope>test</scope>
   </dependency>
 </dependencies>
 ```
 
-## Migration from 0.2.1
+## Migration from 0.2.1 / 0.3.0
+
+From 0.3.0, replace group ID `io.vyrnforge.platform` with `io.github.vyrnforge` and version 0.3.1 for all three dependencies; artifact IDs and Java packages are unchanged. Do not mix the old and new group IDs.
 
 | Old coordinates (artifactId) | Replace with |
 | --- | --- |

@@ -6,25 +6,27 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: write
-  packages: write
+  contents: read
+
+concurrency:
+  group: kernel-public-release
+  cancel-in-progress: false
 
 jobs:
   publish:
-    name: publish
-    if: github.event_name == 'workflow_dispatch' || startsWith(github.event.head_commit.message, 'release:')
+    if: github.ref == 'refs/heads/main' && (github.event_name == 'workflow_dispatch' || startsWith(github.event.head_commit.message, 'release:'))
     runs-on: ubuntu-latest
-    timeout-minutes: 30
-
+    timeout-minutes: 55
+    permissions:
+      contents: write
+      packages: write
     steps:
       - name: Checkout
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
           persist-credentials: false
-          fetch-depth: 1
-
       - name: Set up Java 21
-        uses: actions/setup-java@77dd5b2ce225ea11469928ac317850245a74ae78 # v6.2.0
+        uses: actions/setup-java@77dd5b2ce225ea11469928ac317850245a74ae78
         with:
           distribution: temurin
           java-version: '21'
@@ -32,62 +34,49 @@ jobs:
           server-id: github
           server-username: GITHUB_ACTOR
           server-password: GITHUB_TOKEN
-
-      - name: Verify release version
-        shell: bash
-        run: |
-          set -euo pipefail
-          version="$(tr -d '[:space:]' < VERSION)"
-          pom_version="$(python3 - <<'PY'
-          import xml.etree.ElementTree as ET
-          root=ET.parse("pom.xml").getroot()
-          ns={"m":"http://maven.apache.org/POM/4.0.0"}
-          print(root.find("m:version",ns).text)
-          PY
-          )"
-          test "$version" = "$pom_version"
-          test "$version" = "0.3.0"
-
-      - name: Reject existing release tag
+      - name: Reject existing tag and Central version
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           set -euo pipefail
           version="$(tr -d '[:space:]' < VERSION)"
-          tags="$(gh api "repos/${GITHUB_REPOSITORY}/git/matching-refs/tags/v${version}" --jq '.[].ref')"
-          if grep -Fxq "refs/tags/v${version}" <<< "$tags"; then
-            echo "Release tag already exists; refusing to republish."
-            exit 1
-          fi
-
-      - name: Contract compatibility
-        run: python3 scripts/check-contract-compatibility.py
-
-      - name: Verify release JARs before publication
+          [[ "$version" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]
+          tags="$(gh api "repos/$GITHUB_REPOSITORY/git/matching-refs/tags/v$version" --jq '.[].ref')"
+          ! grep -Fxq "refs/tags/v$version" <<< "$tags"
+          for artifact in platform-kernel-parent platform-kernel platform-kernel-jdbc platform-kernel-testkit; do
+            code="$(curl --silent --show-error --max-time 30 -o /dev/null -w '%{http_code}' "https://repo.maven.apache.org/maven2/io/github/vyrnforge/$artifact/$version/$artifact-$version.pom")"
+            test "$code" = 404 || { echo "Central version exists or probe failed ($code); stop and reconcile"; exit 1; }
+          done
+      - name: Build and verify once
         run: |
-          mvn --batch-mode --no-transfer-progress --strict-checksums clean verify
-          python3 scripts/check-distribution.py
-
-      - name: Maven verify and publish
+          python3 scripts/check-contract-compatibility.py
+          bash scripts/verify-core.sh
+          mvn --batch-mode --no-transfer-progress --strict-checksums -Prelease-docs clean verify
+          python3 scripts/check-distribution.py --release-docs
+          python3 scripts/stage-release.py "$RUNNER_TEMP/release-stage"
+      - name: Sign release bundle
+        env:
+          GPG_PRIVATE_KEY: ${{ secrets.GPG_PRIVATE_KEY }}
+          GPG_PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
+        run: bash scripts/sign-release.sh "$RUNNER_TEMP/release-stage"
+      - name: Publish to Maven Central
+        env:
+          CENTRAL_USERNAME: ${{ secrets.CENTRAL_USERNAME }}
+          CENTRAL_PASSWORD: ${{ secrets.CENTRAL_PASSWORD }}
+        run: bash scripts/publish-central.sh
+      - name: Mirror verified Central payload to GitHub Packages
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GITHUB_ACTOR: ${{ github.actor }}
-        run: mvn --batch-mode --no-transfer-progress --strict-checksums deploy
-
-      - name: Create immutable V2 GitHub release
+        run: bash scripts/mirror-release.sh "$RUNNER_TEMP/release-stage"
+      - name: Create GitHub release
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        shell: bash
         run: |
           set -euo pipefail
           version="$(tr -d '[:space:]' < VERSION)"
-          tag="v$version"
-          if gh release view "$tag" >/dev/null 2>&1; then
-            echo "Release $tag already exists."
-          else
-            gh release create "$tag" \
-              "platform-kernel/target/platform-kernel-$version.jar" \
-              "kernel-persistence-jdbc/target/platform-kernel-jdbc-$version.jar" \
-              "kernel-testkit/target/platform-kernel-testkit-$version.jar" \
-              --target "$GITHUB_SHA" --title "Kernel — $tag" --notes-file CHANGELOG.md
-          fi
+          gh release create "v$version" \
+            "platform-kernel/target/platform-kernel-$version.jar" \
+            "kernel-persistence-jdbc/target/platform-kernel-jdbc-$version.jar" \
+            "kernel-testkit/target/platform-kernel-testkit-$version.jar" \
+            --target "$GITHUB_SHA" --title "Kernel — v$version" --notes-file CHANGELOG.md

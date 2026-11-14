@@ -5,9 +5,9 @@
   <modelVersion>4.0.0</modelVersion>
 
   <parent>
-    <groupId>io.vyrnforge.platform</groupId>
+    <groupId>io.github.vyrnforge</groupId>
     <artifactId>platform-kernel-parent</artifactId>
-    <version>0.3.0</version>
+    <version>0.3.1</version>
     <relativePath>../../pom.xml</relativePath>
   </parent>
 
@@ -18,11 +18,13 @@
   <properties>
     <maven.deploy.skip>true</maven.deploy.skip>
     <maven.install.skip>true</maven.install.skip>
+    <maven.source.skip>true</maven.source.skip>
+    <maven.javadoc.skip>true</maven.javadoc.skip>
   </properties>
 
   <dependencies>
     <dependency>
-      <groupId>io.vyrnforge.platform</groupId>
+      <groupId>io.github.vyrnforge</groupId>
       <artifactId>platform-kernel</artifactId>
       <version>${project.version}</version>
     </dependency>
@@ -30,14 +32,14 @@
 
 
     <dependency>
-      <groupId>io.vyrnforge.platform</groupId>
+      <groupId>io.github.vyrnforge</groupId>
       <artifactId>platform-kernel-testkit</artifactId>
       <version>${project.version}</version>
       <scope>test</scope>
     </dependency>
 
     <dependency>
-      <groupId>io.vyrnforge.platform</groupId>
+      <groupId>io.github.vyrnforge</groupId>
       <artifactId>platform-kernel-jdbc</artifactId>
       <version>${project.version}</version>
     </dependency>
@@ -61,6 +63,7 @@
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-jar-plugin</artifactId>
+        <version>3.4.2</version>
         <configuration><skipIfEmpty>true</skipIfEmpty></configuration>
       </plugin>
       <plugin>
