@@ -1,6 +1,6 @@
 # Repository Security Hardening
 
-Status: repository-controlled controls are implemented in source. GitHub administrator-only settings below must also be enabled in repository settings.
+Status: protected PR, signed squash merge and active Dependency Review were verified in release PR #18. Repository-controlled controls are implemented in source; administrator settings below remain the desired baseline and should be checked independently.
 
 ## Controls implemented in the repository
 
@@ -9,8 +9,8 @@ Status: repository-controlled controls are implemented in source. GitHub adminis
 - Checkout does not persist Git credentials.
 - Maven verification uses strict checksum validation.
 - CodeQL runs on pull requests, `main`, and weekly with `security-extended` queries.
-- Dependency Review blocks newly introduced dependencies with vulnerabilities of moderate severity or higher.
-- Dependabot monitors Maven and GitHub Actions weekly.
+- Dependency Review blocks newly introduced dependencies with vulnerabilities of moderate severity or higher and fails if review cannot run.
+- Dependabot monitors Maven, GitHub Actions and site npm weekly.
 - CODEOWNERS protects repository and security configuration once code-owner review is enabled by a ruleset.
 - A security reporting policy is published.
 - Pull requests include a kernel-boundary and security checklist.
@@ -82,3 +82,7 @@ Review this configuration when:
 - the repository becomes private;
 - release/signing infrastructure is introduced;
 - any workflow needs write permissions.
+
+## Publication credentials
+
+See [signing key operations](../releases/signing-key-operations.md). Publication secrets are used only in the main release job; the temporary bootstrap workflow is retired. Do not delete or rotate active signing credentials during a release. No private key material is stored in the repository.

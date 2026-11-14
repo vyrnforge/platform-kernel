@@ -2,7 +2,7 @@
 
 ## Supported versions
 
-The project is pre-release. Until the first stable release is published, security fixes are made against the latest `main` branch only.
+The project has published pre-1.0 releases. Security fixes target the latest maintained release line on `main` and are distributed as new immutable versions; older releases are not maintained long-term-support lines. See [releases](https://github.com/vyrnforge/platform-kernel/releases) for the current supported version.
 
 ## Reporting a vulnerability
 
@@ -16,7 +16,7 @@ Preferred reporting path:
 
 If private vulnerability reporting is not available, contact a VyrnForge maintainer through an existing private organizational channel before sharing technical details.
 
-We will acknowledge valid reports, investigate impact, and coordinate remediation/disclosure appropriate to the project's pre-release status.
+We will acknowledge valid reports, investigate impact, and coordinate remediation/disclosure appropriate to the project's pre-1.0 status.
 
 ## Scope
 

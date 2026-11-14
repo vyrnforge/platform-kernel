@@ -1,5 +1,7 @@
 # Kernel V2 maintenance release checklist
 
+> Historical release checklist (original checklist retained). Completed release: [v0.2.1](https://github.com/vyrnforge/platform-kernel/releases/tag/v0.2.1). Use the [current release runbook](../README.md) for new releases.
+
 Artifact version: 0.2.1. The released Phase 0 v0.2 JSON schemas remain unchanged.
 
 ## Required gates

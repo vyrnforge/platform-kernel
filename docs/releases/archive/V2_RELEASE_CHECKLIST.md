@@ -1,5 +1,7 @@
 # Kernel V2 release checklist
 
+> Historical release checklist (original checklist retained). Completed release: [v0.2.0](https://github.com/vyrnforge/platform-kernel/releases/tag/v0.2.0). Use the [current release runbook](../README.md) for new releases.
+
 Release version: **0.2.0**
 
 ## Automated gates

@@ -1,94 +1,53 @@
 # VyrnForge Platform Kernel
 
-Thin, reusable enterprise foundation shared by VyrnForge products.
+**Modular products. Unified platform.** A thin, framework-neutral Java foundation for secure, tenant-aware, reliable enterprise applications.
 
-> **Status:** source version 0.3.1; public Maven Central distribution setup. See [published releases](https://github.com/vyrnforge/platform-kernel/releases). File Storage integration remains deferred.
+[Product website / Flow Studio](https://vyrnforge.github.io/platform-kernel/) · [Releases](https://github.com/vyrnforge/platform-kernel/releases) · [Documentation](docs/README.md) · [Apache-2.0](LICENSE)
 
-Explore the [interactive Kernel Flow Studio](https://vyrnforge.github.io/platform-kernel/#demo) for animated request, mutation, event and operations walkthroughs.
+## Get started
 
-## Principles
+Requires Java 21. Maven Central is the canonical destination for the new organization namespace `io.github.vyrnforge` (first planned Central release: 0.3.1). Check [the release record](https://github.com/vyrnforge/platform-kernel/releases) before selecting a version. The previous 0.3.0 distribution remains available on GitHub Packages.
 
-- Modular products, unified platform.
-- Provider-neutral identity context; native IAM is preferred but not mandatory.
-- Explicit tenant context and tenant-isolation checks.
-- Tenant-level module entitlement is separate from domain authorization.
-- Versioned contracts, UUIDv7 platform identifiers, correlation propagation.
-- Domain products own domain data and authorization semantics.
-- No mandatory broker, database, workflow engine, or microservice topology.
-
-## Distribution — three physical JARs
-
-| Maven artifact | Usage |
+| Artifact | Use |
 | --- | --- |
-| `platform-kernel` | Main runtime: core, HTTP, controls, observability, health and JSON schemas. No third-party runtime dependencies. |
-| `platform-kernel-jdbc` | Optional PostgreSQL/Flyway adapter: atomic idempotency, outbox, audit, migrations. |
-| `platform-kernel-testkit` | Test scope only: deterministic in-memory ports and fixtures. |
+| `platform-kernel` | Main runtime: identity/tenancy, HTTP, controls, observability, IDs, event/audit/idempotency contracts and JSON schemas. No production third-party dependencies. |
+| `platform-kernel-jdbc` | Optional PostgreSQL/Flyway adapter: atomic mutation + event/audit + idempotency, fenced outbox, migrations. |
+| `platform-kernel-testkit` | Test-scope in-memory ports and fixtures. |
 
-The Maven parent POM is metadata, not a fourth library JAR. Asset reference tests are internal and not published. See [dependency migration and adoption](docs/integration/three-jar-distribution.md) for coordinates and upgrade instructions. The previous v0.2.1 artifacts remain available; do not mix old split JARs with the new distribution.
+See [Maven dependencies and migration](docs/integration/three-jar-distribution.md) for exact coordinates. The parent POM and source/Javadoc archives are metadata/documentation, not extra runtime libraries. Asset reference tests are internal.
 
-## Milestone 1 golden path
+## How it works
 
 ```text
-HTTP request
-  -> configurable HTTP edge adapter
-  -> credential + requested tenant + correlation
-  -> IdentityAdapter
-  -> ActorContext
-  -> tenant membership guard
-  -> module entitlement guard
-  -> domain authorization hook
-  -> ResolvedRequestContext
-  -> structured telemetry context
-  -> response request/correlation metadata
+Product HTTP request -> trusted identity -> tenant context
+  -> membership -> entitlement -> domain authorization -> product handler
+  -> correlation / safe response metadata
 ```
 
-## Reliability contracts
+The kernel consumes a trusted native IAM or external-IdP identity projection; the product owns resource authorization and data. For durable retriable writes, use `JdbcReliabilityTransaction.executeIdempotent`: domain mutation, required event/audit intents and replay result commit together. The outbox is at-least-once compatible, not exactly-once. Products supply the event transport, telemetry backend and production stores.
 
-The kernel exposes transport/storage-neutral contracts for:
+## Integration guides
 
-- `EventEnvelope<T>` + `EventIntentPort`;
-- `AuditEvent` + `AuditIntentPort`;
-- `FileReference`;
-- tenant-scoped `IdempotencyPort<R>`.
+- [Identity boundary](docs/integration/identity-boundary.md)
+- [HTTP / Asset reference](docs/consumer/asset-reference-http.md)
+- [Reliability semantics](docs/contracts/reliability-semantics.md) and [JDBC rollout / recovery](docs/v2/production-hardening.md)
+- [Correlation and health](docs/observability/observability-health.md)
+- [Release and contributor operations](docs/releases/README.md)
 
-These interfaces define semantics and guarantees without selecting Kafka, PostgreSQL, an outbox table, central audit deployment, or File Storage implementation. See `docs/contracts/reliability-semantics.md`. For retriable JDBC mutations, use `JdbcReliabilityTransaction.executeIdempotent` to commit the acquired result together with domain data and required intents. See `docs/v2/production-hardening.md` for migration and recovery guidance.
+File Storage integration is deferred; `FileReference` is a contract only. No workflow engine, IAM implementation, broker, shared business database or mandatory service topology is included. Real product deployment, load and operational acceptance remain separate.
 
-## Observability and health
+## Build from source
 
-The main JAR's observability package standardizes business correlation and safe contextual telemetry without selecting a logging or tracing SDK.
-
-- business `correlation_id` is preserved across requests/events/jobs;
-- each request/consumer invocation receives a fresh `request_id`;
-- trace context remains opaque W3C metadata;
-- tenant/actor telemetry dimensions require explicit policy opt-in;
-- liveness and readiness are separate;
-- health probe exceptions are converted to safe machine-readable failure codes.
-
-See `docs/observability/observability-health.md`.
-
-The core module deliberately has no Spring, database, broker, IAM SDK, or Asset dependency. Native IAM or external-IdP authentication middleware validates credentials and can hand the normalized result to `ValidatedIdentityAdapter`; the kernel does not depend on undocumented token claims. The JDBC persistence adapter is optional and replaceable.
-
-The V1 HTTP adapter ships configurable defaults such as `Authorization`, `X-Tenant-Id`, `X-Correlation-Id`, `X-Request-Id`, `traceparent`, and `tracestate`. These are adapter defaults, not permanent architecture invariants.
-
-## Build
-
-Requires Java 21 and Maven 3.9+.
+Java 21, Maven 3.9+, Docker for PostgreSQL Testcontainers.
 
 ```bash
-mvn clean verify
-python3 scripts/check-distribution.py
+mvn --batch-mode --no-transfer-progress --strict-checksums -Prelease-docs clean verify
+python3 scripts/check-contract-compatibility.py
+python3 scripts/check-distribution.py --release-docs
 ```
 
-A dependency-free local smoke verifier is also provided:
+For a dependency-free Java smoke test, use `bash scripts/verify-core.sh`. See [CONTRIBUTING.md](CONTRIBUTING.md) for changes and [SECURITY.md](SECURITY.md) for vulnerability reporting.
 
-```bash
-bash scripts/verify-core.sh
-```
+## Compatibility
 
-## Versioning
-
-Kernel artifacts use `0.3.1`; Maven group ID is `io.github.vyrnforge`. The released wire contract package remains `v0.2` (`0.2.0` schema manifest); no wire contract changes are introduced. Phase 0 `v0.1` remains an immutable historical draft; `v0.2` is the released wire-compatible V2 contract package. Breaking consumer-facing changes require a new contract version plus migration guidance.
-
-## License
-
-Apache License 2.0. See `LICENSE`.
+The Maven group ID is independent of the Java package namespace `io.vyrnforge.platform.kernel`. Wire schemas remain immutable v0.1 (historical draft) and v0.2 (released, manifest 0.2.0). Flyway V1–V3 are unchanged. Do not mix old and new Maven coordinates on a classpath. See [CHANGELOG.md](CHANGELOG.md).
