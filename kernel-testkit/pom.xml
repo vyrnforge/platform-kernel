@@ -4,9 +4,9 @@
          xsi:schemaLocation="http://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion>
   <parent>
-    <groupId>io.vyrnforge.platform</groupId>
+    <groupId>io.github.vyrnforge</groupId>
     <artifactId>platform-kernel-parent</artifactId>
-    <version>0.3.0</version>
+    <version>0.3.1</version>
   </parent>
   <artifactId>platform-kernel-testkit</artifactId>
   <name>Platform Kernel Testkit</name>
@@ -14,7 +14,7 @@
 
   <dependencies>
     <dependency>
-      <groupId>io.vyrnforge.platform</groupId>
+      <groupId>io.github.vyrnforge</groupId>
       <artifactId>platform-kernel</artifactId>
       <version>${project.version}</version>
     </dependency>

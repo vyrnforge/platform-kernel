@@ -4,9 +4,9 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion>
   <parent>
-    <groupId>io.vyrnforge.platform</groupId>
+    <groupId>io.github.vyrnforge</groupId>
     <artifactId>platform-kernel-parent</artifactId>
-    <version>0.3.0</version>
+    <version>0.3.1</version>
   </parent>
   <artifactId>platform-kernel</artifactId>
   <name>Platform Kernel</name>
