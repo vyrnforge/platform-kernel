@@ -12,7 +12,7 @@ id="$(curl --silent --show-error --fail-with-body --max-time 120 \
 [[ "$id" =~ ^[0-9a-fA-F-]{36}$ ]] || { echo "Unexpected deployment ID; inspect Portal"; exit 1; }
 echo "Central deployment ID: $id"
 echo "Central deployment: $id" >> "$GITHUB_STEP_SUMMARY"
-for attempt in $(seq 1 120); do
+for attempt in $(seq 1 240); do
   status="$(curl --silent --show-error --fail --max-time 30 -X POST \
     -H "Authorization: Bearer $token" "$api/status?id=$id")"
   state="$(jq -r '.deploymentState' <<< "$status")"
@@ -24,5 +24,5 @@ for attempt in $(seq 1 120); do
     *) echo "Unexpected Central state; inspect deployment $id"; exit 1 ;;
   esac
 done
-echo "Central publication not confirmed; inspect deployment $id before retrying."
+echo "Central publication not confirmed; reconcile deployment $id using the recovery mode before retrying."
 exit 1

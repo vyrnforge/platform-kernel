@@ -9,7 +9,7 @@ Current maintainer entry point. See [Central publication](central-publication.md
 | ci.yml | PRs and main; contract baseline, smoke, Maven tests, JAR and staging verification |
 | codeql.yml | PRs, main, weekly; Java security analysis |
 | dependency-review.yml | PRs; fail closed if dependency review cannot be performed |
-| release.yml | Approved version-changing main release commit or manual main dispatch; sign, publish Central, mirror and tag |
+| release.yml | Approved version-changing main release commit or manual main dispatch; sign, publish Central, mirror and tag; explicit recovery record for timed-out deployments |
 | pages.yml | Site changes and manual main dispatch; React tests, Chrome smoke, Pages deployment |
 
 Dependabot covers Maven, GitHub Actions and site npm. The one-time signing bootstrap is retired. Historical run records may still appear in GitHub Actions; retain those for audit.
