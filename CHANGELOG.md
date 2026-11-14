@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.3.0 — Three-JAR distribution
+
+- Physically consolidate core, HTTP, controls, observability and JSON schemas into `platform-kernel`.
+- Rename the optional JDBC artifact to `platform-kernel-jdbc`; retain `platform-kernel-testkit` as a test dependency.
+- Preserve existing Java fully qualified names, immutable wire schemas and JDBC V1–V3 migrations. No functional changes.
+- Verify physical JAR contents, no duplicate or embedded third-party classes, packaged Java consumer smoke, and the full existing test suite.
+- Old Maven coordinates require migration; v0.2.1 remains immutable. See `docs/integration/three-jar-distribution.md`.
+
+
 ## 0.2.1 — Kernel V2 production hardening
 
 - Add crash-atomic JDBC mutation and idempotency completion using `executeIdempotent`.

@@ -6,16 +6,16 @@
   <parent>
     <groupId>io.vyrnforge.platform</groupId>
     <artifactId>platform-kernel-parent</artifactId>
-    <version>0.2.1</version>
+    <version>0.3.0</version>
   </parent>
-  <artifactId>platform-kernel-persistence-jdbc</artifactId>
+  <artifactId>platform-kernel-jdbc</artifactId>
   <name>Platform Kernel JDBC Persistence</name>
   <description>Replaceable PostgreSQL/Flyway V2 reliability persistence adapter.</description>
 
   <dependencies>
     <dependency>
       <groupId>io.vyrnforge.platform</groupId>
-      <artifactId>platform-kernel-core</artifactId>
+      <artifactId>platform-kernel</artifactId>
       <version>${project.version}</version>
     </dependency>
     <dependency>

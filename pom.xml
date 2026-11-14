@@ -5,7 +5,7 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>io.vyrnforge.platform</groupId>
   <artifactId>platform-kernel-parent</artifactId>
-  <version>0.2.1</version>
+  <version>0.3.0</version>
   <packaging>pom</packaging>
   <name>VyrnForge Platform Kernel</name>
   <description>Thin reusable enterprise platform kernel contracts and Java libraries.</description>
@@ -20,13 +20,9 @@
   </distributionManagement>
 
   <modules>
-    <module>contracts</module>
-    <module>kernel-core</module>
-    <module>kernel-controls</module>
-    <module>kernel-testkit</module>
-    <module>kernel-observability</module>
-    <module>kernel-http</module>
+    <module>platform-kernel</module>
     <module>kernel-persistence-jdbc</module>
+    <module>kernel-testkit</module>
     <module>consumer-tests/asset-reference</module>
   </modules>
 

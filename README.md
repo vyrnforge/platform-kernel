@@ -2,7 +2,7 @@
 
 Thin, reusable enterprise foundation shared by VyrnForge products.
 
-> **Status:** Kernel V2 maintenance release [`0.2.1`](https://github.com/vyrnforge/platform-kernel/releases/tag/v0.2.1) is published. File Storage integration remains explicitly deferred.
+> **Status:** Source version `0.3.0` — three-JAR distribution (DEC-K015). Published releases: [GitHub Releases](https://github.com/vyrnforge/platform-kernel/releases). File Storage integration remains deferred.
 
 Explore the [interactive Kernel Flow Studio](https://vyrnforge.github.io/platform-kernel/#demo) for animated request, mutation, event and operations walkthroughs.
 
@@ -16,18 +16,15 @@ Explore the [interactive Kernel Flow Studio](https://vyrnforge.github.io/platfor
 - Domain products own domain data and authorization semantics.
 - No mandatory broker, database, workflow engine, or microservice topology.
 
-## Modules
+## Distribution — three physical JARs
 
-| Module | Purpose |
+| Maven artifact | Usage |
 | --- | --- |
-| `contracts` | Phase 0 JSON Schema 2020-12 contracts and examples packaged as resources. |
-| `kernel-core` | Framework-neutral contexts, validated-identity integration, EventEnvelope, AuditEvent, FileReference, idempotency, and cross-cutting ports. |
-| `kernel-controls` | Product/module registry, feature flags, and namespaced non-secret configuration primitives. |
-| `kernel-testkit` | In-memory adapters for consumer, tenant-isolation, reliability, and idempotency tests. |
-| `kernel-observability` | Correlation propagation, privacy-aware telemetry attributes, and health/readiness aggregation. |
-| `kernel-http` | Framework-neutral HTTP edge adapter for credential, tenant, correlation, response metadata, and safe error mapping. |
-| `kernel-persistence-jdbc` | Optional PostgreSQL/Flyway V2 adapter for durable audit, outbox, and idempotency reliability. |
-| `consumer-tests/asset-reference` | Test-only Asset reference consumer that validates the kernel from the downstream product side. |
+| `platform-kernel` | Main runtime: core, HTTP, controls, observability, health and JSON schemas. No third-party runtime dependencies. |
+| `platform-kernel-jdbc` | Optional PostgreSQL/Flyway adapter: atomic idempotency, outbox, audit, migrations. |
+| `platform-kernel-testkit` | Test scope only: deterministic in-memory ports and fixtures. |
+
+The Maven parent POM is metadata, not a fourth library JAR. Asset reference tests are internal and not published. See [dependency migration and adoption](docs/integration/three-jar-distribution.md) for coordinates and upgrade instructions. The previous v0.2.1 artifacts remain available; do not mix old split JARs with the new distribution.
 
 ## Milestone 1 golden path
 
@@ -58,7 +55,7 @@ These interfaces define semantics and guarantees without selecting Kafka, Postgr
 
 ## Observability and health
 
-`platform-kernel-observability` standardizes business correlation and safe contextual telemetry without selecting a logging or tracing SDK.
+The main JAR's observability package standardizes business correlation and safe contextual telemetry without selecting a logging or tracing SDK.
 
 - business `correlation_id` is preserved across requests/events/jobs;
 - each request/consumer invocation receives a fresh `request_id`;
@@ -78,7 +75,8 @@ The V1 HTTP adapter ships configurable defaults such as `Authorization`, `X-Tena
 Requires Java 21 and Maven 3.9+.
 
 ```bash
-mvn verify
+mvn clean verify
+python3 scripts/check-distribution.py
 ```
 
 A dependency-free local smoke verifier is also provided:
@@ -89,7 +87,7 @@ bash scripts/verify-core.sh
 
 ## Versioning
 
-Kernel V2 maintenance artifacts use `0.2.1`. The released wire contract package remains `v0.2` (`0.2.0` schema manifest); no wire contract changes are introduced. Phase 0 `v0.1` remains an immutable historical draft; `v0.2` is the released wire-compatible V2 contract package. Breaking consumer-facing changes require a new contract version plus migration guidance.
+Kernel artifacts use `0.3.0`. The released wire contract package remains `v0.2` (`0.2.0` schema manifest); no wire contract changes are introduced. Phase 0 `v0.1` remains an immutable historical draft; `v0.2` is the released wire-compatible V2 contract package. Breaking consumer-facing changes require a new contract version plus migration guidance.
 
 ## License
 
