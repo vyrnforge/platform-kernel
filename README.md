@@ -6,7 +6,7 @@
 
 ## Get started
 
-Requires Java 21. Maven Central is the canonical destination for the new organization namespace `io.github.vyrnforge` (first planned Central release: 0.3.1). Check [the release record](https://github.com/vyrnforge/platform-kernel/releases) before selecting a version. The previous 0.3.0 distribution remains available on GitHub Packages.
+Requires Java 21. Maven Central is the canonical distribution for the organization namespace `io.github.vyrnforge`. [v0.3.1 is published on Maven Central](https://central.sonatype.com/artifact/io.github.vyrnforge/platform-kernel/0.3.1) and verified with an anonymous Maven consumer. No custom Maven repository or credentials are needed. The previous 0.3.0 distribution remains available on GitHub Packages.
 
 | Artifact | Use |
 | --- | --- |
@@ -15,6 +15,14 @@ Requires Java 21. Maven Central is the canonical destination for the new organiz
 | `platform-kernel-testkit` | Test-scope in-memory ports and fixtures. |
 
 See [Maven dependencies and migration](docs/integration/three-jar-distribution.md) for exact coordinates. The parent POM and source/Javadoc archives are metadata/documentation, not extra runtime libraries. Asset reference tests are internal.
+
+```xml
+<dependency>
+  <groupId>io.github.vyrnforge</groupId>
+  <artifactId>platform-kernel</artifactId>
+  <version>0.3.1</version>
+</dependency>
+```
 
 ## How it works
 
