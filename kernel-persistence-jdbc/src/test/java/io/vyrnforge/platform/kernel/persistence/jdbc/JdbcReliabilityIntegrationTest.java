@@ -102,6 +102,79 @@ class JdbcReliabilityIntegrationTest {
         assertEquals(1, countUnchecked("platform_audit_event"));
     }
 
+    @Test void auditFingerprintRejectsDelimiterAndNullCollisionsIncludingLegacyRows() throws Exception {
+        var codec = new JacksonRecordCodec();
+        var port = new JdbcAuditIntentPort(dataSource, codec);
+        UUID id = UUID.fromString("019a7f0e-5234-7abc-8def-1234567890ab");
+        AuditEvent original = audit(id);
+        ActorReference a = new ActorReference(ActorType.USER, "a|b", new IdentityReference("c", "s"), null);
+        ActorReference b = new ActorReference(ActorType.USER, "a", new IdentityReference("b|c", "s"), null);
+        AuditEvent first = copyAudit(original, a, null);
+        AuditEvent collision = copyAudit(original, b, null);
+        AuditEvent nullCollision = copyAudit(original, a, "null");
+        port.accept(first);
+        assertDoesNotThrow(() -> port.accept(first));
+        assertThrows(IllegalStateException.class, () -> port.accept(collision));
+        assertThrows(IllegalStateException.class, () -> port.accept(nullCollision));
+
+        // Simulate a historical row without altering released migration files.
+        // The fixture runs as the test database owner only.
+        try (Connection conn = dataSource.getConnection(); Statement st = conn.createStatement()) {
+            st.execute("ALTER TABLE platform_audit_event DISABLE TRIGGER USER");
+            try (PreparedStatement ps = conn.prepareStatement("UPDATE platform_audit_event SET audit_fingerprint=? WHERE audit_id=?")) {
+                ps.setString(1, legacyAuditHash(first, codec));
+                ps.setObject(2, first.auditId());
+                ps.executeUpdate();
+            } finally {
+                st.execute("ALTER TABLE platform_audit_event ENABLE TRIGGER USER");
+            }
+        }
+        assertDoesNotThrow(() -> port.accept(first));
+        assertThrows(IllegalStateException.class, () -> port.accept(collision));
+        assertThrows(IllegalStateException.class, () -> port.accept(nullCollision));
+        assertEquals(1, countUnchecked("platform_audit_event"));
+    }
+
+    @Test void eventFingerprintSupportsHistoricalReplayAndRejectsDifferentContent() throws Exception {
+        var codec = new JacksonRecordCodec();
+        var port = new JdbcEventIntentPort(dataSource, codec);
+        UUID id = UUID.fromString("019a7f0e-5234-7abc-8def-1234567890ab");
+        var first = event(id, Map.of("label", "Laptop"));
+        var different = event(id, Map.of("label", "Phone"));
+        port.accept(first);
+        assertDoesNotThrow(() -> port.accept(first));
+        assertThrows(IllegalStateException.class, () -> port.accept(different));
+        String old = SqlSupport.sha256(String.join("|",
+                first.eventId().toString(), first.eventType(), Integer.toString(first.eventVersion()),
+                first.occurredAt().toString(), String.valueOf(first.tenantId()), first.producer(),
+                first.subjectType(), first.subjectId(), first.correlationId().toString(),
+                String.valueOf(first.causationId()), String.valueOf(first.actor()), codec.encode(first.payload())));
+        try (Connection conn = dataSource.getConnection();
+             PreparedStatement ps = conn.prepareStatement("UPDATE platform_event_outbox SET event_fingerprint=? WHERE event_id=?")) {
+            ps.setString(1, old);
+            ps.setObject(2, first.eventId());
+            ps.executeUpdate();
+        }
+        assertDoesNotThrow(() -> port.accept(first));
+        assertThrows(IllegalStateException.class, () -> port.accept(different));
+        assertEquals(1, countUnchecked("platform_event_outbox"));
+    }
+
+    private AuditEvent copyAudit(AuditEvent e, ActorReference actor, String reason) {
+        return new AuditEvent(e.auditId(), e.occurredAt(), e.tenantId(), actor, e.action(),
+                e.resource(), e.outcome(), e.source(), e.correlationId(), reason, e.changes());
+    }
+
+    private String legacyAuditHash(AuditEvent e, JacksonRecordCodec codec) {
+        ActorReference a = e.actor();
+        return SqlSupport.sha256(String.join("|", e.auditId().toString(), e.occurredAt().toString(),
+                String.valueOf(e.tenantId()), a.actorType().name(), a.actorId(), a.identity().issuer(),
+                a.identity().subject(), String.valueOf(a.displayName()), e.action(),
+                e.resource().resourceType(), e.resource().resourceId(), String.valueOf(e.resource().tenantId()),
+                e.outcome().name(), e.source(), e.correlationId().toString(), String.valueOf(e.reason()),
+                codec.encode(e.changes())));
+    }
+
     @Test void auditRowsRejectOrdinaryUpdateAndDelete() {
         JacksonRecordCodec codec = new JacksonRecordCodec();
         UUID assetId = UUID.fromString("019a7f0e-5234-7abc-8def-1234567890ab");

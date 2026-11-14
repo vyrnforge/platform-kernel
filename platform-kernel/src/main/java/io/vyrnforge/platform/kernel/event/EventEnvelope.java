@@ -33,7 +33,7 @@ public record EventEnvelope<T>(
 
     public EventEnvelope {
         requireUuidV7(eventId, "eventId");
-        eventType = requireMatch(eventType, "eventType", EVENT_TYPE);
+        eventType = requireMatch(eventType, "eventType", EVENT_TYPE, 192);
         if (eventVersion < 1) {
             throw new IllegalArgumentException("eventVersion must be positive");
         }
@@ -41,14 +41,20 @@ public record EventEnvelope<T>(
         if (tenantId != null) {
             requireUuidV7(tenantId, "tenantId");
         }
-        producer = requireMatch(producer, "producer", NAMESPACED_KEY);
-        subjectType = requireMatch(subjectType, "subjectType", NAMESPACED_KEY);
-        subjectId = requireText(subjectId, "subjectId");
+        producer = requireMatch(producer, "producer", NAMESPACED_KEY, 128);
+        subjectType = requireMatch(subjectType, "subjectType", NAMESPACED_KEY, 128);
+        subjectId = requireText(subjectId, "subjectId", 512);
         requireUuidV7(correlationId, "correlationId");
         if (causationId != null) {
             requireUuidV7(causationId, "causationId");
         }
         Objects.requireNonNull(payload, "payload");
+        // DTOs remain supported; transport adapters must validate serialized JSON shape.
+        if (payload instanceof CharSequence || payload instanceof Number || payload instanceof Boolean
+                || payload instanceof Character || payload instanceof Iterable<?> || payload instanceof Enum<?>
+                || payload.getClass().isArray()) {
+            throw new IllegalArgumentException("event payload must represent a JSON object");
+        }
     }
 
     private static void requireUuidV7(UUID value, String name) {
@@ -58,18 +64,18 @@ public record EventEnvelope<T>(
         }
     }
 
-    private static String requireMatch(String value, String name, Pattern pattern) {
-        value = requireText(value, name);
+    private static String requireMatch(String value, String name, Pattern pattern, int maxLength) {
+        value = requireText(value, name, maxLength);
         if (!pattern.matcher(value).matches()) {
             throw new IllegalArgumentException(name + " has invalid format");
         }
         return value;
     }
 
-    private static String requireText(String value, String name) {
+    private static String requireText(String value, String name, int maxLength) {
         Objects.requireNonNull(value, name);
-        if (value.isBlank()) {
-            throw new IllegalArgumentException(name + " must not be blank");
+        if (value.isBlank() || value.codePointCount(0, value.length()) > maxLength) {
+            throw new IllegalArgumentException(name + " must not be blank or exceed " + maxLength + " characters");
         }
         return value;
     }

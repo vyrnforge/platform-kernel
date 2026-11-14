@@ -120,6 +120,45 @@ class ReliabilityContractsTest {
                 Instant.parse("2026-11-13T10:00:00Z")));
     }
 
+    @Test
+    void auditRequiresConsistentTenantForTenantOwnedResources() {
+        UUID other = UUID.fromString("019a7f0e-3234-7abc-8def-1234567890ab");
+        assertThrows(IllegalArgumentException.class, () -> scopedAudit(TENANT, other));
+        assertThrows(IllegalArgumentException.class, () -> scopedAudit(null, TENANT));
+        assertDoesNotThrow(() -> scopedAudit(TENANT, TENANT));
+        assertDoesNotThrow(() -> scopedAudit(TENANT, null));
+        assertDoesNotThrow(() -> scopedAudit(null, null));
+    }
+
+    @Test
+    void runtimeRejectsInvalidWireFieldShapes() {
+        assertThrows(IllegalArgumentException.class, () ->
+                io.vyrnforge.platform.kernel.context.TenantContext.tenant(UUID.randomUUID()));
+        assertThrows(IllegalArgumentException.class, () ->
+                new io.vyrnforge.platform.kernel.context.ModuleEntitlement(TENANT, "Bad Key", true, null));
+        assertThrows(IllegalArgumentException.class, () ->
+                new io.vyrnforge.platform.kernel.context.ModuleEntitlement(UUID.randomUUID(), "asset", true, null));
+        assertThrows(IllegalArgumentException.class, () ->
+                new ResourceReference("asset.asset", "x".repeat(513), TENANT));
+        assertThrows(IllegalArgumentException.class, () -> sampleEvent("asset-1", "scalar"));
+        assertThrows(IllegalArgumentException.class, () -> sampleEvent("asset-1", java.util.List.of(1)));
+        assertThrows(IllegalArgumentException.class, () -> sampleEvent("x".repeat(513), Map.of()));
+        assertDoesNotThrow(() -> sampleEvent("x".repeat(512), Map.of("label", "Laptop")));
+    }
+
+    private AuditEvent scopedAudit(UUID tenant, UUID resourceTenant) {
+        return new AuditEvent(UUID.fromString("019a7f0e-a234-7abc-8def-1234567890ab"),
+                Instant.EPOCH, tenant, actor(), "asset.assign",
+                new ResourceReference("asset.asset", "asset-1", resourceTenant),
+                AuditOutcome.SUCCESS, "asset", CORRELATION, null, null);
+    }
+
+    private EventEnvelope<Object> sampleEvent(String subject, Object payload) {
+        return new EventEnvelope<>(UUID.fromString("019a7f0e-4234-7abc-8def-1234567890ab"),
+                "asset.asset.created", 1, Instant.EPOCH, TENANT, "asset", "asset.asset",
+                subject, CORRELATION, null, actor(), payload);
+    }
+
     private ActorReference actor() {
         return new ActorReference(
                 ActorType.USER,

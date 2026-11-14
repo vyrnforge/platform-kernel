@@ -26,6 +26,12 @@ final class JdbcAuditIntentWriter implements AuditIntentPort {
         SELECT audit_fingerprint
         FROM platform_audit_event
         WHERE audit_id = ?
+          AND ROW(occurred_at, tenant_id, actor_type, actor_id, identity_issuer, identity_subject,
+                  actor_display_name, action, resource_type, resource_id, resource_tenant_id,
+                  outcome, source, correlation_id, reason, changes_json)
+              IS NOT DISTINCT FROM
+              ROW(?::timestamptz, ?::uuid, ?::text, ?::text, ?::text, ?::text, ?::text,
+                  ?::text, ?::text, ?::text, ?::uuid, ?::text, ?::text, ?::uuid, ?::text, ?::jsonb)
         """;
 
     private final Connection connection;
@@ -40,30 +46,21 @@ final class JdbcAuditIntentWriter implements AuditIntentPort {
     public void accept(AuditEvent audit) {
         Objects.requireNonNull(audit, "audit");
         String changes = audit.changes() == null ? null : codec.encode(audit.changes());
-        String fingerprint = fingerprint(audit, changes);
+        String fingerprint = fingerprint(audit, changes == null ? null : codec.encode(codec.decode(changes)));
+        String legacyFingerprint = legacyFingerprint(audit, changes);
 
         try (PreparedStatement ps = connection.prepareStatement(INSERT_SQL)) {
             int i = 1;
             ps.setObject(i++, audit.auditId());
             ps.setString(i++, fingerprint);
-            ps.setTimestamp(i++, Timestamp.from(audit.occurredAt()));
-            ps.setObject(i++, audit.tenantId());
-            i = bindActor(ps, i, audit.actor());
-            ps.setString(i++, audit.action());
-            ps.setString(i++, audit.resource().resourceType());
-            ps.setString(i++, audit.resource().resourceId());
-            ps.setObject(i++, audit.resource().tenantId());
-            ps.setString(i++, audit.outcome().name());
-            ps.setString(i++, audit.source());
-            ps.setObject(i++, audit.correlationId());
-            ps.setString(i++, audit.reason());
-            ps.setString(i, changes);
+            bindContent(ps, i, audit, changes);
 
             if (ps.executeUpdate() == 1) {
                 return;
             }
 
-            if (!existingFingerprint(audit).equals(fingerprint)) {
+            String existing = existingFingerprint(audit, changes);
+            if (!fingerprint.equals(existing) && !legacyFingerprint.equals(existing)) {
                 throw new IllegalStateException(
                         "audit_id already exists with different content");
             }
@@ -72,18 +69,33 @@ final class JdbcAuditIntentWriter implements AuditIntentPort {
         }
     }
 
-    private String existingFingerprint(AuditEvent audit) throws SQLException {
+    private String existingFingerprint(AuditEvent audit, String changes) throws SQLException {
         try (PreparedStatement ps =
                      connection.prepareStatement(EXISTING_FINGERPRINT_SQL)) {
             ps.setObject(1, audit.auditId());
+            bindContent(ps, 2, audit, changes);
             try (ResultSet rs = ps.executeQuery()) {
                 if (!rs.next()) {
-                    throw new IllegalStateException(
-                            "audit record disappeared during duplicate check");
+                    return null;
                 }
                 return rs.getString(1);
             }
         }
+    }
+
+    private void bindContent(PreparedStatement ps, int i, AuditEvent audit, String changes) throws SQLException {
+        ps.setTimestamp(i++, Timestamp.from(audit.occurredAt()));
+        ps.setObject(i++, audit.tenantId());
+        i = bindActor(ps, i, audit.actor());
+        ps.setString(i++, audit.action());
+        ps.setString(i++, audit.resource().resourceType());
+        ps.setString(i++, audit.resource().resourceId());
+        ps.setObject(i++, audit.resource().tenantId());
+        ps.setString(i++, audit.outcome().name());
+        ps.setString(i++, audit.source());
+        ps.setObject(i++, audit.correlationId());
+        ps.setString(i++, audit.reason());
+        ps.setString(i, changes);
     }
 
     private int bindActor(
@@ -107,6 +119,16 @@ final class JdbcAuditIntentWriter implements AuditIntentPort {
     }
 
     private String fingerprint(AuditEvent audit, String changes) {
+        return IntentFingerprint.hash("audit", IntentFingerprint.fields(new String[] {
+                audit.auditId().toString(), audit.occurredAt().toString(),
+                IntentFingerprint.nullable(audit.tenantId())
+        }, audit.actor(), audit.action(), audit.resource().resourceType(), audit.resource().resourceId(),
+                IntentFingerprint.nullable(audit.resource().tenantId()), audit.outcome().name(),
+                audit.source(), audit.correlationId().toString(), audit.reason(), changes));
+    }
+
+    // Historical hashes are accepted only with an exact persisted-content match.
+    private String legacyFingerprint(AuditEvent audit, String changes) {
         ActorReference actor = audit.actor();
         return SqlSupport.sha256(String.join("|",
                 audit.auditId().toString(),
