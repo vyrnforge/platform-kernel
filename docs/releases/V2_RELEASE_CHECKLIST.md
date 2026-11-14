@@ -7,8 +7,8 @@ Release version: **0.2.0**
 - [ ] protected `verify` check green;
 - [ ] CodeQL green;
 - [ ] Dependency Review green;
-- [ ] v0.1 immutable contract baseline green;
-- [ ] v0.2 released contract package validation green;
+- [ ] immutable `v0.1` draft contract baseline green;
+- [ ] immutable released `v0.2` contract baseline green;
 - [ ] PostgreSQL integration tests green;
 - [ ] Asset V2 end-to-end test green.
 
@@ -20,17 +20,16 @@ Release version: **0.2.0**
 - [x] provider-neutral production identity integration boundary implemented;
 - [x] File Storage explicitly excluded from V2.
 
-## Release publication
+## Publication
 
-The repository's connected automation currently supports release workflow execution but the ChatGPT GitHub connector does not expose tag/GitHub-Release creation.
+After the release-hardening PR passes protected checks, squash-merge it with a commit title beginning with `release:`.
 
-Final publication sequence:
+The protected `release` workflow then:
 
-1. merge the release-hardening PR to `main`;
-2. create tag `v0.2.0` at the verified release commit;
-3. push the tag, or manually run the `release` workflow from that commit;
-4. verify GitHub Packages contains the `io.vyrnforge.platform` 0.2.0 artifacts;
-5. create/publish GitHub Release `v0.2.0` using `CHANGELOG.md`;
-6. record the immutable tag/release/package URLs in the project change log.
+1. verifies `VERSION` and Maven version are exactly `0.2.0`;
+2. re-runs contract compatibility and the full Maven verification suite;
+3. publishes non-test Maven artifacts to GitHub Packages;
+4. creates immutable Git tag `v0.2.0` at the release commit;
+5. creates GitHub Release `v0.2.0` using `CHANGELOG.md`.
 
-Do not mark release closure complete until steps 2–5 are verified.
+Release closure is complete only after that workflow is green and the tag, GitHub Release, and package publication are verified.
