@@ -8,7 +8,7 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.sql.Timestamp;
-import java.time.Instant;
+import java.time.Clock;
 import java.util.Objects;
 
 final class JdbcEventIntentWriter implements EventIntentPort {
@@ -25,10 +25,15 @@ final class JdbcEventIntentWriter implements EventIntentPort {
 
     private final Connection connection;
     private final JacksonRecordCodec codec;
+    private final Clock clock;
 
-    JdbcEventIntentWriter(Connection connection, JacksonRecordCodec codec) {
+    JdbcEventIntentWriter(
+            Connection connection,
+            JacksonRecordCodec codec,
+            Clock clock) {
         this.connection = Objects.requireNonNull(connection, "connection");
         this.codec = Objects.requireNonNull(codec, "codec");
+        this.clock = Objects.requireNonNull(clock, "clock");
     }
 
     @Override
@@ -51,7 +56,7 @@ final class JdbcEventIntentWriter implements EventIntentPort {
             ps.setObject(i++, event.causationId());
             i = bindActor(ps, i, event.actor());
             ps.setString(i++, payload);
-            ps.setTimestamp(i, Timestamp.from(Instant.now()));
+            ps.setTimestamp(i, Timestamp.from(clock.instant()));
             int changed = ps.executeUpdate();
             if (changed == 0) {
                 throw new IllegalStateException("event_id already exists with different content");
