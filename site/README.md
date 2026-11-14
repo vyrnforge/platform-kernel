@@ -7,7 +7,7 @@ A standalone React presentation for the released Kernel V2 library. The Java mod
 Use Node.js 22+:
 ```sh
 cd site
-npm install
+npm ci
 npm test
 npm run dev
 ```

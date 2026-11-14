@@ -23,12 +23,11 @@ jobs:
       - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38
         with:
           node-version: '22'
+          cache: npm
+          cache-dependency-path: site/package-lock.json
       - name: Install dependencies
         working-directory: site
-        run: npm install
-      - name: Record generated lockfile (temporary)
-        working-directory: site
-        run: cat package-lock.json
+        run: npm ci
       - name: Test content and build
         working-directory: site
         run: |
