@@ -1,5 +1,7 @@
 # Asset reference consumer — HTTP request context
 
+This is an internal validation example, not a dependency, setup step or recommended domain for general consumers. Start with the [general-purpose quickstart](../integration/quickstart.md).
+
 The Asset reference module is **test-only**. It exists to validate that a downstream product can consume the kernel without importing kernel internals or moving Asset business policy into the shared library.
 
 The reference tests cover:

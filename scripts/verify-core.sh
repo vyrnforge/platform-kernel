@@ -10,6 +10,11 @@ mapfile -t SOURCES < <(find "$ROOT/platform-kernel/src/main/java" "$ROOT/kernel-
 javac --release 21 -d "$OUT/classes" "${SOURCES[@]}" "$ROOT/verification/GoldenPathSmokeTest.java"
 java -cp "$OUT/classes" GoldenPathSmokeTest
 
+mkdir -p "$OUT/general"
+mapfile -t CORE < <(find "$ROOT/platform-kernel/src/main/java" -name '*.java' -print | sort)
+javac --release 21 -d "$OUT/general" "${CORE[@]}" "$ROOT/verification/GeneralUsageExample.java"
+java -cp "$OUT/general" GeneralUsageExample
+
 python3 - <<'PY' "$ROOT/platform-kernel/src/main/resources/contracts/phase0/v0.1"
 import json, pathlib, sys
 root = pathlib.Path(sys.argv[1])
