@@ -23,7 +23,7 @@ for artifact, module in locations.items():
         for name, sha in baseline[artifact]["resources"].items():
             data = z.read(name)
             actual_sha = hashlib.sha1(f"blob {len(data)}".encode()+bytes([0])+data).hexdigest()
-            actual_sha = hashlib.sha1(f"blob {len(data)}".encode()+bytes([0])+data).hexdigest()
+            assert actual_sha == sha, f"Frozen resource changed: {name}"
         if artifact == "platform-kernel":
             assert not any("/testkit/" in c or "/persistence/jdbc/" in c for c in classes)
             assert not any(n.startswith("db/migration/") for n in names)
