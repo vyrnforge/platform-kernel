@@ -4,6 +4,8 @@
 - **Date:** 2026-11-13
 - **Scope:** implementation choice, not a platform invariant
 
+**Distribution update:** [ADR-0004](0004-distribution-and-publication.md) supersedes the historical Maven module/artifact packaging described below. The original runtime and boundary decisions remain valid.
+
 ## Context
 
 Phase 0 freezes semantics, ownership, compatibility rules, and guarantees while keeping implementation technology replaceable. The first repository slice needs a concrete build/runtime baseline without turning that choice into a consumer-facing dependency.

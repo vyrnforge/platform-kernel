@@ -4,6 +4,8 @@
 - **Date:** 2026-11-13
 - **Scope:** replaceable implementation choice, not a platform invariant
 
+**Distribution update:** [ADR-0004](0004-distribution-and-publication.md) supersedes the historical Maven module/artifact packaging described below. The original runtime and boundary decisions remain valid.
+
 ## Context
 
 Milestone 1 needs a real web-edge integration for request context without coupling `kernel-core` to Spring, Jakarta Servlet, Netty, or any identity-provider SDK.

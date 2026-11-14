@@ -4,6 +4,8 @@
 - **Date:** 2026-11-14
 - **Scope:** replaceable implementation choice, not a platform invariant
 
+**Distribution update:** [ADR-0004](0004-distribution-and-publication.md) supersedes the historical Maven module/artifact packaging described below. The original runtime and boundary decisions remain valid.
+
 ## Context
 
 The Phase 0/V1 contracts require that required event and audit intent cannot be silently lost after a successful mutation, and that retriable API mutations support tenant-scoped idempotency. V2 needs one concrete durable implementation to validate these guarantees with Asset while keeping broker, audit topology, and storage technology replaceable.

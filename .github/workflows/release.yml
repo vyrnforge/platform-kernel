@@ -3,6 +3,7 @@ name: release
 on:
   push:
     branches: [main]
+    paths: ['VERSION']
   workflow_dispatch:
 
 permissions:
@@ -69,6 +70,8 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GITHUB_ACTOR: ${{ github.actor }}
         run: bash scripts/mirror-release.sh "$RUNNER_TEMP/release-stage"
+      - name: Verify anonymous Central consumer
+        run: bash scripts/verify-central-consumer.sh "$(tr -d '[:space:]' < VERSION)"
       - name: Create GitHub release
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}

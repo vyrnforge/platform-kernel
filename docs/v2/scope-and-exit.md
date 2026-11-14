@@ -1,6 +1,6 @@
 # Kernel V2 scope and exit criteria
 
-V2 completes the approved thin shared-kernel foundation and validates it with Asset Management.
+Historical milestone: V2 was completed in v0.2.0 and hardened in v0.2.1. Validation used the test-only Asset reference consumer, not a deployed Asset product. Later distribution releases do not reopen this milestone.
 
 ## In scope
 
