@@ -2,7 +2,7 @@
 import hashlib, json, pathlib, sys
 
 root = pathlib.Path(__file__).resolve().parents[1]
-contracts_root = root / "contracts/src/main/resources/contracts/phase0"
+contracts_root = root / "platform-kernel/src/main/resources/contracts/phase0"
 v01 = contracts_root / "v0.1"
 v02 = contracts_root / "v0.2"
 baseline_path = root / "contracts/compatibility/v0.1-git-blob-sha1.json"

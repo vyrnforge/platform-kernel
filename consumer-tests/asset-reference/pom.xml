@@ -7,7 +7,7 @@
   <parent>
     <groupId>io.vyrnforge.platform</groupId>
     <artifactId>platform-kernel-parent</artifactId>
-    <version>0.2.1</version>
+    <version>0.3.0</version>
     <relativePath>../../pom.xml</relativePath>
   </parent>
 
@@ -22,31 +22,22 @@
   <dependencies>
     <dependency>
       <groupId>io.vyrnforge.platform</groupId>
-      <artifactId>platform-kernel-controls</artifactId>
+      <artifactId>platform-kernel</artifactId>
       <version>${project.version}</version>
     </dependency>
 
-    <dependency>
-      <groupId>io.vyrnforge.platform</groupId>
-      <artifactId>platform-kernel-http</artifactId>
-      <version>${project.version}</version>
-    </dependency>
 
-    <dependency>
-      <groupId>io.vyrnforge.platform</groupId>
-      <artifactId>platform-kernel-observability</artifactId>
-      <version>${project.version}</version>
-    </dependency>
 
     <dependency>
       <groupId>io.vyrnforge.platform</groupId>
       <artifactId>platform-kernel-testkit</artifactId>
       <version>${project.version}</version>
+      <scope>test</scope>
     </dependency>
 
     <dependency>
       <groupId>io.vyrnforge.platform</groupId>
-      <artifactId>platform-kernel-persistence-jdbc</artifactId>
+      <artifactId>platform-kernel-jdbc</artifactId>
       <version>${project.version}</version>
     </dependency>
 
@@ -66,6 +57,11 @@
 
   <build>
     <plugins>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-jar-plugin</artifactId>
+        <configuration><skipIfEmpty>true</skipIfEmpty></configuration>
+      </plugin>
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-compiler-plugin</artifactId>

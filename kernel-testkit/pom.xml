@@ -6,7 +6,7 @@
   <parent>
     <groupId>io.vyrnforge.platform</groupId>
     <artifactId>platform-kernel-parent</artifactId>
-    <version>0.2.1</version>
+    <version>0.3.0</version>
   </parent>
   <artifactId>platform-kernel-testkit</artifactId>
   <name>Platform Kernel Testkit</name>
@@ -15,12 +15,7 @@
   <dependencies>
     <dependency>
       <groupId>io.vyrnforge.platform</groupId>
-      <artifactId>platform-kernel-core</artifactId>
-      <version>${project.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>io.vyrnforge.platform</groupId>
-      <artifactId>platform-kernel-controls</artifactId>
+      <artifactId>platform-kernel</artifactId>
       <version>${project.version}</version>
     </dependency>
     <dependency>

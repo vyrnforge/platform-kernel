@@ -1,11 +1,5 @@
 # Platform Kernel Contracts
 
-This module packages the draft Phase 0 JSON Schema 2020-12 contracts as classpath resources under:
+The original standalone schema JAR was distributed through v0.2.1. From v0.3.0, immutable v0.1 and released v0.2 JSON Schema 2020-12 resources are packaged inside the main `platform-kernel` JAR at `/contracts/phase0/v0.1/` and `/contracts/phase0/v0.2/`.
 
-```text
-/contracts/phase0/v0.1/
-```
-
-These schemas are transport-neutral. They do not select a broker, HTTP framework, database, or IAM provider.
-
-The current v0.1 contract package remains draft pending consumer validation. Additive evolution is preferred; breaking changes require explicit contract versioning and migration guidance.
+The compatibility baseline remains in this directory. Neither the resource names nor the schema bytes change with the Maven packaging version.

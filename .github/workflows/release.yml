@@ -46,7 +46,7 @@ jobs:
           PY
           )"
           test "$version" = "$pom_version"
-          test "$version" = "0.2.1"
+          test "$version" = "0.3.0"
 
       - name: Reject existing release tag
         env:
@@ -62,6 +62,11 @@ jobs:
 
       - name: Contract compatibility
         run: python3 scripts/check-contract-compatibility.py
+
+      - name: Verify release JARs before publication
+        run: |
+          mvn --batch-mode --no-transfer-progress --strict-checksums clean verify
+          python3 scripts/check-distribution.py
 
       - name: Maven verify and publish
         env:
@@ -80,5 +85,9 @@ jobs:
           if gh release view "$tag" >/dev/null 2>&1; then
             echo "Release $tag already exists."
           else
-            gh release create "$tag"               --target "$GITHUB_SHA"               --title "Kernel V2 — $tag"               --notes-file CHANGELOG.md
+            gh release create "$tag" \
+              "platform-kernel/target/platform-kernel-$version.jar" \
+              "kernel-persistence-jdbc/target/platform-kernel-jdbc-$version.jar" \
+              "kernel-testkit/target/platform-kernel-testkit-$version.jar" \
+              --target "$GITHUB_SHA" --title "Kernel — $tag" --notes-file CHANGELOG.md
           fi
