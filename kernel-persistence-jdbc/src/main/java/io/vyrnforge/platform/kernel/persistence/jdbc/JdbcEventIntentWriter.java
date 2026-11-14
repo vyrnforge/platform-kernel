@@ -20,7 +20,22 @@ final class JdbcEventIntentWriter implements EventIntentPort {
           payload_json,status,attempts,available_at
         ) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?::jsonb,'PENDING',0,?)
         ON CONFLICT (event_id) DO UPDATE SET event_id = EXCLUDED.event_id
-        WHERE platform_event_outbox.event_fingerprint = EXCLUDED.event_fingerprint
+        WHERE (platform_event_outbox.event_fingerprint = EXCLUDED.event_fingerprint
+            OR platform_event_outbox.event_fingerprint = ?)
+          AND ROW(platform_event_outbox.event_type, platform_event_outbox.event_version,
+                  platform_event_outbox.occurred_at, platform_event_outbox.tenant_id,
+                  platform_event_outbox.producer, platform_event_outbox.subject_type,
+                  platform_event_outbox.subject_id, platform_event_outbox.correlation_id,
+                  platform_event_outbox.causation_id, platform_event_outbox.actor_type,
+                  platform_event_outbox.actor_id, platform_event_outbox.identity_issuer,
+                  platform_event_outbox.identity_subject, platform_event_outbox.actor_display_name,
+                  platform_event_outbox.payload_json)
+              IS NOT DISTINCT FROM
+              ROW(EXCLUDED.event_type, EXCLUDED.event_version, EXCLUDED.occurred_at,
+                  EXCLUDED.tenant_id, EXCLUDED.producer, EXCLUDED.subject_type, EXCLUDED.subject_id,
+                  EXCLUDED.correlation_id, EXCLUDED.causation_id, EXCLUDED.actor_type,
+                  EXCLUDED.actor_id, EXCLUDED.identity_issuer, EXCLUDED.identity_subject,
+                  EXCLUDED.actor_display_name, EXCLUDED.payload_json)
         """;
 
     private final Connection connection;
@@ -40,7 +55,12 @@ final class JdbcEventIntentWriter implements EventIntentPort {
     public void accept(EventEnvelope<?> event) {
         Objects.requireNonNull(event, "event");
         String payload = codec.encode(event.payload());
-        String fingerprint = fingerprint(event, payload);
+        Object decoded = codec.decode(payload);
+        if (!(decoded instanceof java.util.Map<?, ?>)) {
+            throw new IllegalArgumentException("event payload must serialize to a JSON object");
+        }
+        String fingerprint = fingerprint(event, codec.encode(decoded));
+        String legacyFingerprint = legacyFingerprint(event, payload);
         try (PreparedStatement ps = connection.prepareStatement(SQL)) {
             int i=1;
             ps.setObject(i++, event.eventId());
@@ -56,7 +76,8 @@ final class JdbcEventIntentWriter implements EventIntentPort {
             ps.setObject(i++, event.causationId());
             i = bindActor(ps, i, event.actor());
             ps.setString(i++, payload);
-            ps.setTimestamp(i, Timestamp.from(clock.instant()));
+            ps.setTimestamp(i++, Timestamp.from(clock.instant()));
+            ps.setString(i, legacyFingerprint);
             int changed = ps.executeUpdate();
             if (changed == 0) {
                 throw new IllegalStateException("event_id already exists with different content");
@@ -80,6 +101,16 @@ final class JdbcEventIntentWriter implements EventIntentPort {
     }
 
     private String fingerprint(EventEnvelope<?> e, String payload) {
+        return IntentFingerprint.hash("event", IntentFingerprint.fields(new String[] {
+                e.eventId().toString(), e.eventType(), Integer.toString(e.eventVersion()),
+                e.occurredAt().toString(), IntentFingerprint.nullable(e.tenantId()), e.producer(),
+                e.subjectType(), e.subjectId(), e.correlationId().toString(),
+                IntentFingerprint.nullable(e.causationId())
+        }, e.actor(), payload));
+    }
+
+    // Historical hashes are accepted only with an exact persisted-content match.
+    private String legacyFingerprint(EventEnvelope<?> e, String payload) {
         return SqlSupport.sha256(String.join("|",
                 e.eventId().toString(), e.eventType(), Integer.toString(e.eventVersion()),
                 e.occurredAt().toString(), String.valueOf(e.tenantId()), e.producer(),
