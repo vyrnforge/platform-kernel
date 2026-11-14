@@ -2,7 +2,9 @@
 
 Thin, reusable enterprise foundation shared by VyrnForge products.
 
-> **Status:** Kernel V2 maintenance source version `0.2.1`. The `v0.2.0` release is the original V2 baseline; check [GitHub Releases](https://github.com/vyrnforge/platform-kernel/releases) for published maintenance artifacts. File Storage integration remains explicitly deferred.
+> **Status:** Kernel V2 maintenance release [`0.2.1`](https://github.com/vyrnforge/platform-kernel/releases/tag/v0.2.1) is published. File Storage integration remains explicitly deferred.
+
+Explore the [interactive Kernel Flow Studio](https://vyrnforge.github.io/platform-kernel/#demo) for animated request, mutation, event and operations walkthroughs.
 
 ## Principles
 

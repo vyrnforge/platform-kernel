@@ -1,6 +1,6 @@
 # Kernel V2 production hardening
 
-Status: maintenance source version 0.2.1; publication subject to verified release workflow. Does not reopen DEC-K013 release closure.
+Status: maintenance release 0.2.1 published on 14 November 2026. Release commit bfdeb09434239899b5663aef9a408da7f800029f; CI, CodeQL and release workflow passed. Does not reopen DEC-K013 release closure.
 Based on the v0.2.0 implementation and DEC-K008/009/011/012/013.
 
 ## P0 controls
