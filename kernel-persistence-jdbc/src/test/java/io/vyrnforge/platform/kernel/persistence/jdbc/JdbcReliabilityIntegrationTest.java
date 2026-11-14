@@ -13,6 +13,7 @@ import java.sql.*;
 import java.time.*;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.*;
 import java.util.logging.Logger;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -184,6 +185,136 @@ class JdbcReliabilityIntegrationTest {
         assertEquals(1,result.dead());
         assertEquals("DEAD",status(assetId));
         assertEquals("IllegalArgumentException",errorCode(assetId));
+    }
+
+    @Test void atomicIdempotencySurvivesLostResponseAndRejectsStaleLease() {
+        MutableClock clock=new MutableClock(Instant.now());
+        var codec=new JacksonRecordCodec();
+        var port=new JdbcIdempotencyPort<String>(dataSource,IdempotencyResultCodec.strings(),clock);
+        var tx=new JdbcReliabilityTransaction(dataSource,codec,clock);
+        var request=new IdempotencyRequest(TENANT,"asset.create","atomic","fp",clock.instant().plusSeconds(300));
+        var lease=port.begin(request).lease();
+        UUID id=UUID.fromString("019a7f0e-5234-7abc-8def-1234567890ab");
+        tx.executeIdempotent(lease,IdempotencyResultCodec.strings(),(c,e,a)->{
+            try(PreparedStatement ps=c.prepareStatement("INSERT INTO asset_reference VALUES (?,?,?)")){
+                ps.setObject(1,id);ps.setObject(2,TENANT);ps.setString(3,"Laptop");ps.executeUpdate();
+            }
+            e.accept(event(id,Map.of("label","Laptop")));a.accept(audit(id));
+            return id.toString();
+        });
+        // Simulate loss of response after database commit, then a fresh process.
+        var replay=new JdbcIdempotencyPort<String>(dataSource,IdempotencyResultCodec.strings(),clock).begin(request);
+        assertEquals(IdempotencyDecisionType.REPLAY,replay.type());
+        assertEquals(id.toString(),replay.replay().result());
+        assertThrows(IllegalStateException.class,()->tx.executeIdempotent(lease,IdempotencyResultCodec.strings(),
+                (c,e,a)->{fail("stale lease must not run");return "";}));
+        assertEquals(1,countUnchecked("asset_reference"));
+        assertEquals(1,countUnchecked("platform_event_outbox"));
+        assertEquals(1,countUnchecked("platform_audit_event"));
+    }
+
+    @Test void expiredLeaseRollsBackDomainAndIntents() {
+        MutableClock clock=new MutableClock(Instant.now());
+        var codec=new JacksonRecordCodec();
+        var port=new JdbcIdempotencyPort<String>(dataSource,IdempotencyResultCodec.strings(),clock);
+        var tx=new JdbcReliabilityTransaction(dataSource,codec,clock);
+        var request=new IdempotencyRequest(TENANT,"asset.create","expire","fp",clock.instant().plusSeconds(5));
+        var lease=port.begin(request).lease();
+        UUID id=UUID.fromString("019a7f0e-5234-7abc-8def-1234567890ab");
+        assertThrows(IllegalStateException.class,()->tx.executeIdempotent(lease,IdempotencyResultCodec.strings(),(c,e,a)->{
+            try(PreparedStatement ps=c.prepareStatement("INSERT INTO asset_reference VALUES (?,?,?)")){
+                ps.setObject(1,id);ps.setObject(2,TENANT);ps.setString(3,"Laptop");ps.executeUpdate();
+            }
+            e.accept(event(id,Map.of("label","Laptop")));a.accept(audit(id));
+            clock.advance(Duration.ofSeconds(6));
+            return id.toString();
+        }));
+        assertEquals(0,countUnchecked("asset_reference"));
+        assertEquals(0,countUnchecked("platform_event_outbox"));
+        assertEquals(0,countUnchecked("platform_audit_event"));
+        assertEquals(IdempotencyDecisionType.ACQUIRED,port.begin(new IdempotencyRequest(
+                TENANT,"asset.create","expire","fp",clock.instant().plusSeconds(60))).type());
+    }
+
+    @Test void concurrentRetryWaitsForAtomicResult() throws Exception {
+        Clock clock=Clock.fixed(Instant.now(),ZoneOffset.UTC);
+        var codec=new JacksonRecordCodec();
+        var port=new JdbcIdempotencyPort<String>(dataSource,IdempotencyResultCodec.strings(),clock);
+        var tx=new JdbcReliabilityTransaction(dataSource,codec,clock);
+        var request=new IdempotencyRequest(TENANT,"asset.create","concurrent","fp",clock.instant().plusSeconds(300));
+        var lease=port.begin(request).lease();
+        UUID id=UUID.fromString("019a7f0e-5234-7abc-8def-1234567890ab");
+        CountDownLatch inside=new CountDownLatch(1), release=new CountDownLatch(1), retryStarted=new CountDownLatch(1);
+        try(var executor=Executors.newVirtualThreadPerTaskExecutor()){
+            try {
+                Future<String> first=executor.submit(()->tx.executeIdempotent(lease,IdempotencyResultCodec.strings(),(c,e,a)->{
+                    try(PreparedStatement ps=c.prepareStatement("INSERT INTO asset_reference VALUES (?,?,?)")){
+                        ps.setObject(1,id);ps.setObject(2,TENANT);ps.setString(3,"Laptop");ps.executeUpdate();
+                    }
+                    inside.countDown();
+                    if(!release.await(10,TimeUnit.SECONDS))throw new IllegalStateException("test timed out");
+                    return id.toString();
+                }));
+                assertTrue(inside.await(10,TimeUnit.SECONDS));
+                Future<IdempotencyDecision<String>> retry=executor.submit(()->{
+                    retryStarted.countDown();
+                    return new JdbcIdempotencyPort<String>(dataSource,IdempotencyResultCodec.strings(),clock).begin(request);
+                });
+                assertTrue(retryStarted.await(10,TimeUnit.SECONDS));
+                assertThrows(TimeoutException.class,()->retry.get(200,TimeUnit.MILLISECONDS));
+                release.countDown();
+                assertEquals(id.toString(),first.get(10,TimeUnit.SECONDS));
+                var replay=retry.get(10,TimeUnit.SECONDS);
+                assertEquals(IdempotencyDecisionType.REPLAY,replay.type());
+                assertEquals(id.toString(),replay.replay().result());
+                assertEquals(1,countUnchecked("asset_reference"));
+            } finally {release.countDown();}
+        }
+    }
+
+    @Test void errorDuringTransactionCannotAccidentallyCommit() {
+        var tx=new JdbcReliabilityTransaction(dataSource,new JacksonRecordCodec());
+        UUID id=UUID.fromString("019a7f0e-5234-7abc-8def-1234567890ab");
+        assertThrows(AssertionError.class,()->tx.execute((c,e,a)->{
+            try(PreparedStatement ps=c.prepareStatement("INSERT INTO asset_reference VALUES (?,?,?)")){
+                ps.setObject(1,id);ps.setObject(2,TENANT);ps.setString(3,"Laptop");ps.executeUpdate();
+            }
+            throw new AssertionError("simulated fatal work error");
+        }));
+        assertEquals(0,countUnchecked("asset_reference"));
+    }
+
+    @Test void staleOutboxWorkerCannotOverwriteNewerClaim() {
+        var codec=new JacksonRecordCodec();
+        UUID id=UUID.fromString("019a7f0e-5234-7abc-8def-1234567890ab");
+        new JdbcEventIntentPort(dataSource,codec).accept(event(id,Map.of("label","Laptop")));
+        MutableClock clock=new MutableClock(Instant.now());
+        var newer=new JdbcOutboxPublisher(dataSource,codec,e->{},clock,3,Duration.ZERO,Duration.ofSeconds(5));
+        var older=new JdbcOutboxPublisher(dataSource,codec,e->{
+            clock.advance(Duration.ofSeconds(6));
+            assertEquals(1,newer.publishBatch(1).published());
+            throw new SQLException("late failure");
+        },clock,3,Duration.ZERO,Duration.ofSeconds(5));
+        var result=older.publishBatch(1);
+        assertEquals(1,result.lostClaims());
+        assertEquals(0,result.retried());
+        assertEquals("PUBLISHED",status(id));
+    }
+
+    @Test void expiredFinalClaimBecomesDeadWithoutAnotherSend() {
+        var codec=new JacksonRecordCodec();
+        UUID id=UUID.fromString("019a7f0e-5234-7abc-8def-1234567890ab");
+        new JdbcEventIntentPort(dataSource,codec).accept(event(id,Map.of("label","Laptop")));
+        MutableClock clock=new MutableClock(Instant.now());
+        AtomicInteger sends=new AtomicInteger();
+        var publisher=new JdbcOutboxPublisher(dataSource,codec,e->{
+            sends.incrementAndGet();clock.advance(Duration.ofSeconds(6));
+        },clock,1,Duration.ZERO,Duration.ofSeconds(5));
+        assertEquals(1,publisher.publishBatch(1).lostClaims());
+        assertEquals(1,publisher.publishBatch(1).dead());
+        assertEquals(1,sends.get());
+        assertEquals("DEAD",status(id));
+        assertEquals("ATTEMPTS_EXHAUSTED",errorCode(id));
     }
 
     private EventEnvelope<Map<String,Object>> event(UUID assetId,Map<String,Object> payload){
