@@ -24,13 +24,17 @@ public record FileReference(
             Pattern.compile("^[a-z][a-z0-9_.:-]*$");
 
     public FileReference {
-        fileId = requireText(fileId, "fileId");
+        fileId = requireText(fileId, "fileId", 512);
         if (ownerTenantId != null && !UuidV7.isCanonical(ownerTenantId.toString())) {
             throw new IllegalArgumentException("ownerTenantId must be UUIDv7 when present");
         }
-        storageService = requireText(storageService, "storageService");
+        storageService = requireText(storageService, "storageService", 128);
         if (!STORAGE_SERVICE.matcher(storageService).matches()) {
             throw new IllegalArgumentException("storageService has invalid format");
+        }
+        if (name != null && name.codePointCount(0, name.length()) > 1024
+                || mimeType != null && mimeType.codePointCount(0, mimeType.length()) > 255) {
+            throw new IllegalArgumentException("file snapshot exceeds contract length");
         }
         if (size != null && size < 0) {
             throw new IllegalArgumentException("size must not be negative");
@@ -41,9 +45,9 @@ public record FileReference(
         this(fileId, ownerTenantId, storageService, null, null, null, null);
     }
 
-    private static String requireText(String value, String name) {
+    private static String requireText(String value, String name, int maxLength) {
         Objects.requireNonNull(value, name);
-        if (value.isBlank()) {
+        if (value.isBlank() || value.codePointCount(0, value.length()) > maxLength) {
             throw new IllegalArgumentException(name + " must not be blank");
         }
         return value;

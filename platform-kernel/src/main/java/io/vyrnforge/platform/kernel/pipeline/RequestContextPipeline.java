@@ -10,6 +10,7 @@ import io.vyrnforge.platform.kernel.ports.IdentityAdapter;
 import io.vyrnforge.platform.kernel.ports.ModuleEntitlementPort;
 import io.vyrnforge.platform.kernel.ports.TenantMembershipPort;
 
+import java.time.Clock;
 import java.util.Objects;
 
 /**
@@ -21,12 +22,23 @@ public final class RequestContextPipeline<C> {
     private final TenantMembershipPort tenantMembershipPort;
     private final ModuleEntitlementPort moduleEntitlementPort;
     private final DomainAuthorizationHook domainAuthorizationHook;
+    private final Clock clock;
 
     public RequestContextPipeline(
             IdentityAdapter<C> identityAdapter,
             TenantMembershipPort tenantMembershipPort,
             ModuleEntitlementPort moduleEntitlementPort,
             DomainAuthorizationHook domainAuthorizationHook) {
+        this(identityAdapter, tenantMembershipPort, moduleEntitlementPort, domainAuthorizationHook, Clock.systemUTC());
+    }
+
+    public RequestContextPipeline(
+            IdentityAdapter<C> identityAdapter,
+            TenantMembershipPort tenantMembershipPort,
+            ModuleEntitlementPort moduleEntitlementPort,
+            DomainAuthorizationHook domainAuthorizationHook,
+            Clock clock) {
+        this.clock = Objects.requireNonNull(clock, "clock");
         this.identityAdapter = Objects.requireNonNull(identityAdapter, "identityAdapter");
         this.tenantMembershipPort = Objects.requireNonNull(tenantMembershipPort, "tenantMembershipPort");
         this.moduleEntitlementPort = Objects.requireNonNull(moduleEntitlementPort, "moduleEntitlementPort");
@@ -97,7 +109,8 @@ public final class RequestContextPipeline<C> {
             if (entitlement == null
                     || !entitlement.tenantId().equals(tenant.tenantId())
                     || !entitlement.moduleKey().equals(policy.moduleKey())
-                    || !entitlement.enabled()) {
+                    || !entitlement.enabled()
+                    || (entitlement.effectiveAt() != null && entitlement.effectiveAt().isAfter(clock.instant()))) {
                 throw new KernelAccessException(
                         KernelFailure.MODULE_DISABLED,
                         "The requested module is not enabled for the active tenant.");
