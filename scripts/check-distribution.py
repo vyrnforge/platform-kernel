@@ -52,4 +52,6 @@ with tempfile.TemporaryDirectory() as out:
     cp = ":".join(str(root / locations[a] / "target" / f"{a}-{version}.jar") for a in ("platform-kernel", "platform-kernel-testkit"))
     subprocess.run(["javac", "--release", "21", "-cp", cp, "-d", out, str(root / "verification/GoldenPathSmokeTest.java")], check=True)
     subprocess.run(["java", "-cp", out+":"+cp, "GoldenPathSmokeTest"], check=True)
-print("Three physical JARs, preserved resources, dependency isolation and packaged consumer OK")
+# Compile and run the public example against only the packaged main JAR.
+subprocess.run(["java", "-cp", str(root / "platform-kernel" / "target" / f"platform-kernel-{version}.jar"), str(root / "examples/general-java/Example.java")], check=True)
+print("Three physical JARs, preserved resources, dependency isolation and packaged consumers OK")

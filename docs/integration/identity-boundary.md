@@ -1,6 +1,6 @@
 # Identity integration boundary
 
-Status: V2 release boundary.
+Any Java application can supply a trusted identity projection from its own authentication layer. No VyrnForge IAM, OIDC provider or other particular product is required.
 
 The kernel intentionally does **not** implement provider-specific raw token validation. Signature algorithms, issuer metadata, JWKS discovery, audience rules, token formats, API-key validation, and credential revocation are owned by the native IAM/runtime authentication layer or by the supported external identity-provider adapter.
 
@@ -16,7 +16,7 @@ After provider authentication succeeds, trusted middleware produces a `Validated
 
 This is a production integration hook, unlike `StaticIdentityAdapter`, which remains test-only.
 
-## Native Wyrmgate IAM
+## Example: native Wyrmgate IAM (optional)
 
 The Wyrmgate security baseline distinguishes bearer authentication from administrative/domain authorization. The kernel preserves that separation:
 
@@ -29,9 +29,9 @@ The Wyrmgate security baseline distinguishes bearer authentication from administ
 
 The kernel does not interpret Wyrmgate control-plane roles/scopes as Asset/ITSM domain authorization.
 
-## External identity providers
+## Any application authentication layer
 
-The same adapter accepts validated projections from supported standards-based external IdPs. Product/domain code therefore does not depend on provider-specific token claim shapes.
+The same adapter accepts validated projections from any trusted application authentication boundary, including standards-based external IdPs or an existing application session verifier. The kernel does not verify raw tokens or sessions itself. Application code maps trusted identities to stable actor references and supplies membership, entitlements and domain authorization. See the [standalone quickstart](getting-started.md).
 
 ## Security requirement
 

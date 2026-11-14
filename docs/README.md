@@ -4,9 +4,10 @@ Current consumer and maintainer entry point. Use the current distribution guide 
 
 | Topic | Guide |
 | --- | --- |
+| Start here | [General-purpose Java quickstart](integration/getting-started.md) |
 | Adoption / Maven | [Three-JAR distribution](integration/three-jar-distribution.md) |
 | Identity | [Trusted identity boundary](integration/identity-boundary.md) |
-| HTTP | [Asset reference](consumer/asset-reference-http.md) |
+| Optional internal reference | [Asset reference](consumer/asset-reference-http.md) |
 | Events, audit, idempotency | [Reliability contracts](contracts/reliability-semantics.md) |
 | JDBC | [Production hardening](v2/production-hardening.md), [migration/recovery](v2/migration-recovery.md) |
 | Operations | [Observability and health](observability/observability-health.md) |

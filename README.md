@@ -1,6 +1,6 @@
 # VyrnForge Platform Kernel
 
-**Modular products. Unified platform.** A thin, framework-neutral Java foundation for secure, tenant-aware, reliable enterprise applications.
+**A general-purpose Java foundation for application developers.** Use the kernel in any Java 21 application or service: SaaS, internal tools, APIs, background workers, or independently deployed applications. Adopt individual capabilities without adopting a VyrnForge product, a specific identity provider, or a shared kernel server.
 
 [Product website / Flow Studio](https://vyrnforge.github.io/platform-kernel/) · [Releases](https://github.com/vyrnforge/platform-kernel/releases) · [Documentation](docs/README.md) · [Apache-2.0](LICENSE)
 
@@ -14,7 +14,7 @@ Requires Java 21. Maven Central is the canonical distribution for the organizati
 | `platform-kernel-jdbc` | Optional PostgreSQL/Flyway adapter: atomic mutation + event/audit + idempotency, fenced outbox, migrations. |
 | `platform-kernel-testkit` | Test-scope in-memory ports and fixtures. |
 
-See [Maven dependencies and migration](docs/integration/three-jar-distribution.md) for exact coordinates. The parent POM and source/Javadoc archives are metadata/documentation, not extra runtime libraries. Asset reference tests are internal.
+See [Maven dependencies and migration](docs/integration/three-jar-distribution.md) for exact coordinates. The parent POM and source/Javadoc archives are metadata/documentation, not extra runtime libraries. The internal Asset reference tests are one integration example, not a prerequisite.
 
 ```xml
 <dependency>
@@ -24,20 +24,25 @@ See [Maven dependencies and migration](docs/integration/three-jar-distribution.m
 </dependency>
 ```
 
+## Start with a working example
+
+Follow the [general-purpose Java quickstart](docs/integration/getting-started.md) to run a standalone application against the published main JAR, including tenantless and tenant-scoped requests. No database, web framework, IAM service or VyrnForge application is required for the example.
+
 ## How it works
 
 ```text
-Product HTTP request -> trusted identity -> tenant context
+Application HTTP request -> trusted identity -> tenant context
   -> membership -> entitlement -> domain authorization -> product handler
   -> correlation / safe response metadata
 ```
 
-The kernel consumes a trusted native IAM or external-IdP identity projection; the product owns resource authorization and data. For durable retriable writes, use `JdbcReliabilityTransaction.executeIdempotent`: domain mutation, required event/audit intents and replay result commit together. The outbox is at-least-once compatible, not exactly-once. Products supply the event transport, telemetry backend and production stores.
+The kernel consumes a trusted identity projection from your authentication layer; your application owns resource authorization and data. The full tenant-scoped pipeline requires a module key, membership and entitlement checks; tenantless endpoints are explicit and still authorize the action. You can also use individual utilities and contracts without the pipeline. For durable retriable writes, use `JdbcReliabilityTransaction.executeIdempotent`: domain mutation, required event/audit intents and replay result commit together. The outbox is at-least-once compatible, not exactly-once. Products supply the event transport, telemetry backend and production stores.
 
 ## Integration guides
 
 - [Identity boundary](docs/integration/identity-boundary.md)
-- [HTTP / Asset reference](docs/consumer/asset-reference-http.md)
+- [General-purpose quickstart](docs/integration/getting-started.md)
+- [Internal Asset reference (optional example)](docs/consumer/asset-reference-http.md)
 - [Reliability semantics](docs/contracts/reliability-semantics.md) and [JDBC rollout / recovery](docs/v2/production-hardening.md)
 - [Correlation and health](docs/observability/observability-health.md)
 - [Release and contributor operations](docs/releases/README.md)
