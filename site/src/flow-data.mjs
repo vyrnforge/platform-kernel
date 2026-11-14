@@ -95,6 +95,10 @@ export function edgePath(a,b){
     return 'M '+(a.x+sign*hx)+' '+a.y+' H '+(b.x-sign*hx);
   }
   const sign=Math.sign(b.y-a.y),mid=(a.y+b.y)/2;
+  if(Math.abs(b.y-a.y)>180){
+    const side=b.x>a.x?1:-1, corridor=a.x+side*121;
+    return 'M '+(a.x+side*hx)+' '+a.y+' H '+corridor+' V '+(b.y-sign*58)+' H '+b.x+' V '+(b.y-sign*hy);
+  }
   return 'M '+a.x+' '+(a.y+sign*hy)+' V '+mid+' H '+b.x+' V '+(b.y-sign*hy);
 }
 export function routeEdges(flow,scenario){
