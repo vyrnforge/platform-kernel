@@ -38,12 +38,18 @@ public record AuditEvent(
         if (tenantId != null) {
             requireUuidV7(tenantId, "tenantId");
         }
-        action = requireMatch(action, "action");
+        action = requireMatch(action, "action", 192);
         Objects.requireNonNull(resource, "resource");
+        if (resource.tenantId() != null && !resource.tenantId().equals(tenantId)) {
+            throw new IllegalArgumentException("audit and resource tenant must match");
+        }
         Objects.requireNonNull(outcome, "outcome");
-        source = requireMatch(source, "source");
+        source = requireMatch(source, "source", 128);
         requireUuidV7(correlationId, "correlationId");
 
+        if (reason != null && reason.codePointCount(0, reason.length()) > 2048) {
+            throw new IllegalArgumentException("reason exceeds 2048 characters");
+        }
         if (reason != null && reason.isBlank()) {
             reason = null;
         }
@@ -59,9 +65,9 @@ public record AuditEvent(
         }
     }
 
-    private static String requireMatch(String value, String name) {
+    private static String requireMatch(String value, String name, int maxLength) {
         Objects.requireNonNull(value, name);
-        if (value.isBlank() || !NAMESPACED_KEY.matcher(value).matches()) {
+        if (value.codePointCount(0, value.length()) > maxLength || value.isBlank() || !NAMESPACED_KEY.matcher(value).matches()) {
             throw new IllegalArgumentException(name + " has invalid format");
         }
         return value;

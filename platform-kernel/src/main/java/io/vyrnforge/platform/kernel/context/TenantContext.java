@@ -1,5 +1,7 @@
 package io.vyrnforge.platform.kernel.context;
 
+import io.vyrnforge.platform.kernel.ids.UuidV7;
+
 import java.util.Objects;
 import java.util.UUID;
 
@@ -9,6 +11,9 @@ public record TenantContext(TenantScope scope, UUID tenantId) {
         Objects.requireNonNull(scope, "scope");
         if (scope == TenantScope.TENANT && tenantId == null) {
             throw new IllegalArgumentException("tenantId is required for TENANT scope");
+        }
+        if (tenantId != null && !UuidV7.isCanonical(tenantId.toString())) {
+            throw new IllegalArgumentException("tenantId must be UUIDv7");
         }
         if (scope == TenantScope.NONE && tenantId != null) {
             throw new IllegalArgumentException("tenantId must be null for NONE scope");
