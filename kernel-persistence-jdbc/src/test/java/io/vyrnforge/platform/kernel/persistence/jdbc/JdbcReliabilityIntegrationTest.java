@@ -82,6 +82,47 @@ class JdbcReliabilityIntegrationTest {
         assertEquals(0,countUnchecked("platform_audit_event"));
     }
 
+    @Test void auditDuplicateFingerprintIsStableAcrossMapInsertionOrder() {
+        JacksonRecordCodec codec = new JacksonRecordCodec();
+        UUID assetId = UUID.fromString("019a7f0e-5234-7abc-8def-1234567890ab");
+
+        LinkedHashMap<String,Object> firstChanges = new LinkedHashMap<>();
+        firstChanges.put("label", "Laptop");
+        firstChanges.put("owner", "actor-1");
+
+        LinkedHashMap<String,Object> secondChanges = new LinkedHashMap<>();
+        secondChanges.put("owner", "actor-1");
+        secondChanges.put("label", "Laptop");
+
+        new JdbcAuditIntentPort(dataSource, codec).accept(audit(assetId, firstChanges));
+        assertDoesNotThrow(() ->
+                new JdbcAuditIntentPort(dataSource, codec).accept(audit(assetId, secondChanges)));
+
+        assertEquals(1, countUnchecked("platform_audit_event"));
+    }
+
+    @Test void auditRowsRejectOrdinaryUpdateAndDelete() {
+        JacksonRecordCodec codec = new JacksonRecordCodec();
+        UUID assetId = UUID.fromString("019a7f0e-5234-7abc-8def-1234567890ab");
+        new JdbcAuditIntentPort(dataSource, codec).accept(audit(assetId));
+
+        assertThrows(SQLException.class, () -> {
+            try (Connection c = dataSource.getConnection();
+                 Statement s = c.createStatement()) {
+                s.executeUpdate("UPDATE platform_audit_event SET source='tampered'");
+            }
+        });
+
+        assertThrows(SQLException.class, () -> {
+            try (Connection c = dataSource.getConnection();
+                 Statement s = c.createStatement()) {
+                s.executeUpdate("DELETE FROM platform_audit_event");
+            }
+        });
+
+        assertEquals(1, countUnchecked("platform_audit_event"));
+    }
+
     @Test void persistedIdempotencyReplaysAcrossPortInstances() {
         Instant now=Instant.parse("2026-11-13T15:00:00Z");
         Clock clock=Clock.fixed(now,ZoneOffset.UTC);
@@ -153,11 +194,15 @@ class JdbcReliabilityIntegrationTest {
     }
 
     private AuditEvent audit(UUID assetId){
+        return audit(assetId, Map.of("label","Laptop"));
+    }
+
+    private AuditEvent audit(UUID assetId, Map<String,Object> changes){
         return new AuditEvent(
                 UUID.fromString("019a7f0e-a234-7abc-8def-1234567890ab"),
                 Instant.parse("2026-11-13T15:00:00Z"),TENANT,actor(),"asset.create",
                 new ResourceReference("asset.asset",assetId.toString(),TENANT),
-                AuditOutcome.SUCCESS,"asset",CORRELATION,null,Map.of("label","Laptop"));
+                AuditOutcome.SUCCESS,"asset",CORRELATION,null,changes);
     }
 
     private ActorReference actor(){

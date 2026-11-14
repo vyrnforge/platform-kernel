@@ -1,0 +1,23 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.shared-platform.local/phase0/v0.2/identity-reference.schema.json",
+  "title": "IdentityReference",
+  "description": "Provider-neutral identity provenance. The issuer/provider plus subject form the stable external identity reference.",
+  "type": "object",
+  "required": ["issuer", "subject"],
+  "properties": {
+    "issuer": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 512,
+      "description": "Stable issuer/provider identifier. For OIDC this is normally the issuer URL."
+    },
+    "subject": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 512,
+      "description": "Opaque provider subject identifier; do not interpret as globally unique without issuer."
+    }
+  },
+  "additionalProperties": true
+}

@@ -1,0 +1,90 @@
+{
+  "package": "shared-platform-kernel-phase0-contracts",
+  "version": "0.2.0",
+  "status": "released",
+  "schema_dialect": "https://json-schema.org/draft/2020-12/schema",
+  "canonical_document_version": "0.2",
+  "date": "2026-11-14",
+  "governing_decisions": [
+    "DEC-K007",
+    "DEC-K008",
+    "DEC-K009",
+    "DEC-K010",
+    "DEC-K011",
+    "DEC-K012",
+    "DEC-K013"
+  ],
+  "contracts": [
+    {
+      "name": "IdentityReference",
+      "file": "identity-reference.schema.json"
+    },
+    {
+      "name": "ActorReference",
+      "file": "actor-reference.schema.json"
+    },
+    {
+      "name": "TenantContext",
+      "file": "tenant-context.schema.json"
+    },
+    {
+      "name": "ActorContext",
+      "file": "actor-context.schema.json"
+    },
+    {
+      "name": "ResourceReference",
+      "file": "resource-reference.schema.json"
+    },
+    {
+      "name": "CorrelationContext",
+      "file": "correlation-context.schema.json"
+    },
+    {
+      "name": "ApiError",
+      "file": "api-error.schema.json"
+    },
+    {
+      "name": "EventEnvelope",
+      "file": "event-envelope.schema.json"
+    },
+    {
+      "name": "AuditEvent",
+      "file": "audit-event.schema.json"
+    },
+    {
+      "name": "FileReference",
+      "file": "file-reference.schema.json"
+    },
+    {
+      "name": "ModuleEntitlement",
+      "file": "module-entitlement.schema.json"
+    }
+  ],
+  "compatibility": {
+    "consumer_rule": "Consumers must ignore unknown optional fields unless a specific contract states otherwise.",
+    "compatible_examples": [
+      "add an optional field",
+      "add a new endpoint/resource",
+      "add an optional event payload field",
+      "loosen a validation constraint when safe"
+    ],
+    "breaking_examples": [
+      "remove or rename an existing field",
+      "change field meaning",
+      "change field type incompatibly",
+      "make an optional field required",
+      "reuse an identifier with new semantics",
+      "alter event meaning without a new event_version"
+    ]
+  },
+  "implementation_non_contracts": [
+    "programming language/runtime",
+    "database technology",
+    "message broker/vendor",
+    "outbox physical schema",
+    "audit storage technology",
+    "deployment topology",
+    "cache implementation"
+  ],
+  "release_notes": "V2 released contract package. Semantics are compatible with the Phase 0 v0.1 draft; v0.1 remains immutable historical draft."
+}

@@ -15,6 +15,10 @@
   <name>Platform Kernel Asset Reference Tests</name>
   <description>Test-only Asset Management reference consumer for kernel compatibility validation.</description>
 
+  <properties>
+    <maven.deploy.skip>true</maven.deploy.skip>
+  </properties>
+
   <dependencies>
     <dependency>
       <groupId>io.vyrnforge.platform</groupId>
