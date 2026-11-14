@@ -7,6 +7,7 @@ import { mkdtemp, readFile, rm, mkdir, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { resolve, join, extname } from 'node:path';
 import { flows } from '../src/flow-data.mjs';
+import { version } from '../src/data.mjs';
 const sleep=ms=>new Promise(r=>setTimeout(r,ms));
 const dist=resolve('dist'),prefix='/platform-kernel/';
 const server=createServer(async(req,res)=>{try{
@@ -23,28 +24,31 @@ const profile=await mkdtemp(join(tmpdir(),'kernel-chrome-'));
 let chromeBin=process.env.CHROME_BIN;
 if(!chromeBin){for(const b of ['google-chrome','chromium','chromium-browser']){try{chromeBin=execFileSync('which',[b],{encoding:'utf8'}).trim();break}catch{}}}
 assert.ok(chromeBin,'Chrome or Chromium is required for browser smoke tests');
-const chrome=spawn(chromeBin,['--headless=new','--no-sandbox','--disable-dev-shm-usage','--disable-gpu','--no-first-run','--no-default-browser-check','--remote-debugging-port=0','--user-data-dir='+profile,url],{stdio:'ignore'});
+const chrome=spawn(chromeBin,['--headless=new','--no-sandbox','--disable-dev-shm-usage','--disable-gpu','--no-first-run','--no-default-browser-check','--remote-debugging-port=0','--user-data-dir='+profile,url],{stdio:['ignore','ignore','pipe']});
+let chromeErrors='',launchError;
+chrome.stderr.on('data',chunk=>{chromeErrors=(chromeErrors+chunk.toString()).slice(-6000)});
+chrome.on('error',error=>{launchError=error});
 let ws;
 try{
   let port;
-  for(let i=0;i<100;i++){try{port=(await readFile(join(profile,'DevToolsActivePort'),'utf8')).split('\n')[0];break}catch{await sleep(100)}}
-  assert.ok(port,'Chrome debugging port not available');
+  for(let i=0;i<300;i++){if(launchError)throw launchError;if(chrome.exitCode!==null)throw Error('Chrome exited: '+chrome.exitCode+'\n'+chromeErrors);try{port=(await readFile(join(profile,'DevToolsActivePort'),'utf8')).split('\n')[0];break}catch{await sleep(100)}}
+  assert.ok(port,'Chrome debugging port not available\n'+chromeErrors);
   let target;
-  for(let i=0;i<100;i++){try{const pages=await (await fetch('http://127.0.0.1:'+port+'/json/list')).json();target=pages.find(p=>p.type==='page'&&p.url.startsWith(url));if(target)break;}catch{}await sleep(100)}
-  assert.ok(target,'Page target not found');
+  for(let i=0;i<300;i++){try{const pages=await (await fetch('http://127.0.0.1:'+port+'/json/list',{signal:AbortSignal.timeout(2000)})).json();target=pages.find(p=>p.type==='page'&&p.url.startsWith(url));if(target)break;}catch{}await sleep(100)}
+  assert.ok(target,'Page target not found\n'+chromeErrors);
   ws=new WebSocket(target.webSocketDebuggerUrl);
-  await new Promise((ok,no)=>{ws.addEventListener('open',ok,{once:true});ws.addEventListener('error',no,{once:true})});
+  await new Promise((ok,no)=>{const timer=setTimeout(()=>no(Error('Chrome websocket open timeout')),10000);ws.addEventListener('open',()=>{clearTimeout(timer);ok()},{once:true});ws.addEventListener('error',e=>{clearTimeout(timer);no(e)},{once:true})});
   let nextId=0;const pending=new Map(),errors=[];
   ws.addEventListener('message',event=>{const m=JSON.parse(event.data);if(m.id){const p=pending.get(m.id);if(!p)return;pending.delete(m.id);m.error?p.reject(new Error(JSON.stringify(m.error))):p.resolve(m.result)}else if(m.method==='Runtime.exceptionThrown')errors.push(m.params.exceptionDetails.text);});
   const send=(method,params={})=>new Promise((resolve,reject)=>{const id=++nextId;pending.set(id,{resolve,reject});ws.send(JSON.stringify({id,method,params}));});
   const evaluate=async expression=>{const r=await send('Runtime.evaluate',{expression,returnByValue:true,awaitPromise:true});if(r.exceptionDetails)throw Error(JSON.stringify(r.exceptionDetails));return r.result.value};
-  const wait=async (condition,message)=>{for(let i=0;i<80;i++){if(await evaluate(condition))return;await sleep(100)}throw Error(message||condition)};
+  const wait=async (condition,message)=>{for(let i=0;i<200;i++){if(await evaluate(condition))return;await sleep(100)}throw Error((message||condition)+'\nBrowser exceptions: '+JSON.stringify(errors)+'\nChrome: '+chromeErrors)};
   const click=async selector=>{await evaluate('document.querySelector('+JSON.stringify(selector)+').click()');await sleep(70)};
   const q=selector=>'document.querySelector('+JSON.stringify(selector)+')';
   await send('Runtime.enable');
   await send('Emulation.setDeviceMetricsOverride',{width:1440,height:1000,deviceScaleFactor:1,mobile:false});
   await wait('!!document.querySelector("[data-testid=flow-studio]")','React Flow Studio did not render');
-  assert.match(await evaluate('document.body.innerText'),/0\.3\.0 RELEASED/);
+  assert.ok((await evaluate('document.body.innerText')).includes(version+' RELEASED'),'Expected released version '+version);
   assert.equal(await evaluate('document.querySelectorAll("[data-mode]").length'),4);
   // Traverse every scenario, inspect the terminal step and prove restart works.
   for(const f of flows){
@@ -90,7 +94,7 @@ try{
   assert.equal(await evaluate('document.querySelector(".fs-graph animateMotion")!==null'),false,'Reduced motion must suppress packet animation');
   await click('[data-testid="play"]');
   assert.deepEqual(errors,[],'Browser JavaScript exceptions');
-  console.log('Browser smoke: motion, pause, stepping, expanded view, mobile layout, reduced motion and v0.3.0 outcomes passed');
+  console.log('Browser smoke: motion, pause, stepping, expanded view, mobile layout, reduced motion and release-version outcomes passed');
 } finally {
   ws?.close();chrome.kill('SIGTERM');server.close();await sleep(200);await rm(profile,{recursive:true,force:true}).catch(()=>{});
 }
