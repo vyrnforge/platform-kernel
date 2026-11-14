@@ -3,7 +3,7 @@
 ## Boundary rules
 
 1. The kernel owns cross-product technical primitives, not Asset/ITSM/IAM business logic.
-2. `kernel-core` must not depend on product-domain packages or provider-specific IAM SDKs.
+2. The main `platform-kernel` JAR must not depend on product-domain packages or provider-specific IAM SDKs.
 3. Tenant-owned access must fail closed when active tenant scope cannot be established or validated.
 4. Module entitlement is tenant/product availability only; it must never replace domain authorization.
 5. Raw credentials, tokens, secrets, and undocumented provider claims must not enter stable kernel contracts.
@@ -14,7 +14,8 @@
 
 ```bash
 bash scripts/verify-core.sh
-mvn verify
+mvn clean verify
+python3 scripts/check-distribution.py
 ```
 
 PRs should include negative tenant-isolation coverage for any change affecting tenancy or authorization plumbing.

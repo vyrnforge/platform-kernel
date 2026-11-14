@@ -1,20 +1,20 @@
-// Illustrative, deterministic sequences based on released v0.2.1 source.
+// Illustrative, deterministic sequences based on released v0.3.0 source.
 // No network, credentials, production telemetry, or execution of Java code.
-const core='kernel-core/src/main/java/io/vyrnforge/platform/kernel/';
+const core='platform-kernel/src/main/java/io/vyrnforge/platform/kernel/';
 const jdbc='kernel-persistence-jdbc/src/main/java/io/vyrnforge/platform/kernel/persistence/jdbc/';
 const n=(id,title,owner,x,y,description,path)=>({id,title,owner,x,y,description,path});
 const f=(node,label,detail,signal,tone='info')=>({node,label,detail,signal,tone});
 const s=(id,title,outcome,tone,frames)=>({id,title,outcome,tone,frames});
 const request=[
-n('client','API client','PRODUCT',120,100,'The product receives a request and supplies endpoint policy.','kernel-http/'),
-n('edge','HTTP edge','KERNEL HTTP',370,100,'Extract configured headers, request/correlation metadata and credential.','kernel-http/'),
+n('client','API client','PRODUCT',120,100,'The product receives a request and supplies endpoint policy.','platform-kernel/src/main/java/io/vyrnforge/platform/kernel/http/'),
+n('edge','HTTP edge','KERNEL HTTP',370,100,'Extract configured headers, request/correlation metadata and credential.','platform-kernel/src/main/java/io/vyrnforge/platform/kernel/http/'),
 n('identity','Trusted identity','IAM / IDP',620,100,'Upstream verifier authenticates; ValidatedIdentityAdapter consumes only a trusted projection.',core+'identity/ValidatedIdentityAdapter.java'),
 n('tenant','Tenant guard','KERNEL CORE',870,100,'Validate active tenant, resource ownership and membership. Explicitly tenantless policies reject an active tenant.',core+'pipeline/RequestContextPipeline.java'),
 n('entitlement','Module access','KERNEL CORE',870,260,'Tenant module entitlement is independent of product domain authorization.',core+'pipeline/RequestContextPipeline.java'),
 n('policy','Domain policy','PRODUCT',620,260,'The resource-owning product decides whether the actor may perform the action.',core+'ports/DomainAuthorizationHook.java'),
 n('handler','Domain handler','PRODUCT',370,260,'Product performs the business operation with tenant-scoped persistence.','consumer-tests/asset-reference/'),
-n('response','Response','HTTP EDGE',120,260,'Return the product response and request/correlation headers.','kernel-http/'),
-n('reject','Safe rejection','HTTP EDGE',620,410,'Map failures to stable error codes; cross-tenant resource mismatch is hidden as 404.','kernel-http/')];
+n('response','Response','HTTP EDGE',120,260,'Return the product response and request/correlation headers.','platform-kernel/src/main/java/io/vyrnforge/platform/kernel/http/'),
+n('reject','Safe rejection','HTTP EDGE',620,410,'Map failures to stable error codes; cross-tenant resource mismatch is hidden as 404.','platform-kernel/src/main/java/io/vyrnforge/platform/kernel/http/')];
 const rq=[f('client','Request received','A product endpoint declares its required module and action.','POST /v1/assets'),f('edge','Context extracted','Read X-Tenant-Id and correlation; generate a fresh request ID.','request_id: new UUIDv7'),f('identity','Identity established','Only a trusted upstream authentication projection reaches the kernel.','ActorContext · issuer + subject'),f('tenant','Tenant verified','Check tenant ownership and membership before module entitlement.','tenant_id: tenant-A'),f('entitlement','Module enabled','Asset is enabled for this tenant; this does not grant domain permission.','module: asset · enabled'),f('policy','Domain permitted','Product authorizes the requested action against the resource.','action: asset.create'),f('handler','Handler executes','The domain owns validation, persistence and business response.','tenant-scoped mutation'),f('response','Response sent','The product returns its result with correlation and request metadata.','HTTP 2xx · correlation_id retained','success')];
 const deny=(at,node,label,detail,signal)=>[...rq.slice(0,at),f(node,label,detail,signal,'danger'),f('reject','Request stopped','No domain handler executes. The HTTP adapter maps the kernel failure safely.',signal,'danger')];
 const mutation=[
@@ -42,14 +42,14 @@ n('dead','DEAD','POSTGRES',870,410,'An exhausted attempt enters DEAD; reconcile 
 n('stale','Lost claim','PUBLISHER',620,410,'Stale workers cannot overwrite state; lostClaims() exposes superseded or expired claims.',jdbc+'OutboxPublishResult.java')];
 const ob=[f('intent','Event intent committed','The domain commit created a durable event with its event ID and correlation ID.','event_id: evt-1'),f('pending','Pending delivery','The outbox row is PENDING and available to publishers.','status = PENDING'),f('workerA','Worker A claims','Claim under row lock; generate a token and increment attempts.','token=A · attempts=1'),f('transport','Event sent','The product transport publishes the event. Delivery may be duplicated.','event_id: evt-1'),f('consumer','Consumer accepts','The downstream consumer deduplicates by event ID before applying its own mutation.','consumer deduplication'),f('fence','Fence validates','Update only if token A still owns an unexpired pending claim.','WHERE claim_token=A'),f('published','State committed','The fenced update marks PUBLISHED and clears the claim.','status = PUBLISHED','success')];
 const ops=[
-n('incoming','Inbound request','PRODUCT',120,100,'Read or create business correlation ID; create a new request ID.','kernel-observability/'),
-n('context','Correlation','KERNEL',370,100,'Propagate business correlation independently of request IDs and opaque trace context.','kernel-observability/'),
-n('event','Event / job','PRODUCT',620,100,'An event/job receives the business correlation and a fresh invocation request ID.','kernel-observability/'),
-n('downstream','Next product','PRODUCT',870,100,'A downstream consumer correlates work without sharing authoritative data.','kernel-observability/'),
-n('telemetry','Safe telemetry','KERNEL',370,260,'Actor/tenant telemetry dimensions are opt-in; never log credentials.','kernel-observability/'),
-n('probe','Health probes','PRODUCT',620,260,'Product supplies liveness and readiness probes. HealthAggregator sanitizes probe failures.','kernel-observability/'),
+n('incoming','Inbound request','PRODUCT',120,100,'Read or create business correlation ID; create a new request ID.','platform-kernel/src/main/java/io/vyrnforge/platform/kernel/observability/'),
+n('context','Correlation','KERNEL',370,100,'Propagate business correlation independently of request IDs and opaque trace context.','platform-kernel/src/main/java/io/vyrnforge/platform/kernel/observability/'),
+n('event','Event / job','PRODUCT',620,100,'An event/job receives the business correlation and a fresh invocation request ID.','platform-kernel/src/main/java/io/vyrnforge/platform/kernel/observability/'),
+n('downstream','Next product','PRODUCT',870,100,'A downstream consumer correlates work without sharing authoritative data.','platform-kernel/src/main/java/io/vyrnforge/platform/kernel/observability/'),
+n('telemetry','Safe telemetry','KERNEL',370,260,'Actor/tenant telemetry dimensions are opt-in; never log credentials.','platform-kernel/src/main/java/io/vyrnforge/platform/kernel/observability/'),
+n('probe','Health probes','PRODUCT',620,260,'Product supplies liveness and readiness probes. HealthAggregator sanitizes probe failures.','platform-kernel/src/main/java/io/vyrnforge/platform/kernel/observability/'),
 n('operator','Operator view','EXTERNAL',870,260,'Deployment exports logs, traces and metrics to its chosen backend.','docs/observability/observability-health.md'),
-n('notready','Not ready','DEPLOYMENT',620,410,'Readiness may be DOWN even when process liveness is UP.','kernel-observability/')];
+n('notready','Not ready','DEPLOYMENT',620,410,'Readiness may be DOWN even when process liveness is UP.','platform-kernel/src/main/java/io/vyrnforge/platform/kernel/observability/')];
 const op=[f('incoming','Request starts','A new request gets a request ID, while an existing business correlation can be preserved.','correlation=C1 · request=R1'),f('context','Correlation propagated','Carry business correlation through API, event or job. W3C trace context remains separate.','correlation=C1'),f('event','Invocation starts','The event consumer creates a new request ID and retains business correlation.','correlation=C1 · request=R2'),f('downstream','Downstream work','A second product owns its own data and authorization.','correlation=C1 · request=R3'),f('telemetry','Safe attributes','Emit safe contextual fields; actor and tenant dimensions default off.','actor_id / tenant_id: omitted'),f('operator','Correlated view','Product observability backend can connect related work.','same correlation · distinct requests','success')];
 export const flows=[
 {id:'request',title:'Secure request',subtitle:'Access control / provider-neutral identity',nodes:request,scenarios:[
@@ -57,7 +57,7 @@ s('allowed','Allowed request','Handler executes','success',rq),
 s('invalid','Invalid credential','401 · authentication failed','danger',deny(2,'identity','Authentication fails','No trusted identity can be established.','HTTP 401 · AUTHENTICATION_FAILED')),
 s('missing','Missing active tenant','403 · tenant required','danger',deny(3,'tenant','Tenant required','Tenant-scoped endpoints require an active tenant.','HTTP 403 · TENANT_REQUIRED')),
 s('cross','Cross-tenant resource','404 · resource hidden','danger',deny(3,'tenant','Resource mismatch','Resource belongs to a different tenant; do not reveal existence.','HTTP 404 · TENANT_CONTEXT_MISMATCH')),
-s('tenantless','Tenantless endpoint + tenant','400 · invalid context','danger',deny(3,'tenant','Tenantless policy violation','v0.2.1 rejects an active tenant even if the tenant-owned resource matches.','HTTP 400 · INVALID_CONTEXT')),
+s('tenantless','Tenantless endpoint + tenant','400 · invalid context','danger',deny(3,'tenant','Tenantless policy violation','The hardened kernel rejects an active tenant even if the tenant-owned resource matches.','HTTP 400 · INVALID_CONTEXT')),
 s('membership','Non-member','403 · membership required','danger',deny(3,'tenant','Membership denied','The actor is not a member of the active tenant.','HTTP 403 · TENANT_MEMBERSHIP_REQUIRED')),
 s('module','Module disabled','403 · module disabled','danger',deny(4,'entitlement','Module disabled','The tenant has no enabled entitlement for the requested module.','HTTP 403 · MODULE_DISABLED')),
 s('permission','Domain permission denied','403 · access denied','danger',deny(5,'policy','Product denies action','Domain authorization remains the product responsibility.','HTTP 403 · DOMAIN_ACCESS_DENIED'))]},
