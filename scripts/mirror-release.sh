@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
 set -euo pipefail
 stage="$1"
-version="$(tr -d '[:space:]' < VERSION)"
+version="${2:-$(tr -d '[:space:]' < VERSION)}"
+[[ "$version" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]
 group="io/github/vyrnforge"
 base="https://repo.maven.apache.org/maven2"
 ghbase="https://maven.pkg.github.com/vyrnforge/platform-kernel"
