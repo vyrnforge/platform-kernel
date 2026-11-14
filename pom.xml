@@ -46,7 +46,7 @@
     <maven.surefire.plugin.version>3.6.1</maven.surefire.plugin.version>
     <flyway.version>13.12.1</flyway.version>
     <postgresql.version>42.7.14</postgresql.version>
-    <jackson.version>2.22.4</jackson.version>
+    <jackson.version>2.23.0</jackson.version>
     <testcontainers.version>1.21.4</testcontainers.version>
   </properties>
 

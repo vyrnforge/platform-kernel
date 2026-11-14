@@ -7,8 +7,8 @@ on:
   workflow_dispatch:
     inputs:
       recovery_record:
-        description: 'Existing deployment recovery JSON (empty = new release)'
-        required: false
+        description: 'Existing deployment recovery JSON (required for manual recovery)'
+        required: true
         type: string
 
 permissions:
@@ -20,7 +20,7 @@ concurrency:
 
 jobs:
   publish:
-    if: github.ref == 'refs/heads/main' && ((github.event_name == 'workflow_dispatch' && inputs.recovery_record == '') || startsWith(github.event.head_commit.message, 'release:'))
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push' && startsWith(github.event.head_commit.message, 'release:')
     runs-on: ubuntu-latest
     timeout-minutes: 100
     permissions:
@@ -53,6 +53,13 @@ jobs:
             code="$(curl --silent --show-error --max-time 30 -o /dev/null -w '%{http_code}' "https://repo.maven.apache.org/maven2/io/github/vyrnforge/$artifact/$version/$artifact-$version.pom")"
             test "$code" = 404 || { echo "Central version exists or probe failed ($code); stop and reconcile"; exit 1; }
           done
+      - name: Reserve exact source tag before publication
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          version="$(tr -d '[:space:]' < VERSION)"
+          gh api --method POST "repos/$GITHUB_REPOSITORY/git/refs" -f ref="refs/tags/v$version" -f sha="$GITHUB_SHA" >/dev/null
       - name: Build and verify once
         run: |
           python3 scripts/check-contract-compatibility.py
@@ -77,17 +84,11 @@ jobs:
         run: bash scripts/mirror-release.sh "$RUNNER_TEMP/release-stage"
       - name: Verify anonymous Central consumer
         run: bash scripts/verify-central-consumer.sh "$(tr -d '[:space:]' < VERSION)"
-      - name: Create GitHub release
+      - name: Create and verify GitHub release
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          set -euo pipefail
-          version="$(tr -d '[:space:]' < VERSION)"
-          gh release create "v$version" \
-            "platform-kernel/target/platform-kernel-$version.jar" \
-            "kernel-persistence-jdbc/target/platform-kernel-jdbc-$version.jar" \
-            "kernel-testkit/target/platform-kernel-testkit-$version.jar" \
-            --target "$GITHUB_SHA" --title "Kernel — v$version" --notes-file CHANGELOG.md
+        run: bash scripts/complete-github-release.sh "$(tr -d '[:space:]' < VERSION)" "$GITHUB_SHA" "$RUNNER_TEMP/release-stage"
+
 
   reconcile:
     name: reconcile existing Central release
@@ -129,25 +130,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GITHUB_ACTOR: ${{ github.actor }}
         run: bash scripts/mirror-release.sh "$RUNNER_TEMP/release-stage" "$(jq -r '.version' "$RECOVERY_RECORD")"
-      - name: Create GitHub release at original source commit
+      - name: Complete GitHub release at original source commit
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          set -euo pipefail
-          version="$(jq -r '.version' "$RECOVERY_RECORD")"
-          source="$(jq -r '.sourceCommit' "$RECOVERY_RECORD")"
-          tag="v$version"
-          if git rev-parse --verify "refs/tags/$tag" >/dev/null 2>&1; then
-            test "$(git rev-list -n1 "$tag")" = "$source"
-          fi
-          if gh release view "$tag" >/dev/null 2>&1; then
-            echo "Release exists; verify its assets manually, do not replace."
-            exit 1
-          fi
-          git show "$source:CHANGELOG.md" > "$RUNNER_TEMP/release-notes.md"
-          stage="$RUNNER_TEMP/release-stage/io/github/vyrnforge"
-          gh release create "$tag" \
-            "$stage/platform-kernel/$version/platform-kernel-$version.jar" \
-            "$stage/platform-kernel-jdbc/$version/platform-kernel-jdbc-$version.jar" \
-            "$stage/platform-kernel-testkit/$version/platform-kernel-testkit-$version.jar" \
-            --target "$source" --title "Kernel — $tag" --notes-file "$RUNNER_TEMP/release-notes.md"
+        run: bash scripts/complete-github-release.sh "$(jq -r '.version' "$RECOVERY_RECORD")" "$(jq -r '.sourceCommit' "$RECOVERY_RECORD")" "$RUNNER_TEMP/release-stage"
