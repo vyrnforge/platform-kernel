@@ -131,6 +131,18 @@ class RequestContextPipelineTest {
     }
 
     @Test
+    void tenantlessPolicyRejectsActiveTenantEvenForMatchingResource() {
+        var pipeline = pipeline(identityAdapter(Set.of("asset.read")), false, false, true);
+        var resource = new ResourceReference("asset.asset", "asset-1", TENANT_A);
+        for (ResourceReference ref : new ResourceReference[]{resource, null}) {
+            var error = assertThrows(KernelAccessException.class, () -> pipeline.resolve(
+                    new RequestContextInput<>("valid", TenantContext.tenant(TENANT_A),
+                            CorrelationContext.create(), EndpointPolicy.tenantless("asset.read"), ref)));
+            assertEquals(KernelFailure.INVALID_CONTEXT, error.failure());
+        }
+    }
+
+    @Test
     void tenantlessEndpointCanResolveWithoutMembershipOrEntitlement() {
         var pipeline = pipeline(identityAdapter(Set.of("profile.read")), false, false, true);
 

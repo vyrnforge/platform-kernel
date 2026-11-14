@@ -71,6 +71,14 @@ public final class RequestContextPipeline<C> {
             }
         }
 
+        // A tenantless policy cannot be used to establish a tenant-scoped context.
+        // Keep the resource mismatch check above so cross-tenant resources stay hidden.
+        if (!policy.tenantRequired() && actorContext.tenant().isTenantScoped()) {
+            throw new KernelAccessException(
+                    KernelFailure.INVALID_CONTEXT,
+                    "A tenantless endpoint cannot establish an active tenant.");
+        }
+
         if (policy.tenantRequired()) {
             TenantContext tenant = actorContext.tenant();
             if (!tenant.isTenantScoped()) {

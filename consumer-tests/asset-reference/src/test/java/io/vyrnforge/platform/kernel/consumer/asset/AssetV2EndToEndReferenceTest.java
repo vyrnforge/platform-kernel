@@ -174,7 +174,7 @@ class AssetV2EndToEndReferenceTest {
         JdbcReliabilityTransaction transaction =
                 new JdbcReliabilityTransaction(dataSource, codec, clock);
 
-        transaction.execute((connection, events, audits) -> {
+        transaction.executeIdempotent(decision.lease(), IdempotencyResultCodec.strings(), (connection, events, audits) -> {
             try (PreparedStatement statement = connection.prepareStatement("""
                     INSERT INTO asset_v2_reference
                       (id, tenant_id, label, assigned_actor_id)
@@ -219,10 +219,8 @@ class AssetV2EndToEndReferenceTest {
                     "Asset created through V2 reference flow.",
                     Map.of("label", label)));
 
-            return null;
+            return ASSET_ID.toString();
         });
-
-        idempotency.complete(decision.lease(), ASSET_ID.toString());
 
         List<EventEnvelope<Object>> published =
                 new CopyOnWriteArrayList<>();
