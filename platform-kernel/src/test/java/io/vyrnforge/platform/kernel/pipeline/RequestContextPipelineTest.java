@@ -52,6 +52,21 @@ class RequestContextPipelineTest {
     }
 
     @Test
+    void rejectsFutureEffectiveEntitlementBeforeDomainAuthorization() {
+        Instant now = Instant.parse("2026-11-14T00:00:00Z");
+        var pipeline = new RequestContextPipeline<>(
+                identityAdapter(Set.of("asset.read")),
+                (actor, tenant) -> true,
+                (tenant, module) -> new ModuleEntitlement(tenant, module, true, now.plusSeconds(1)),
+                (actor, action, resource) -> { throw new AssertionError("must not authorize"); },
+                java.time.Clock.fixed(now, java.time.ZoneOffset.UTC));
+        var error = assertThrows(KernelAccessException.class, () -> pipeline.resolve(
+                new RequestContextInput<>("valid", TenantContext.tenant(TENANT_A),
+                        CorrelationContext.create(), EndpointPolicy.tenantModule("asset", "asset.read"), null)));
+        assertEquals(KernelFailure.MODULE_DISABLED, error.failure());
+    }
+
+    @Test
     void rejectsTenantlessActorForTenantOwnedEndpoint() {
         var pipeline = pipeline(identityAdapter(Set.of("asset.read")), true, true, true);
 
