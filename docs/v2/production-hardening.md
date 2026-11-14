@@ -1,6 +1,6 @@
 # Kernel V2 production hardening
 
-Status: proposed implementation for review; does not reopen DEC-K013 release closure.
+Status: maintenance source version 0.2.1; publication subject to verified release workflow. Does not reopen DEC-K013 release closure.
 Based on the v0.2.0 implementation and DEC-K008/009/011/012/013.
 
 ## P0 controls

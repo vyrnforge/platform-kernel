@@ -1,5 +1,16 @@
 # Changelog
 
+## 0.2.1 — Kernel V2 production hardening
+
+- Add crash-atomic JDBC mutation and idempotency completion using `executeIdempotent`.
+- Fence outbox worker updates with per-claim UUIDv7 tokens; recover expired final attempts as DEAD and expose lost claims.
+- Reject tenant-scoped contexts on explicitly tenantless endpoints.
+- Add PostgreSQL concurrent retry, lost-response, rollback, stale worker and terminal recovery regression tests; extend HTTP/core negative isolation coverage.
+- Add Flyway V3, an additive migration. Stop/drain older publishers before upgrading; mixed old/new publisher versions are unsupported.
+- Preserve released v0.2 wire schemas. Existing separate `execute` + `complete` calls remain available but are not crash-atomic.
+
+See `docs/v2/production-hardening.md` for rollout, recovery, security behavior changes and residual deployment requirements.
+
 ## 0.2.0 — Kernel V2 milestone
 
 Kernel V2 completes the thin cross-product foundation and validates durable reliability with Asset Management.

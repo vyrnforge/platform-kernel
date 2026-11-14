@@ -2,7 +2,7 @@
 
 Thin, reusable enterprise foundation shared by VyrnForge products.
 
-> **Status:** Kernel V2 release candidate — artifact version `0.2.0`. Implementation/security validation is included; publication closes when `v0.2.0` is tagged and the packages are published. File Storage integration is explicitly deferred.
+> **Status:** Kernel V2 maintenance source version `0.2.1`. The `v0.2.0` release is the original V2 baseline; check [GitHub Releases](https://github.com/vyrnforge/platform-kernel/releases) for published maintenance artifacts. File Storage integration remains explicitly deferred.
 
 ## Principles
 
@@ -52,7 +52,7 @@ The kernel exposes transport/storage-neutral contracts for:
 - `FileReference`;
 - tenant-scoped `IdempotencyPort<R>`.
 
-These interfaces define semantics and guarantees without selecting Kafka, PostgreSQL, an outbox table, central audit deployment, or File Storage implementation. See `docs/contracts/reliability-semantics.md`.
+These interfaces define semantics and guarantees without selecting Kafka, PostgreSQL, an outbox table, central audit deployment, or File Storage implementation. See `docs/contracts/reliability-semantics.md`. For retriable JDBC mutations, use `JdbcReliabilityTransaction.executeIdempotent` to commit the acquired result together with domain data and required intents. See `docs/v2/production-hardening.md` for migration and recovery guidance.
 
 ## Observability and health
 
@@ -87,7 +87,7 @@ bash scripts/verify-core.sh
 
 ## Versioning
 
-Kernel V2 artifacts use `0.2.0`. Phase 0 `v0.1` remains an immutable historical draft; `v0.2` is the released wire-compatible V2 contract package. Breaking consumer-facing changes require a new contract version plus migration guidance.
+Kernel V2 maintenance artifacts use `0.2.1`. The released wire contract package remains `v0.2` (`0.2.0` schema manifest); no wire contract changes are introduced. Phase 0 `v0.1` remains an immutable historical draft; `v0.2` is the released wire-compatible V2 contract package. Breaking consumer-facing changes require a new contract version plus migration guidance.
 
 ## License
 
