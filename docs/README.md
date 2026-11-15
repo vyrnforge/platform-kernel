@@ -5,6 +5,7 @@ Current consumer and maintainer entry point. Use the current distribution guide 
 | Topic | Guide |
 | --- | --- |
 | Adoption / Maven | [Three-JAR distribution](integration/three-jar-distribution.md) |
+| Adoption checklist | [Application adoption](integration/adoption-checklist.md) |
 | First integration | [General-purpose Java quickstart](integration/quickstart.md) |
 | Identity | [Trusted identity boundary](integration/identity-boundary.md) |
 | HTTP / request context | [General-purpose quickstart](integration/quickstart.md#http-integration) |

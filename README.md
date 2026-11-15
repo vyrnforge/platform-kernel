@@ -6,7 +6,7 @@
 
 ## Get started
 
-Requires Java 21. Maven Central is the canonical distribution for the organization namespace `io.github.vyrnforge`. [v0.3.1 is published on Maven Central](https://central.sonatype.com/artifact/io.github.vyrnforge/platform-kernel/0.3.1) and verified with an anonymous Maven consumer. No custom Maven repository or credentials are needed. The previous 0.3.0 distribution remains available on GitHub Packages.
+Requires Java 21. Maven Central is the canonical distribution for the organization namespace `io.github.vyrnforge`. [v0.3.2 is published on Maven Central](https://central.sonatype.com/artifact/io.github.vyrnforge/platform-kernel/0.3.2) and verified with an anonymous Maven consumer. No custom Maven repository or credentials are needed. The previous 0.3.0 distribution remains available on GitHub Packages.
 
 | Artifact | Use |
 | --- | --- |
@@ -20,7 +20,7 @@ See [Maven dependencies and migration](docs/integration/three-jar-distribution.m
 <dependency>
   <groupId>io.github.vyrnforge</groupId>
   <artifactId>platform-kernel</artifactId>
-  <version>0.3.1</version>
+  <version>0.3.2</version>
 </dependency>
 ```
 
@@ -45,6 +45,7 @@ The kernel consumes a trusted identity projection from your authentication middl
 
 ## Integration guides
 
+- [Application adoption checklist](docs/integration/adoption-checklist.md)
 - [Identity boundary](docs/integration/identity-boundary.md)
 - [General-purpose quickstart and HTTP integration](docs/integration/quickstart.md)
 - [Reliability semantics](docs/contracts/reliability-semantics.md) and [JDBC rollout / recovery](docs/v2/production-hardening.md)

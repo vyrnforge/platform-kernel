@@ -10,7 +10,7 @@ Maven Central, no custom repository or credentials:
 <dependency>
   <groupId>io.github.vyrnforge</groupId>
   <artifactId>platform-kernel</artifactId>
-  <version>0.3.1</version>
+  <version>0.3.2</version>
 </dependency>
 ```
 
@@ -18,7 +18,7 @@ Gradle (Java 21):
 
 ```kotlin
 repositories { mavenCentral() }
-dependencies { implementation("io.github.vyrnforge:platform-kernel:0.3.1") }
+dependencies { implementation("io.github.vyrnforge:platform-kernel:0.3.2") }
 ```
 
 Optional: add `platform-kernel-jdbc` for PostgreSQL/Flyway reliability, or `platform-kernel-testkit` as a test dependency. See [distribution](three-jar-distribution.md). Java imports remain `io.vyrnforge.platform.kernel.*`.
@@ -49,11 +49,11 @@ A tenantless endpoint is not an unauthenticated endpoint and cannot access a ten
 
 [GeneralUsageExample.java](../../verification/GeneralUsageExample.java) is a complete executable sample, compiled and executed by repository CI against the packaged main JAR alone. It demonstrates UUIDv7, normalized identity, tenantless profile access, tenant-scoped record access, and rejection of cross-tenant, invalid-context and unauthorized requests. Its fixed identities and lambda stores are **synthetic fixtures**, not production authentication or persistence.
 
-Save the example and obtain the main JAR using Maven (or [download it](https://repo.maven.apache.org/maven2/io/github/vyrnforge/platform-kernel/0.3.1/platform-kernel-0.3.1.jar)). From the directory containing the two files:
+Save the example and obtain the main JAR using Maven (or [download it](https://repo.maven.apache.org/maven2/io/github/vyrnforge/platform-kernel/0.3.2/platform-kernel-0.3.2.jar)). From the directory containing the two files:
 
 ```bash
-javac --release 21 -cp platform-kernel-0.3.1.jar GeneralUsageExample.java
-java -cp ".:platform-kernel-0.3.1.jar" GeneralUsageExample
+javac --release 21 -cp platform-kernel-0.3.2.jar GeneralUsageExample.java
+java -cp ".:platform-kernel-0.3.2.jar" GeneralUsageExample
 ```
 
 On Windows, replace the classpath separator `:` with `;`. No testkit, PostgreSQL, web framework or VyrnForge service is needed.
