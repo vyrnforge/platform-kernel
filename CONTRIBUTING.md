@@ -26,3 +26,7 @@ PRs should include negative tenant-isolation coverage for any change affecting t
 ## Pull requests and releases
 
 Keep changes focused. Open a PR against `main`; required checks include `verify`, `CodeQL` and `dependency-review`. Use a squash merge with a verified commit. A release PR updates VERSION and all Maven module versions and uses a `release:` merge title. See [release operations](docs/releases/README.md). Documentation-only changes do not publish a new library. Avoid direct pushes to protected main or unreviewed workflow changes.
+
+## Review discipline
+
+For changes to public contracts, authentication/tenant controls, database migrations, publishing workflows or signing keys, request independent qualified review before merge whenever a second authorized maintainer is available. Current single-maintainer operation cannot produce independent approval; record the named owner acceptance, exact revision, protected CI evidence, compatibility/rollback review and the exception in the PR. Do not count an automated check as human approval. Keep protections active; when a qualified second maintainer is appointed, owner approves enabling required approvals/CODEOWNERS reviews. Never bypass signed-commit or required-check controls. Signing-key custody and token revocation are owner-controlled; see [key operations](docs/releases/signing-key-operations.md).
