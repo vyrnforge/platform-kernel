@@ -3,7 +3,7 @@
 set -euo pipefail
 root="$(cd "$(dirname "$0")/.." && pwd)"
 version="$(tr -d '[:space:]' < "$root/VERSION")"
-consumer=2effe678943242260c64ef252bae7378aa61434a
+consumer=0f08b3054c6835c8f40913c38ca09c8d359d6ce1
 work="$(mktemp -d)"
 trap 'rm -rf "$work"' EXIT
 git init -q "$work/file-storage"
@@ -18,8 +18,8 @@ mvn -B -ntp --strict-checksums -Dmaven.repo.local="$work/m2" org.apache.maven.pl
 mvn -B -ntp --strict-checksums -Dmaven.repo.local="$work/m2" org.apache.maven.plugins:maven-install-plugin:3.1.4:install-file -Dfile="$jar" -DpomFile="$root/platform-kernel/pom.xml"
 cd "$work/file-storage"
 # Only temporary dependency wiring changes; exercise original consumer source and CI.
-sed -i "s|<kernel.version>0.3.0</kernel.version>|<kernel.version>$version</kernel.version>|; s|io.vyrnforge.platform</groupId>|io.github.vyrnforge</groupId>|g" backend/pom.xml backend/file-storage-domain/pom.xml
-sed -i 's|"io.vyrnforge.platform", "platform-kernel"|"io.github.vyrnforge", "platform-kernel"|' scripts/check-domain-boundaries.py
+sed -i "s|<kernel.version>0.3.0</kernel.version>|<kernel.version>$version</kernel.version>|; s|io.vyrnforge.platform</groupId>|io.github.vyrnforge</groupId>|g" backend/pom.xml backend/file-storage-domain/pom.xml backend/file-storage-application/pom.xml
+sed -i 's|"io.vyrnforge.platform", "platform-kernel"|"io.github.vyrnforge", "platform-kernel"|g' scripts/check-domain-boundaries.py
 cat > scripts/bootstrap-kernel.sh <<'EOF'
 #!/usr/bin/env bash
 set -euo pipefail

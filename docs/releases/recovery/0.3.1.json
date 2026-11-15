@@ -4,5 +4,6 @@
   "sourceCommit": "337cfd8f2737ef395b90315f8fe9a40882c60729",
   "fingerprint": "3772D5BF8DAAA18AB96A6CE46DBE5434595CDE18",
   "ownerTagVerified": true,
-  "githubReleaseId": 445343058
+  "githubReleaseId": 445343058,
+  "reconciliationReason": "Restore missing GitHub binary attachments from original signed Central payloads; never republish Central."
 }
