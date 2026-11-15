@@ -11,7 +11,7 @@ public record IdentityReference(String issuer, String subject) {
 
     private static String requireText(String value, String name) {
         Objects.requireNonNull(value, name);
-        if (value.isBlank()) {
+        if (value.isBlank() || value.codePointCount(0, value.length()) > 512) {
             throw new IllegalArgumentException(name + " must not be blank");
         }
         return value;

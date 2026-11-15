@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.3.2 — Integrity and consumer compatibility
+
+- Versioned structured intent fingerprints with persisted-content verification for historical duplicate replay; drain old intent writers before rollout.
+- Reject inconsistent audit tenant ownership, future effective entitlement decisions and invalid runtime contract fields; preserve released v0.1/v0.2 schemas and existing migrations.
+- Add real File Storage FS-100A compatibility gate using an isolated Maven repository and a pinned consumer source revision.
+- Preserve three physical JARs and Java package names. See `docs/v2/audit-remediation.md` for upgrade constraints.
+
 ## 0.3.1 — Maven Central distribution
 
 - Move Maven coordinates to the verified organization namespace `io.github.vyrnforge`; Java imports and APIs are unchanged.

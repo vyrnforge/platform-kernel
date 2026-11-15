@@ -16,6 +16,14 @@ public record CorrelationContext(
     public CorrelationContext {
         Objects.requireNonNull(requestId, "requestId");
         Objects.requireNonNull(correlationId, "correlationId");
+        if (!UuidV7.isCanonical(requestId.toString()) || !UuidV7.isCanonical(correlationId.toString())
+                || (causationId != null && !UuidV7.isCanonical(causationId.toString()))) {
+            throw new IllegalArgumentException("correlation identifiers must be UUIDv7");
+        }
+        if (traceparent != null && traceparent.codePointCount(0, traceparent.length()) > 128
+                || tracestate != null && tracestate.codePointCount(0, tracestate.length()) > 512) {
+            throw new IllegalArgumentException("trace metadata exceeds contract length");
+        }
     }
 
     public static CorrelationContext create() {

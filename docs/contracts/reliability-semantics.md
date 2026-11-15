@@ -15,9 +15,9 @@ This document describes semantics exposed by the Java library. It does **not** s
 - producer and subject identity;
 - UUIDv7 correlation and optional causation;
 - optional actor;
-- non-null domain-owned payload.
+- non-null domain-owned JSON object payload; transport adapters validate the serialized shape.
 
-Consumers must assume at-least-once-compatible delivery and use `eventId` (plus consumer-specific state where necessary) to tolerate duplicate delivery.
+Consumers must assume at-least-once-compatible delivery and use `eventId` (plus consumer-specific state where necessary) to tolerate duplicate delivery. A DEAD outbox record does not prove non-delivery; reconcile with the receiver before replay.
 
 `EventIntentPort` is intentionally not named after Kafka, a queue, or an outbox. Returning successfully means the implementation accepted responsibility for eventual delivery according to its documented durability guarantee. The calling domain still owns how that acceptance is made atomic with the business mutation.
 
@@ -57,6 +57,8 @@ The caller also supplies an opaque `requestFingerprint` representing the effecti
 - `CONFLICT` — the key was reused with a different fingerprint.
 
 Records expire according to an explicit caller/service policy. After expiration, a key may be acquired again.
+
+Reauthenticate and authorize the current caller before replaying a stored result. The effective fingerprint must include actor/target semantics whenever the outcome depends on them; do not replay expired credentials or signed URLs. For JDBC, use `executeIdempotent` to atomically commit business rows, required intents and result on the supplied connection. Separate `execute` and `complete` calls are not crash-atomic. Keep external network side effects outside the transaction.
 
 The generic result type `R` is adapter/domain-owned. The kernel does not freeze HTTP response serialization, storage schema, or database locking strategy.
 

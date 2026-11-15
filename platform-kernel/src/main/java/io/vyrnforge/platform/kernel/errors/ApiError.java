@@ -1,6 +1,7 @@
 package io.vyrnforge.platform.kernel.errors;
 
 import io.vyrnforge.platform.kernel.context.CorrelationContext;
+import io.vyrnforge.platform.kernel.ids.UuidV7;
 
 import java.util.List;
 import java.util.Map;
@@ -17,10 +18,13 @@ public record ApiError(
         Map<String, Object> details) {
 
     public ApiError {
-        if (code == null || code.isBlank()) throw new IllegalArgumentException("code must not be blank");
-        if (message == null || message.isBlank()) throw new IllegalArgumentException("message must not be blank");
+        if (code == null || code.length() > 128 || !code.matches("^[A-Za-z0-9][A-Za-z0-9_.:-]*$")) throw new IllegalArgumentException("code must not be blank");
+        if (message == null || message.isBlank() || message.codePointCount(0, message.length()) > 2048) throw new IllegalArgumentException("message must not be blank");
         Objects.requireNonNull(requestId, "requestId");
         Objects.requireNonNull(correlationId, "correlationId");
+        if (!UuidV7.isCanonical(requestId.toString()) || !UuidV7.isCanonical(correlationId.toString())) {
+            throw new IllegalArgumentException("error identifiers must be UUIDv7");
+        }
         fieldErrors = fieldErrors == null ? List.of() : List.copyOf(fieldErrors);
         details = details == null ? Map.of() : Map.copyOf(details);
     }
