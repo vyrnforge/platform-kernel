@@ -3,7 +3,7 @@
 set -euo pipefail
 root="$(cd "$(dirname "$0")/.." && pwd)"
 version="$(tr -d '[:space:]' < "$root/VERSION")"
-consumer=0f08b3054c6835c8f40913c38ca09c8d359d6ce1
+consumer=43f1c5552a3202ad0724e516fe51c03886373591
 work="$(mktemp -d)"
 trap 'rm -rf "$work"' EXIT
 git init -q "$work/file-storage"
@@ -17,18 +17,13 @@ sha256sum "$jar"
 mvn -B -ntp --strict-checksums -Dmaven.repo.local="$work/m2" org.apache.maven.plugins:maven-install-plugin:3.1.4:install-file -Dfile="$root/pom.xml" -DpomFile="$root/pom.xml"
 mvn -B -ntp --strict-checksums -Dmaven.repo.local="$work/m2" org.apache.maven.plugins:maven-install-plugin:3.1.4:install-file -Dfile="$jar" -DpomFile="$root/platform-kernel/pom.xml"
 cd "$work/file-storage"
-# Only temporary dependency wiring changes; exercise original consumer source and CI.
-sed -i "s|<kernel.version>0.3.0</kernel.version>|<kernel.version>$version</kernel.version>|; s|io.vyrnforge.platform</groupId>|io.github.vyrnforge</groupId>|g" backend/pom.xml backend/file-storage-domain/pom.xml backend/file-storage-application/pom.xml
-sed -i 's|"io.vyrnforge.platform", "platform-kernel"|"io.github.vyrnforge", "platform-kernel"|g' scripts/check-domain-boundaries.py
-cat > scripts/bootstrap-kernel.sh <<'EOF'
-#!/usr/bin/env bash
-set -euo pipefail
-test -s "$KERNEL_CANDIDATE"
-cmp "$KERNEL_CANDIDATE" "$KERNEL_INSTALLED"
-echo "Using exact locally built kernel candidate; no remote release substitution."
-EOF
-export KERNEL_CANDIDATE="$jar"
-export KERNEL_INSTALLED="$work/m2/io/github/vyrnforge/platform-kernel/$version/platform-kernel-$version.jar"
+# The pinned consumer already uses Central coordinates; change only its version
+# in this disposable checkout and require the exact locally installed candidate.
+sed -i "s|<kernel.version>0.3.2</kernel.version>|<kernel.version>$version</kernel.version>|" backend/pom.xml
+grep -Fq "<kernel.version>$version</kernel.version>" backend/pom.xml
+installed="$work/m2/io/github/vyrnforge/platform-kernel/$version/platform-kernel-$version.jar"
+cmp "$jar" "$installed"
 export MAVEN_OPTS="${MAVEN_OPTS:-} -Dmaven.repo.local=$work/m2"
 make ci
+cmp "$jar" "$installed"
 echo "File Storage $consumer passed with kernel $version candidate."
