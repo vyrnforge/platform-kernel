@@ -1,28 +1,28 @@
-# Kernel 0.3.1 — three-JAR distribution
+# Kernel 0.3.2 — three-JAR distribution
 
-DEC-K015 / DEC-K016: three-JAR packaging and organization-level Maven publication, not new capabilities or an architecture change.
+DEC-K015 / DEC-K016: three-JAR packaging and organization-level Maven publication. v0.3.2 includes audit integrity and contract validation hardening; see [upgrade constraints](../v2/audit-remediation.md).
 
 ## Maven dependencies
 
-v0.3.1 is published on Maven Central (default Maven repository); all three libraries and parent metadata are available without custom repository settings or credentials. GitHub Packages remains a mirror; it requires authenticated Maven settings (server ID github). Never commit tokens.
+v0.3.2 is published on Maven Central (default Maven repository); all three libraries and parent metadata are available without custom repository settings or credentials. GitHub Packages remains a mirror; it requires authenticated Maven settings (server ID github). Never commit tokens.
 
 ```xml
 <dependencies>
   <dependency>
     <groupId>io.github.vyrnforge</groupId>
     <artifactId>platform-kernel</artifactId>
-    <version>0.3.1</version>
+    <version>0.3.2</version>
   </dependency>
   <!-- Optional: omit for products without JDBC reliability -->
   <dependency>
     <groupId>io.github.vyrnforge</groupId>
     <artifactId>platform-kernel-jdbc</artifactId>
-    <version>0.3.1</version>
+    <version>0.3.2</version>
   </dependency>
   <dependency>
     <groupId>io.github.vyrnforge</groupId>
     <artifactId>platform-kernel-testkit</artifactId>
-    <version>0.3.1</version>
+    <version>0.3.2</version>
     <scope>test</scope>
   </dependency>
 </dependencies>
@@ -30,7 +30,7 @@ v0.3.1 is published on Maven Central (default Maven repository); all three libra
 
 ## Migration from 0.2.1 / 0.3.0
 
-From 0.3.0, replace group ID `io.vyrnforge.platform` with `io.github.vyrnforge` and version 0.3.1 for all three dependencies; artifact IDs and Java packages are unchanged. Do not mix the old and new group IDs.
+From 0.3.0, replace group ID `io.vyrnforge.platform` with `io.github.vyrnforge` and version 0.3.2 for all three dependencies; artifact IDs and Java packages are unchanged. Do not mix the old and new group IDs.
 
 | Old coordinates (artifactId) | Replace with |
 | --- | --- |
@@ -40,7 +40,7 @@ From 0.3.0, replace group ID `io.vyrnforge.platform` with `io.github.vyrnforge` 
 | platform-kernel-observability | platform-kernel |
 | platform-kernel-contracts | platform-kernel |
 | platform-kernel-persistence-jdbc | platform-kernel-jdbc |
-| platform-kernel-testkit | same artifact, new group ID/version 0.3.1, test scope |
+| platform-kernel-testkit | same artifact, new group ID/version 0.3.2, test scope |
 
 Remove the old dependencies rather than adding the new JARs alongside them. Inspect `mvn dependency:tree` for transitive references to the old split distribution and upgrade or exclude those dependencies. Java imports, method signatures, schema resource names and database migration checksums remain unchanged. The existing v0.2.1 artifacts are retained; schema-only consumers can continue using the historical contracts artifact if necessary.
 
@@ -50,6 +50,6 @@ There are exactly three kernel library JARs plus parent POM metadata and supplem
 
 ## Verification
 
-The [release recovery run](https://github.com/vyrnforge/platform-kernel/actions/runs/43603172847) confirmed the original deployment, verified all 13 signed payloads and resolved all three libraries in an isolated anonymous Maven consumer. The published release source remains pinned to commit `337cfd8f2737ef395b90315f8fe9a40882c60729`.
+The [release workflow](https://github.com/vyrnforge/platform-kernel/actions/runs/43663775552) built, signed and published v0.3.2, verified Central consumer resolution and completed the three GitHub binary attachments. The published source remains pinned to `c86eb33a46fae2843c75181c6b395cd0dc6710fe`. Earlier versions remain immutable.
 
 `mvn clean verify` runs the existing core, HTTP, controls, observability, JDBC/PostgreSQL, testkit and Asset reference tests. HTTP integration tests using testkit fixtures now live in the testkit test suite to prevent a main-to-testkit cyclic Maven dependency. `python3 scripts/check-distribution.py` checks exact JAR inventory, expected classes/resources, frozen schema/migration bytes and runs the standalone consumer smoke against the physical JARs.

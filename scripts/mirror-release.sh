@@ -28,7 +28,7 @@ for artifact in platform-kernel-parent platform-kernel platform-kernel-jdbc plat
   for file in "$dir"/*.pom "$dir"/*.jar; do
     test -f "$file" || continue
     rel="${file#"$stage/"}"
-    code="$(curl --silent --show-error --max-time 30 -u "$GITHUB_ACTOR:$GITHUB_TOKEN" -o "$RUNNER_TEMP/mirror-check" -w '%{http_code}' "$ghbase/$rel")"
+    code="$(curl --silent --show-error --location --max-redirs 5 --proto '=https' --proto-redir '=https' --max-time 30 -u "$GITHUB_ACTOR:$GITHUB_TOKEN" -o "$RUNNER_TEMP/mirror-check" -w '%{http_code}' "$ghbase/$rel")"
     case "$code" in
       200) cmp -s "$file" "$RUNNER_TEMP/mirror-check" || { echo "Mirror byte mismatch: $rel"; exit 1; }; present=$((present+1));;
       404) missing=$((missing+1));;

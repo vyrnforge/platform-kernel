@@ -5,5 +5,5 @@
   "fingerprint": "3772D5BF8DAAA18AB96A6CE46DBE5434595CDE18",
   "ownerTagVerified": true,
   "githubReleaseId": 445343058,
-  "reconciliationReason": "Restore missing GitHub binary attachments from original signed Central payloads; never republish Central."
+  "reconciliationReason": "Restore missing GitHub binary attachments from original signed Central payloads; retry after HTTPS redirect fix in mirror verification; never republish Central."
 }
