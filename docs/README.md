@@ -6,15 +6,17 @@ Current consumer and maintainer entry point. Use the current distribution guide 
 | --- | --- |
 | Adoption / Maven | [Three-JAR distribution](integration/three-jar-distribution.md) |
 | Adoption checklist | [Application adoption](integration/adoption-checklist.md) |
+| Consumer conformance | [Consumer conformance specification](integration/consumer-conformance.md) |
 | First integration | [General-purpose Java quickstart](integration/quickstart.md) |
 | Identity | [Trusted identity boundary](integration/identity-boundary.md) |
 | HTTP / request context | [General-purpose quickstart](integration/quickstart.md#http-integration) |
+| Portable wire contracts | [Contract inventory](contracts/portable-contract-inventory.md) |
 | Events, audit, idempotency | [Reliability contracts](contracts/reliability-semantics.md) |
 | JDBC | [Production hardening](v2/production-hardening.md), [migration/recovery](v2/migration-recovery.md) |
-| Operations | [Observability and health](observability/observability-health.md) |
+| Operations | [Observability and health](observability/observability-health.md), [operational readiness and outcome measurement](integration/operations-and-measurement.md) |
 | Security | [Repository controls](security/repository-hardening.md), [threat model](security/v2-threat-model.md), [historical internal review](security/v2-security-review.md) |
 | Releases | [Release runbook and workflow inventory](releases/README.md) |
-| Strategy | [Approved strategic evolution](strategy/kernel-evolution.md) |
+| Strategy | [Approved strategic evolution](strategy/kernel-evolution.md), [Foundation Adoption & Assurance baseline](strategy/foundation-adoption-assurance.md) |
 | Scope | [V2 scope and exit criteria](v2/scope-and-exit.md) |
 | Architecture decisions | [ADR 0001](adr/0001-v1-runtime-baseline.md), [ADR 0002](adr/0002-framework-neutral-http-adapter.md), [ADR 0003](adr/0003-v2-jdbc-reliability.md), [ADR 0004](adr/0004-distribution-and-publication.md) |
 
