@@ -56,13 +56,24 @@ try{
   assert.equal(await evaluate('document.querySelector(".skip-link").getAttribute("href")'),'#content');
   assert.equal(await evaluate('document.querySelectorAll(".docs-topic").length'),developerGuides.length,'all developer guides are available');
   assert.equal(await evaluate('document.querySelector(".docs-nav-link").getAttribute("href")'),'#docs');
-  await click('.docs-nav-group:nth-child(2) .docs-topic');
+  assert.equal(await evaluate('getComputedStyle(document.querySelector(".docs-topic-nav")).display'),'block','desktop guide groups stack vertically');
+  // Keyboard users can select a guide with a native button and Enter.
+  await evaluate('document.querySelector(".docs-nav-group:nth-child(2) .docs-topic").focus()');
+  assert.equal(await evaluate('document.activeElement.classList.contains("docs-topic")'),true);
+  await send('Input.dispatchKeyEvent',{type:'keyDown',key:'Enter',code:'Enter',windowsVirtualKeyCode:13});
+  await send('Input.dispatchKeyEvent',{type:'keyUp',key:'Enter',code:'Enter',windowsVirtualKeyCode:13});
   assert.equal(await evaluate(q('#docs-guide-title')+'.textContent'),'Resolve a trusted request','guide selection changes article');
   await click('.docs-code-choices button:nth-child(2)');
   assert.ok((await evaluate(q('.docs-code code')+'.textContent')).includes('TenantContext.tenant(tenantId)'),'tenant-scoped usage snippet visible');
   await click('.docs-nav-group:first-child .docs-topic');
   await click('.docs-code-choices button:nth-child(2)');
   assert.ok((await evaluate(q('.docs-code code')+'.textContent')).includes('mavenCentral()'),'Gradle tab changes code');
+  // At an effective 200%-zoom desktop content width (720 CSS px), the layout still reflows.
+  await send('Emulation.setDeviceMetricsOverride',{width:720,height:1000,deviceScaleFactor:1,mobile:false});
+  await sleep(200);
+  assert.ok(await evaluate('document.documentElement.scrollWidth <= window.innerWidth+1'),'Guide layout overflows an effective 200%-zoom desktop width');
+  assert.ok(await evaluate('document.querySelector(".docs-code pre").scrollWidth >= document.querySelector(".docs-code pre").clientWidth'),'code panel remains scrollable');
+  await send('Emulation.setDeviceMetricsOverride',{width:1440,height:1000,deviceScaleFactor:1,mobile:false});
   await click('.journey-choice:nth-child(2)');
   assert.ok((await evaluate('document.querySelector(".journey-detail").innerText')).includes('Commit a business change'),'path selector updates content');
   await click('.journey-choice:nth-child(1)');
