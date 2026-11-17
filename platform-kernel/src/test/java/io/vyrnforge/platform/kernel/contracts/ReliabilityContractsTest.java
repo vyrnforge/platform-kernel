@@ -121,6 +121,24 @@ class ReliabilityContractsTest {
     }
 
     @Test
+    void idempotencyRequestRespectsExistingDatabaseColumnLimits() {
+        Instant expiry = Instant.parse("2026-11-13T10:00:00Z");
+        assertDoesNotThrow(() -> new IdempotencyRequest(TENANT,
+                "a".repeat(192), "k".repeat(512), "f".repeat(512), expiry));
+        assertThrows(IllegalArgumentException.class, () -> new IdempotencyRequest(TENANT,
+                "a".repeat(193), "key", "fingerprint", expiry));
+        assertThrows(IllegalArgumentException.class, () -> new IdempotencyRequest(TENANT,
+                "asset.create", "k".repeat(513), "fingerprint", expiry));
+        assertThrows(IllegalArgumentException.class, () -> new IdempotencyRequest(TENANT,
+                "asset.create", "key", "f".repeat(513), expiry));
+        // PostgreSQL varchar lengths count characters, not UTF-16 code units.
+        assertDoesNotThrow(() -> new IdempotencyRequest(TENANT,
+                "asset.create", "😀".repeat(512), "f", expiry));
+        assertThrows(IllegalArgumentException.class, () -> new IdempotencyRequest(TENANT,
+                "asset.create", "😀".repeat(513), "f", expiry));
+    }
+
+    @Test
     void auditRequiresConsistentTenantForTenantOwnedResources() {
         UUID other = UUID.fromString("019a7f0e-3234-7abc-8def-1234567890ab");
         assertThrows(IllegalArgumentException.class, () -> scopedAudit(TENANT, other));
