@@ -6,7 +6,7 @@
   "scripts": {
     "build": "node build.mjs",
     "dev": "node build.mjs --serve",
-    "test": "node --test src/data.test.mjs"
+    "test": "node --test src/*.test.mjs"
   },
   "dependencies": {
     "react": "19.3.1",
