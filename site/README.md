@@ -9,7 +9,7 @@ Four separate destinations use hash routes, so deep links and browser Back/Forwa
 | Destination | Route | Purpose |
 | --- | --- | --- |
 | Home | #/ | One dependency preview, a three-step start and an ownership summary. |
-| Documentation | #/docs/install, /first, /request, /jdbc, /assure | Task-oriented, source-pinned usage examples; search, code tabs and verification. |
+| Documentation | #/docs/install, /first, /request, /jdbc, /assure | Task-oriented, source-pinned usage examples; full-text guide search, syntax-highlighted code tabs, run commands and verification. |
 | Playground | #/playground | One browser-only integration learning model: core, trusted API and optional JDBC. |
 | Reference | #/reference/architecture, /capabilities, /releases | Ownership, deployment, full capability inventory and release evidence. |
 
@@ -41,4 +41,4 @@ Use Node.js 22+.
 
 The bundle uses local files and needs no external CDN/backend. GitHub Pages CI builds/tests the PR and runs Chromium smoke. Deploy only when a change is merged to main.
 
-Manual real browser/200% zoom/screen-reader and independent code-example verification remain separate; automated checks do not constitute WCAG certification. Keep site claims pinned to published Maven Central evidence rather than an unpublished candidate.
+Chromium smoke covers route/focus/keyboard navigation, code rendering, search, and narrow/zoom-equivalent responsive widths; it is not a full manual 200% browser-zoom, screen-reader or WCAG audit. The first Java example and request/JDBC signatures were source-reviewed against v0.3.2, not executed against Maven Central artifacts in the website pipeline. Keep site claims pinned to published Maven Central evidence rather than an unpublished candidate.

@@ -62,11 +62,18 @@ try{
   await wait('document.querySelector(".guide-article") && location.hash==="#/docs/install"','Documentation page did not render');
   assert.equal(await evaluate('document.querySelectorAll(".docs-guide-group a").length'),5,'five addressable developer guides');
   assert.ok((await evaluate(q('#guide-heading')+'.textContent')).includes('Install the released library'));
+  assert.equal(await evaluate('document.activeElement.id'),'guide-heading','docs navigation announces the active guide');
   await click('.guide-code-tabs button:nth-child(2)');
   assert.ok((await evaluate(q('.guide-code-shell code')+'.textContent')).includes('mavenCentral()'),'Gradle tab changes example');
+  await click('.guide-copy');
+  await wait('document.querySelector(".guide-copy-status").textContent.length>0','copy action must report success or a usable fallback');
   await click('.guide-pager a:last-child');
   await wait('location.hash==="#/docs/first" && document.querySelector("#guide-heading").textContent.includes("first Java")','next guide deep link failed');
   assert.ok((await evaluate(q('.guide-code-shell code')+'.textContent')).includes('UuidV7.generate'),'real first Java API visible');
+  assert.ok(await evaluate('document.querySelectorAll(".guide-code-shell .tok-keyword").length>0'),'syntax highlighting is rendered without altering code text');
+  await click('.guide-code-tabs button:nth-child(2)');
+  assert.ok((await evaluate(q('.guide-code-shell code')+'.textContent')).includes('javac --release 21'),'run commands are directly accessible');
+  assert.equal(await evaluate('document.querySelector(".guide-code-caption").textContent.includes("terminal")'),true,'filename/language is identified');
   await click('.docs-guide-group:nth-child(2) a:first-of-type');
   await wait('location.hash==="#/docs/request"','request guide navigation failed');
   assert.equal(await evaluate('document.querySelector(".docs-guide-group:nth-child(2) a:first-of-type").getAttribute("aria-current")'),'page');
@@ -81,6 +88,8 @@ try{
   const setSearch=async text=>evaluate('(()=>{const el=document.querySelector("#guide-search");const setter=Object.getOwnPropertyDescriptor(HTMLInputElement.prototype,"value").set;setter.call(el,'+JSON.stringify(text)+');el.dispatchEvent(new Event("input",{bubbles:true}));return true})()');
   await setSearch('retriable');
   await wait('document.querySelectorAll(".docs-guide-group a").length===1','guide search did not filter topics');
+  await setSearch('classpath separator');
+  await wait('document.querySelectorAll(".docs-guide-group a").length===1','search did not index troubleshooting content');
   await setSearch('unlikely-search-xyz');
   await wait('!!document.querySelector(".docs-search-empty")','search empty state not visible');
   await click('.docs-search-empty button');
@@ -89,6 +98,7 @@ try{
   // Reference is documentation, not another homepage showcase.
   await click('.primary-nav a[href="#/reference/architecture"]');
   await wait('location.hash==="#/reference/architecture" && !!document.querySelector(".ownership-grid")','architecture reference failed');
+  assert.equal(await evaluate('document.activeElement.id'),'reference-heading','reference route focuses its topic heading');
   assert.equal(await evaluate('document.querySelectorAll(".ownership-grid section").length'),4,'four separate ownership boundaries');
   assert.equal(await evaluate('document.querySelectorAll(".reference-patterns details").length'),4,'deployment notes are consolidated in reference');
   await click('.reference-patterns summary');
@@ -103,6 +113,7 @@ try{
   // One playground only, with published code output and negative scenarios.
   await click('.primary-nav a[href="#/playground"]');
   await wait('location.hash==="#/playground" && !!document.querySelector(".wb-frame")','playground failed');
+  assert.equal(await evaluate('document.activeElement.id'),'workbench-title','playground route focuses its visible heading');
   assert.equal(await evaluate('document.querySelectorAll(".wb-profile").length'),3,'supported modes present');
   await click('.wb-profile:nth-child(2)');
   await click('.wb-scenario:nth-child(2)');
@@ -119,15 +130,16 @@ try{
   assert.ok((await evaluate(q('.wb-outcome')+'.textContent')).includes('SAFE REPLAY'),'idempotent replay simulated');
 
   // Wide, zoom-equivalent and narrow reflow: page has no horizontal overflow; code scrolls in its own pane.
-  for(const width of [720,390]){
+  for(const width of [720,640,390,320]){
     await send('Emulation.setDeviceMetricsOverride',{width,height:900,deviceScaleFactor:1,mobile:width===390});
     await sleep(180);
     assert.ok(await evaluate('document.documentElement.scrollWidth<=window.innerWidth+1'),'Playground overflows viewport '+width);
     await evaluate('location.hash="#/docs/first"');
     await wait('!!document.querySelector(".guide-article")','mobile docs missing');
     assert.ok(await evaluate('document.documentElement.scrollWidth<=window.innerWidth+1'),'Docs overflow viewport '+width);
+    if(width<=640)assert.equal(await evaluate('getComputedStyle(document.querySelector(".docs-guide-nav")).display'),'flex','mobile guide links use compact wrapping navigation at '+width);
     assert.equal(await evaluate('getComputedStyle(document.querySelector(".guide-code-shell pre")).overflowX'),'auto','code has local horizontal scrolling at '+width);
-    if(width===390)assert.ok(await evaluate('document.querySelector(".guide-code-shell pre").scrollWidth>document.querySelector(".guide-code-shell pre").clientWidth'),'long code scrolls at narrow viewport');
+    if(width<=390)assert.ok(await evaluate('document.querySelector(".guide-code-shell pre").scrollWidth>document.querySelector(".guide-code-shell pre").clientWidth'),'long code scrolls at narrow viewport');
     await evaluate('location.hash="#/reference/architecture"');
     await wait('!!document.querySelector(".ownership-grid")','responsive reference missing');
     assert.ok(await evaluate('document.documentElement.scrollWidth<=window.innerWidth+1'),'Reference overflows viewport '+width);
@@ -137,10 +149,12 @@ try{
     await evaluate('location.hash="#/playground"');
     await wait('!!document.querySelector(".wb-frame")','responsive playground missing');
   }
+  await evaluate('location.hash="#/"');
+  await wait('document.activeElement?.id==="page-title"','Home heading should receive route-change focus');
   await send('Emulation.setEmulatedMedia',{features:[{name:'prefers-reduced-motion',value:'reduce'}]});
   assert.equal(await evaluate('matchMedia("(prefers-reduced-motion: reduce)").matches'),true,'reduced-motion preference present');
   assert.deepEqual(errors,[],'browser JavaScript exceptions');
-  console.log('Browser smoke: four destinations, deep-link docs, search, keyboard guides, code, reference, playground and 720/390px reflow passed');
+  console.log('Browser smoke: four destinations, source-aware docs search, focus, keyboard/code, playground, and 720/640/390/320px reflow passed');
 } finally {
   ws?.close();chrome.kill('SIGTERM');server.close();await sleep(200);await rm(profile,{recursive:true,force:true}).catch(()=>{});
 }

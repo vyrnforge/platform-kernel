@@ -1,6 +1,7 @@
 import React, {useState} from 'react';
 import {repo,version} from './data.mjs';
 import {getWorkbenchTrace,getWorkbenchRecipe,workbenchModes,workbenchScenarios} from './workbench-data.mjs';
+import {tokenizeCode} from './code-tokens.mjs';
 import './kernel-workbench.css';
 
 export function IntegrationWorkbench(){
@@ -33,16 +34,15 @@ export function IntegrationWorkbench(){
   return <section id="workbench" className="section wb-section" aria-labelledby="workbench-title">
     <div className="wrap">
       <div className="wb-intro">
-        <div><span className="wb-kicker"><span className="wb-pulse" aria-hidden="true"/> INTERACTIVE LAB / RELEASED v{version}</span>
-          <h2 id="workbench-title">Don’t just read the docs. <em>Build the picture.</em></h2>
-          <p className="lead">Choose an integration, test its boundaries and leave with the right dependencies and Java starting point. Change any setting and the walkthrough updates.</p>
+        <div><span className="wb-kicker">SIMULATED LEARNING / RELEASED v{version}</span>
+          <h2 id="workbench-title" tabIndex={-1}>Trace a request. <em>Understand the boundary.</em></h2>
+          <p className="lead">Select a scenario to understand where Kernel checks stop and application responsibilities begin. Copy released dependency or Java examples afterward.</p>
         </div>
-        <div className="wb-intro-aside"><strong>01—03</strong><span>Three integration paths<br/>One embedded foundation</span></div>
       </div>
       <div className="wb-frame">
         <div className="wb-toolbar">
-          <div className="wb-toolbar-title"><span className="wb-icon" aria-hidden="true">⌘</span><div><strong>Kernel Workbench</strong><small>Interactive integration composer</small></div></div>
-          <div className="wb-toolbar-right"><span className="wb-live-dot" aria-hidden="true"/> Browser-only preview <span className="wb-toolbar-version">v{version} published</span></div>
+          <div className="wb-toolbar-title"><span className="wb-icon" aria-hidden="true">⌘</span><div><strong>Integration Playground</strong><small>Scenario walkthrough and code reference</small></div></div>
+          <div className="wb-toolbar-right">Simulation · not executable Java <span className="wb-toolbar-version">v{version} published</span></div>
         </div>
         <div className="wb-layout">
           <aside className="wb-config" aria-label="Workbench configuration">
@@ -75,13 +75,6 @@ export function IntegrationWorkbench(){
           </aside>
           <div className="wb-main">
             <div className="wb-stage-heading"><div><span className="wb-overline">COMPOSED ARCHITECTURE</span><h3>{modeInfo.title}<span className="wb-stage-slash"> / {mode==='request'?(scope==='scoped'?'tenant-scoped':'tenantless'):mode==='mutation'?'JDBC adapter':'zero infrastructure'}</span></h3></div><span className="wb-mode-tag">{modeInfo.badge}</span></div>
-            <div className="wb-architecture" aria-label="Illustrative component ownership">
-              <div className="wb-node wb-node-app"><span>YOUR APPLICATION</span><strong>{mode==='core'?'Java service / worker':mode==='request'?'API handler':'Business command'}</strong><small>Business logic + authorization</small></div>
-              <div className="wb-connector" aria-hidden="true"><span/></div>
-              <div className="wb-node wb-node-kernel"><span>EMBEDDED LIBRARY</span><strong>Platform Kernel</strong><small>{recipe.kernelProvision}</small></div>
-              <div className="wb-connector" aria-hidden="true"><span/></div>
-              <div className="wb-node wb-node-external"><span>{mode==='core'?'NO REQUIRED SERVER':'APPLICATION SUPPLIES'}</span><strong>{mode==='core'?'Independent primitives':mode==='request'?'Trusted identity + policies':'Product JDBC + delivery'}</strong><small>{mode==='core'?'No DB · no IAM · no broker':mode==='request'?'IAM or IdP is external':'No shared cross-product database'}</small></div>
-            </div>
             <div className="wb-trace-heading"><div><span className="wb-overline">DECISION TRACE / SIMULATED</span><h4>{scenarios.find(x=>x.id===scenario)?.title}</h4></div><span className={'wb-outcome'+(blocked?' is-blocked':'')}>{trace.outcome}</span></div>
             <ol className="wb-track" aria-label="Walk through decision stages">
               {trace.steps.map((item,i)=><li key={item.name}><button type="button" aria-current={i===activeStep?'step':undefined} className={'wb-trace-step'+(i===activeStep?' is-current':'')+(item.state==='blocked'?' is-blocked':'')} onClick={()=>setActiveStep(i)}>
@@ -99,7 +92,7 @@ export function IntegrationWorkbench(){
               <div className="wb-export-head"><div><span className="wb-overline">YOUR STARTER RECIPE</span><h4>{recipe.artifacts.length} {recipe.artifacts.length===1?'artifact':'artifacts'} · Java 21+</h4></div><span className="wb-published">● v{version} / RELEASED</span></div>
               <div className="wb-export-grid">
                 <div className="wb-code-pane"><div className="wb-code-tabs"><div role="group" aria-label="Generated code type"><button type="button" aria-pressed={codeTab==='maven'} className={codeTab==='maven'?'is-selected':''} onClick={()=>{setCodeTab('maven');setCopyStatus('')}}>pom.xml</button><button type="button" aria-pressed={codeTab==='java'} className={codeTab==='java'?'is-selected':''} onClick={()=>{setCodeTab('java');setCopyStatus('')}}>Java example</button></div><button type="button" className="wb-copy" onClick={copyCode}>Copy <span aria-hidden="true">↗</span></button></div>
-                  <div className="wb-code-kind">{codeTab==='maven'?'Maven coordinates · published artifacts only':recipe.javaKind}</div><pre><code>{code}</code></pre><p className="wb-copy-feedback" role="status">{copyStatus}</p>
+                  <div className="wb-code-kind">{codeTab==='maven'?'Maven coordinates · published artifacts only':recipe.javaKind}</div><pre tabIndex={0} aria-label="Generated code, scroll horizontally if needed"><code>{tokenizeCode(code,codeTab==='maven'?'xml':'java').map((part,i)=>part.kind?<span key={i} className={'tok-'+part.kind}>{part.text}</span>:part.text)}</code></pre><p className="wb-copy-feedback" role="status">{copyStatus}</p>
                 </div>
                 <div className="wb-check-pane"><span className="wb-overline">INTEGRATION CHECKLIST</span><ul>{recipe.checks.map(x=><li key={x}>{x}</li>)}</ul><p><strong>Your application owns</strong>{recipe.appOwnership}</p><a href={repo+'/blob/main/'+recipe.guide} target="_blank" rel="noopener noreferrer">Open the integration guide <span aria-hidden="true">↗</span></a></div>
               </div>

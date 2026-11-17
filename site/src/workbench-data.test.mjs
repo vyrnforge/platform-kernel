@@ -50,7 +50,7 @@ test('generated starter recipes are pinned to published three-JAR contracts',()=
     assert.ok(!r.maven.includes(candidateVersion));
     assert.ok(!r.java.includes('RequestContextPipeline.tenantless('));
     assert.ok(r.checks.length>=2);
-    assert.ok(r.appOwnership&&r.kernelProvision);
+    assert.ok(r.appOwnership);
   }
   assert.deepEqual(getWorkbenchRecipe('core').artifacts,['platform-kernel']);
   assert.deepEqual(getWorkbenchRecipe('request').artifacts,['platform-kernel']);

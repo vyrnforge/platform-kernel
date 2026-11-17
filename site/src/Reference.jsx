@@ -39,7 +39,7 @@ export function Reference({topic='architecture'}){
       <div className="reference-main">
         {topic==='architecture'&&<article className="reference-article" aria-labelledby="reference-heading">
           <span className="eyebrow">SYSTEM BOUNDARIES</span>
-          <h2 id="reference-heading">Modular products, unified platform.</h2>
+          <h2 id="reference-heading" tabIndex={-1}>Modular products, unified platform.</h2>
           <p className="reference-lead">Platform Kernel is a Java library embedded in each product. It does not require a shared server, shared business database, IAM replacement or File Storage replacement.</p>
           <div className="ownership-grid">
             {boundaries.map(x=><section key={x.title}><span>{x.type}</span><h3>{x.title}</h3><p>{x.items}</p></section>)}
@@ -53,7 +53,7 @@ export function Reference({topic='architecture'}){
         </article>}
         {topic==='capabilities'&&<article className="reference-article" aria-labelledby="reference-heading">
           <span className="eyebrow">WHAT THE PUBLISHED LIBRARY PROVIDES</span>
-          <h2 id="reference-heading">Capability reference.</h2>
+          <h2 id="reference-heading" tabIndex={-1}>Capability reference.</h2>
           <p className="reference-lead">Each capability shows the library contract and the work that stays with the consuming application. Use the guide link for implementation, not this catalog.</p>
           <div className="capability-reference">
             {capabilities.map(x=><section key={x.title} className="capability-row">
@@ -66,7 +66,7 @@ export function Reference({topic='architecture'}){
         </article>}
         {topic==='releases'&&<article className="reference-article" aria-labelledby="reference-heading">
           <span className="eyebrow">VERSIONS & READINESS</span>
-          <h2 id="reference-heading">Use the released version.</h2>
+          <h2 id="reference-heading" tabIndex={-1}>Use the released version.</h2>
           <p className="reference-lead">A green library pipeline and a browser demo do not certify your application's security or production readiness.</p>
           <div className="versions-grid">
             <section><span className="version-state released">PUBLISHED</span><h3>v{version}</h3><p>Java 21+ core JAR, optional JDBC adapter and test-scope testkit. Maven Central coordinates are <code>io.github.vyrnforge</code>. The examples on this site are pinned to this release.</p><a href={'https://central.sonatype.com/artifact/io.github.vyrnforge/platform-kernel/'+version} target="_blank" rel="noopener noreferrer">View on Maven Central ↗</a></section>
