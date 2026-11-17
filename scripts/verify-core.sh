@@ -4,6 +4,7 @@ ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 OUT="$ROOT/target/local-verify"
 rm -rf "$OUT"
 mkdir -p "$OUT/classes"
+python3 "$ROOT/scripts/check-java-hygiene.py"
 
 mapfile -t SOURCES < <(find "$ROOT/platform-kernel/src/main/java" "$ROOT/kernel-testkit/src/main/java" -name '*.java' -print | sort)
 
