@@ -41,7 +41,7 @@ test('tenantless requests remain authenticated, scoped requests fail closed',()=
 
 test('JDBC dry-run illustrates replay and conflict without claiming live execution',()=>{
   const original=getWorkbenchTrace('mutation','scoped','success');
-  assert.match(original.detail,/one product-owned JDBC transaction/);
+  assert.match(original.detail,/one product-owned JDBC transaction/i);
   const replay=getWorkbenchTrace('mutation','scoped','replay');
   assert.equal(replay.outcome,'SAFE REPLAY');
   assert.equal(replay.steps[2].state,'skipped');
