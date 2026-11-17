@@ -22,10 +22,11 @@ There is no secondary marketing catalog, Journey Selector, Flow Studio, duplicat
 - src/DeveloperDocs.jsx, src/developer-docs.css and src/docs-data.mjs — the five published-release guides.
 - src/IntegrationWorkbench.jsx, src/kernel-workbench.css and src/workbench-data.mjs — the single interactive learning model with Maven/Java starting points.
 - src/Reference.jsx — consolidated capability, architecture and release reference.
+- src/PreviewGuide.jsx and src/preview-data.mjs — the source-reviewed v0.4.0 candidate guide delivered as an in-site Documentation route, not an external GitHub Markdown manual.
 - src/data.mjs — release/source metadata and boundaries. Released source pinned to c86eb33a46fae2843c75181c6b395cd0dc6710fe.
 - src/style.css and scripts/browser-smoke.mjs — responsive UI and Chromium end-to-end checks.
 
-**Pre-release documentation:** the existing Reference → Versions panel may link to the [v0.4.0 developer preview](../docs/releases/v0.4.0-developer-preview.md), marked NOT RELEASED. Pre-release guides are drafted and reviewed before publication; published installation defaults, code examples and source pins stay on v0.3.2. After verified publication, update them through a separate reviewed docs/site change.
+**Pre-release documentation:** the existing Reference → Versions panel links to the [v0.4.0 developer preview](https://vyrnforge.github.io/platform-kernel/#/docs/preview), marked NOT RELEASED. Pre-release guides are drafted and reviewed before publication; published installation defaults, code examples and source pins stay on v0.3.2. After verified publication, update them through a separate reviewed docs/site change.
 
 **Version discipline:** v0.4.0 candidate APIs, including RequestContextPipeline.tenantless(...) and the optional JacksonRecordCodec(applicationMapper) constructor, must not appear as published v0.3.2 examples. Integration excerpts require application-provided ports and wiring. The playground is NOT a live JVM, token verifier or database and does not prove production conformance. Testkit is test-scoped. Applications own business data, policy, transactions and deployment; IAM/IdP and File Storage remain external authorities.
 
