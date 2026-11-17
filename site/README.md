@@ -53,3 +53,7 @@ Chromium smoke covers route/focus/keyboard navigation, code rendering, search, a
 ## Trace usability and verification
 
 The one Playground is a deterministic **simulation**, not a running JVM, IAM verifier, JDBC transaction or authorization test. The trace separates a check that actually ran from a check intentionally not required (e.g. membership on tenantless) and one never reached after denial. Browser URLs preserve mode, scope and scenario, so guides can link to a relevant failure case. Negative paths for cross-tenant 404, missing membership, disabled module, denied domain policy, replay and in-progress retries match published v0.3.2 contract semantics. Ownership remains with product applications. Screen-reader testing and actual 200% browser zoom still require manual validation.
+
+## Accessibility baseline (issue #77)
+
+See [the QA accessibility task and evidence matrix](qa/accessibility-baseline.md) for source findings, focused Chromium regressions, and separately outstanding actual browser zoom and screen-reader tasks. WCAG 2.2 AA is a *proposed* site quality target, not a certification. This work does not alter the published Java library.
