@@ -16,7 +16,7 @@ Dependabot covers Maven, GitHub Actions and site npm. The one-time signing boots
 
 ## Developer documentation prepared before release
 
-- [v0.4.0 developer preview](v0.4.0-developer-preview.md) is prepared **before publication** and explicitly marked **NOT RELEASED**. It documents candidate-only APIs, dependency coordinates for future use, compatibility and migration tests. The site's default installation guidance stays pinned to published v0.3.2 until v0.4.0 is independently approved and publication is verified.
+- [v0.4.0 website developer preview](https://vyrnforge.github.io/platform-kernel/#/docs/preview) lives in the website source (not duplicated in this repository's release-operations folder), is prepared **before publication** and is explicitly marked **NOT RELEASED**. It documents candidate-only APIs, dependency coordinates for future use, compatibility and migration tests. The site's default installation guidance stays pinned to published v0.3.2 until v0.4.0 is independently approved and publication is verified.
 - Keep pre-release developer documentation ready and reviewed *before* requesting release authorization. Publication and consumer adoption remain separate gates.
 
 ## Release checklist

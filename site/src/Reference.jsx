@@ -49,7 +49,7 @@ export function Reference({topic='architecture'}){
             {architectures.map(x=><details key={x.title}><summary><strong>{x.title}</strong><span>{x.label}</span></summary><div><p>{x.description}</p><p><strong>Topology:</strong> {x.products.map(y=>y.name+' ('+y.instances+' instance'+(y.instances===1?'':'s')+')').join(' · ')}</p><p><strong>External services:</strong> {x.external}</p><p>{x.note}</p></div></details>)}
           </div>
           <p className="reference-caution">These are illustrative arrangements, not production throughput benchmarks or certified deployment profiles. Each domain remains authoritative for its own data and authorization.</p>
-          <a className="inline-link" href={repo+'/blob/main/docs/integration/identity-boundary.md'} target="_blank" rel="noopener noreferrer">Read the identity integration boundary ↗</a>
+          <a className="inline-link" href="#/docs/request">Read the identity integration guide →</a>
         </article>}
         {topic==='capabilities'&&<article className="reference-article" aria-labelledby="reference-heading">
           <span className="eyebrow">WHAT THE PUBLISHED LIBRARY PROVIDES</span>
@@ -70,7 +70,7 @@ export function Reference({topic='architecture'}){
           <p className="reference-lead">A green library pipeline and a browser demo do not certify your application's security or production readiness.</p>
           <div className="versions-grid">
             <section><span className="version-state released">PUBLISHED</span><h3>v{version}</h3><p>Java 21+ core JAR, optional JDBC adapter and test-scope testkit. Maven Central coordinates are <code>io.github.vyrnforge</code>. The examples on this site are pinned to this release.</p><a href={'https://central.sonatype.com/artifact/io.github.vyrnforge/platform-kernel/'+version} target="_blank" rel="noopener noreferrer">View on Maven Central ↗</a></section>
-            <section><span className="version-state preview">NOT PUBLISHED</span><h3>v{candidateVersion}</h3><p>Candidate changes remain under separate release governance. Do not copy unreleased convenience APIs into a v{version} project or assume adoption is approved.</p><a href={candidatePr} target="_blank" rel="noopener noreferrer">Review candidate PR ↗</a><div className="reference-preview-doc"><a href={repo+"/blob/main/docs/releases/v0.4.0-developer-preview.md"} target="_blank" rel="noopener noreferrer">Read pre-publication developer guide ↗</a><p>Prepared ahead of release. v{candidateVersion} examples cannot be installed from Maven Central yet.</p></div></section>
+            <section><span className="version-state preview">NOT PUBLISHED</span><h3>v{candidateVersion}</h3><p>Candidate changes remain under separate release governance. Do not copy unreleased convenience APIs into a v{version} project or assume adoption is approved.</p><a href={candidatePr} target="_blank" rel="noopener noreferrer">Review candidate PR ↗</a><div className="reference-preview-doc"><a href="#/docs/preview">Read the developer preview on this website →</a><p>Browse the candidate documentation here. v{candidateVersion} is not available to install from Maven Central yet.</p></div></section>
           </div>
           <h3 className="reference-subhead">Release and consumer evidence</h3>
           <p>The published version has automated release evidence, but real consumers must independently verify IAM/File Storage integration, tenant isolation, retry behavior, database migration compatibility, operations and rollback.</p>

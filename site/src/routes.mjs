@@ -41,6 +41,7 @@ export function resolveRoute(hash=''){
   if(normalized==='#/')return {page:'home',title:'Home',canonical:normalized};
   if(normalized==='#/playground')return {page:'playground',title:'Playground',canonical:normalized};
   if(normalized==='#/docs')return {page:'docs',id:'install',title:'Documentation',canonical:'#/docs/install'};
+  if(normalized==='#/docs/preview')return {page:'docs',id:'preview',title:'v0.4.0 developer preview · NOT RELEASED',canonical:normalized};
   if(normalized.startsWith('#/docs/')){
     const id=normalized.slice('#/docs/'.length);
     const guide=developerGuides.find(x=>x.id===id);

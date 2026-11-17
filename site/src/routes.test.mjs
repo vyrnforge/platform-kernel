@@ -7,6 +7,8 @@ test('four top-level destinations and addressable guide/reference pages',()=>{
   assert.deepEqual(siteNavigation.map(x=>x.id),['home','docs','playground','reference']);
   assert.equal(resolveRoute('').page,'home');
   assert.equal(resolveRoute('#/playground').page,'playground');
+  assert.equal(resolveRoute('#/docs/preview').id,'preview');
+  assert.equal(resolveRoute('#/docs/preview').page,'docs');
   for(const guide of developerGuides){
     const x=resolveRoute('#/docs/'+guide.id);
     assert.equal(x.page,'docs');

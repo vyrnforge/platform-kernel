@@ -1,7 +1,9 @@
 import React,{useEffect,useMemo,useState} from 'react';
-import {repo,source,version} from './data.mjs';
+import {source,version} from './data.mjs';
 import {developerGuides,searchDeveloperGuides} from './docs-data.mjs';
 import {tokenizeCode} from './code-tokens.mjs';
+import {PreviewGuide} from './PreviewGuide.jsx';
+import {searchPreview} from './preview-data.mjs';
 import './developer-docs.css';
 
 const groups=['Getting started','Integrate','Test & operate'];
@@ -10,10 +12,12 @@ export function DeveloperDocs({guideId='install'}){
   const [query,setQuery]=useState('');
   const [sampleIndex,setSampleIndex]=useState(0);
   const [copyStatus,setCopyStatus]=useState('');
+  const isPreview=guideId==='preview';
   const guide=developerGuides.find(x=>x.id===guideId)||developerGuides[0];
   const index=developerGuides.indexOf(guide);
   const sample=guide.samples[Math.min(sampleIndex,guide.samples.length-1)];
   const visible=useMemo(()=>searchDeveloperGuides(query),[query]);
+  const previewVisible=useMemo(()=>searchPreview(query),[query]);
   useEffect(()=>{setSampleIndex(0);setCopyStatus('')},[guideId]);
   async function copySample(){
     try{
@@ -23,21 +27,22 @@ export function DeveloperDocs({guideId='install'}){
     }catch{setCopyStatus('Clipboard unavailable. Select the code block to copy manually.')}
   }
   return <div className="docs-page content-surface">
-    <div className="wrap docs-page-heading"><span className="eyebrow">DEVELOPER DOCUMENTATION / PUBLISHED v{version}</span><h1 id="page-title" tabIndex={-1}>Learn by building.</h1><p>Task-based guides for the real v{version} Java library. Each recipe states what the Kernel provides and what your application must implement.</p></div>
+    <div className="wrap docs-page-heading"><span className="eyebrow">DEVELOPER DOCUMENTATION / v{version} PUBLISHED · v0.4.0 PREVIEW</span><h1 id="page-title" tabIndex={-1}>Learn by building.</h1><p>Task-based guides for the real v{version} Java library. Each recipe states what the Kernel provides and what your application must implement.</p></div>
     <div className="wrap docs-layout">
       <aside className="docs-sidebar">
         <div className="docs-sidebar-top"><label htmlFor="guide-search">Search documentation</label><input type="search" id="guide-search" placeholder="Find a guide…" value={query} onChange={e=>setQuery(e.target.value)}/></div>
-        <p className="docs-search-count" role="status">{visible.length} of {developerGuides.length} guides</p>
+        <p className="docs-search-count" role="status">{visible.length+(previewVisible?1:0)} of {developerGuides.length+1} guides</p>
         <nav aria-label="Developer guide navigation" className="docs-guide-nav">
           {groups.map(group=>{
             const items=visible.filter(x=>x.group===group);
-            return items.length>0&&<div className="docs-guide-group" key={group}><h2>{group}</h2>{items.map(item=><a href={'#/docs/'+item.id} key={item.id} aria-current={guide.id===item.id?'page':undefined}>{item.title}<span aria-hidden="true">→</span></a>)}</div>;
+            return items.length>0&&<div className="docs-guide-group" key={group}><h2>{group}</h2>{items.map(item=><a href={'#/docs/'+item.id} key={item.id} aria-current={!isPreview&&guide.id===item.id?'page':undefined}>{item.title}<span aria-hidden="true">→</span></a>)}</div>;
           })}
         </nav>
-        {visible.length===0&&<p className="docs-search-empty">No matching guides. <button type="button" onClick={()=>setQuery('')}>Clear search</button></p>}
-        <div className="docs-sidebar-note"><strong>Version boundary</strong><p>Examples use published v{version}. The v0.4.0 candidate is not yet released.</p></div>
+        {previewVisible&&<div className="docs-preview-entry"><span className="side-kicker">UPCOMING · NOT PUBLISHED</span><a href="#/docs/preview" aria-current={isPreview?'page':undefined}>v0.4.0 Developer Preview <span aria-hidden="true">→</span></a></div>}
+        {visible.length===0&&!previewVisible&&<p className="docs-search-empty">No matching guides. <button type="button" onClick={()=>setQuery('')}>Clear search</button></p>}
+        <div className="docs-sidebar-note"><strong>Version boundary</strong><p>Core guides use published v{version}. The v0.4.0 preview is not released or installable yet.</p></div>
       </aside>
-      <article className="guide-article" aria-labelledby="guide-heading">
+      {isPreview?<PreviewGuide/>:<article className="guide-article" aria-labelledby="guide-heading">
         <nav className="guide-breadcrumb" aria-label="Breadcrumb"><a href="#/docs/install">Documentation</a><span aria-hidden="true"> / </span><span>{guide.group}</span></nav>
         <div className="guide-topline"><span>Practical integration</span><span>v{version} · released APIs</span></div>
         <h2 id="guide-heading" tabIndex={-1}>{guide.title}</h2>
@@ -58,13 +63,13 @@ export function DeveloperDocs({guideId='install'}){
           <section><h3>Check your integration</h3><p>{guide.verify}</p></section>
           <section><h3>Ownership boundary</h3><p>{guide.ownership}</p></section>
         </div>
-        <div className="guide-resource-links"><a href={repo+'/blob/main/'+guide.guide} target="_blank" rel="noopener noreferrer">Repository integration guide ↗</a><a href={source(guide.source)} target="_blank" rel="noopener noreferrer">Published v{version} source ↗</a></div>
-        <p className="guide-note">Repository guides evolve independently. Examples here have been checked against the published v{version} source; only the linked release-source revision is immutable.</p>
+        <div className="guide-resource-links"><a href={source(guide.source)} target="_blank" rel="noopener noreferrer">Published v{version} source ↗</a></div>
+        <p className="guide-note">The practical integration guide is on this website; the GitHub link above points only to immutable released source for verification.</p>
         <nav className="guide-pager" aria-label="Previous and next guides">
           {index>0?<a href={'#/docs/'+developerGuides[index-1].id}><span>← Previous</span><strong>{developerGuides[index-1].title}</strong></a>:<span/>}
           {index<developerGuides.length-1?<a href={'#/docs/'+developerGuides[index+1].id}><span>Next →</span><strong>{developerGuides[index+1].title}</strong></a>:<span/>}
         </nav>
-      </article>
+      </article>}
     </div>
   </div>;
 }
