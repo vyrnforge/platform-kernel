@@ -95,15 +95,15 @@ export const developerGuides = [
     "id": "request",
     "group": "Integrate",
     "title": "Resolve a trusted request",
-    "summary": "Compose tenantless or tenant-scoped policy without outsourcing resource authorization.",
-    "prerequisite": "A real authentication verifier, trusted identity projection and application-owned domain policy. Tenant-scoped operations also need authoritative membership and module entitlements.",
+    "summary": "Choose tenantless or tenant-scoped requests, validate identity at the application boundary, and diagnose the first denied gate.",
+    "prerequisite": "Java 21+ and the published platform-kernel:0.3.2 core JAR; a real IAM/IdP verifier and an application-owned authorization policy. Scoped endpoints additionally require authoritative tenant membership and current module entitlements.",
     "when": "An authenticated endpoint needs a normalized actor, tenant guard and explicit resource authorization.",
     "steps": [
-      "Verify credentials with your application/IAM/IdP; map the trusted result through a ValidatedIdentityAdapter or your own IdentityAdapter.",
-      "Compose RequestContextPipeline with the identity, membership, module-entitlement and DomainAuthorizationHook ports. The last three are application-supplied; the domain hook is required even for tenantless endpoints.",
-      "For explicitly tenantless operations, use EndpointPolicy.tenantless and TenantContext.none. Never infer that tenantless means anonymous.",
-      "For tenant-owned operations, use EndpointPolicy.tenantModule with exactly one authorized tenant. Enforce resource-level policy and tenant filtering in your SQL.",
-      "At the HTTP boundary, use HttpRequestContextAdapter only after your framework has handled trusted request metadata. Propagate correlation IDs and safely map failures."
+      "Verify the user's or service's credential in application/IAM/IdP middleware (issuer, signature, audience, expiry and relevant session controls). Only THEN create a trusted, normalized ValidatedIdentityCredential; never build it from unverified client claims or assume the bearer extractor authenticates.",
+      "Compose the published four-port RequestContextPipeline constructor using ValidatedIdentityAdapter plus application-owned TenantMembershipPort, ModuleEntitlementPort and DomainAuthorizationHook. The domain hook is mandatory for both tenantless and tenant-scoped requests.",
+      "Choose an explicitly tenantless endpoint only for authenticated global/non-tenant-owned resources: TenantContext.none() and EndpointPolicy.tenantless(action). Kernel skips membership and module checks only on a valid tenantless request; it still runs domain authorization.",
+      "For tenant-owned operations, set exactly one active TenantContext.tenant(tenantId), use EndpointPolicy.tenantModule(moduleKey, action), and pass an authoritative ResourceReference. The product still enforces tenant-filtered SQL and its resource policy.",
+      "At the HTTP edge preserve duplicate header values, extract only trusted request metadata, and use HttpRequestContextAdapter to resolve context. HttpKernelErrorMapper maps Kernel failures; the application owns web dispatch, upstream verification failures and safe domain error responses. Record request/correlation IDs without tokens or sensitive attributes."
     ],
     "samples": [
       {
@@ -119,18 +119,132 @@ export const developerGuides = [
         "language": "java",
         "code": "var record = new ResourceReference(\"record\", recordId, tenantId);\nvar context = pipeline.resolve(new RequestContextInput<>(\n    verifiedIdentity,\n    TenantContext.tenant(tenantId),\n    CorrelationContext.create(),\n    EndpointPolicy.tenantModule(\"records\", \"records.read\"),\n    record));\n// The application's query must also enforce tenant ownership.",
         "filename": "Handler.java (excerpt)"
+      },
+      {
+        "label": "Wiring",
+        "kind": "Integration excerpt — application supplies three ports and trusted verifier",
+        "language": "java",
+        "filename": "RequestWiring.java (excerpt)",
+        "code": "import io.vyrnforge.platform.kernel.identity.ValidatedIdentityAdapter;\nimport io.vyrnforge.platform.kernel.identity.ValidatedIdentityCredential;\nimport io.vyrnforge.platform.kernel.pipeline.RequestContextPipeline;\nimport io.vyrnforge.platform.kernel.ports.TenantMembershipPort;\nimport io.vyrnforge.platform.kernel.ports.ModuleEntitlementPort;\nimport io.vyrnforge.platform.kernel.ports.DomainAuthorizationHook;\n\n// These three ports must come from your application's authoritative services.\nRequestContextPipeline<ValidatedIdentityCredential> pipeline =\n    new RequestContextPipeline<>(\n        new ValidatedIdentityAdapter(),\n        tenantMembershipPort,    // TenantMembershipPort\n        moduleEntitlementPort,   // ModuleEntitlementPort\n        domainAuthorizationHook  // DomainAuthorizationHook\n    );"
       }
     ],
-    "verify": "Test missing membership, disabled entitlement, wrong-tenant resource and denied resource permission; all must fail closed.",
-    "ownership": "The identity provider authenticates. The Kernel applies shared guards. Your application owns permissions, resource truth and tenant-filtered data access.",
+    "verify": "Run both positive paths and all negative cases in the table below. Compare KernelFailure codes, mapped HTTP statuses and first stopped gate; confirm subsequent checks are not reached. Verify actual product SQL/data isolation and safe request/correlation metadata with your real verifier and adapters.",
+    "ownership": "Native IAM or an external IdP verifies identity; Kernel embeds normalized context, scope/membership/entitlement guards and safe HTTP mapping; the application owns membership/entitlement truth, business-resource policy, tenant-scoped SQL, transport and diagnostics. A module or feature flag is never a record permission.",
     "guide": "docs/integration/identity-boundary.md",
     "source": "verification/GeneralUsageExample.java",
-    "provides": "Framework-neutral request pipeline, explicit tenant/module guards, correlation metadata and HTTP edge helpers. It does not verify a raw JWT or authorize business resources for you.",
+    "provides": "Published v0.3.2 RequestContextPipeline (four-port constructor), ValidatedIdentityAdapter, RequestContextInput, endpoint policy and HTTP edge helpers. The library does not independently verify bearer tokens, create user tenants or authorize a product's business records.",
     "mistakes": [
-      "A Bearer token extractor only extracts a token. Your authentication layer must validate issuer, signature, expiry and audience before building trusted identity.",
-      "Module entitlement answers whether the module is enabled; it does not grant record-level access. Feature flags are not permissions either.",
-      "A tenantless request with an active tenant is rejected. For tenant-scoped reads and writes, do not treat a client-provided resource tenant ID as authoritative."
-    ]
+      "Do not pass raw Authorization headers or unverified JWT claims into ValidatedIdentityCredential; a bearer extractor only extracts and a validated identity adapter trusts a previously verified projection.",
+      "Do not substitute module entitlement or feature flags for application-owned DomainAuthorizationHook or tenant-filtered SQL. Tenant membership and module eligibility do not grant record access.",
+      "Do not use TenantContext.none() for tenant-owned resources, silently create personal tenants, or trust a client-provided resource tenant ID. A mismatched resource is hidden by the HTTP mapper as 404.",
+      "Trace denied requests using safe stable error codes with request_id and correlation_id. Never log raw tokens, identity-provider claims, credential headers or sensitive record payloads."
+    ],
+    "endpointChoices": [
+      {
+        "id": "tenantless",
+        "name": "Authenticated tenantless",
+        "when": "Non-tenant-owned profile or global operation",
+        "policy": "TenantContext.none() + EndpointPolicy.tenantless(action)",
+        "guards": "Trusted identity → scope (no active tenant/tenant-owned resource) → application domain authorization",
+        "ownership": "Application verifies actor and resource policy; no membership or module-entitlement lookup.",
+        "scenario": "success"
+      },
+      {
+        "id": "scoped",
+        "name": "Tenant-scoped",
+        "when": "Product data belonging to an explicitly selected tenant",
+        "policy": "TenantContext.tenant(tenantId) + EndpointPolicy.tenantModule(moduleKey, action)",
+        "guards": "Trusted identity → active/resource tenant → membership → module entitlement → application domain authorization",
+        "ownership": "Application supplies membership/entitlement data and authoritative resource tenant, plus tenant-filtered product SQL.",
+        "scenario": "success"
+      }
+    ],
+    "failureCases": [
+      {
+        "id": "unverified",
+        "scope": "scoped",
+        "trigger": "Unverified or absent trusted actor",
+        "gate": "Credential verification / identity",
+        "failure": "AUTHENTICATION_FAILED",
+        "http": "401",
+        "owner": "Application / IAM / IdP",
+        "recovery": "Reject before constructing a trusted projection. If failure reaches Kernel, the HTTP adapter maps AUTHENTICATION_FAILED to 401."
+      },
+      {
+        "id": "scope-tenantless",
+        "scope": "tenantless",
+        "scenario": "scope",
+        "trigger": "Active tenant on tenantless policy",
+        "gate": "Request scope",
+        "failure": "INVALID_CONTEXT",
+        "http": "400",
+        "owner": "Kernel guard; application fixes endpoint use",
+        "recovery": "Use a tenantless endpoint only for global resources with no active tenant. Never strip tenant scope to access tenant-owned data."
+      },
+      {
+        "id": "scope-scoped",
+        "scope": "scoped",
+        "scenario": "scope",
+        "trigger": "No active tenant on tenant-scoped policy",
+        "gate": "Request scope",
+        "failure": "TENANT_REQUIRED",
+        "http": "403",
+        "owner": "Kernel guard; application selects tenant",
+        "recovery": "Require exactly one active trusted tenant; do not infer a personal tenant."
+      },
+      {
+        "id": "cross-tenant",
+        "scope": "scoped",
+        "trigger": "Resource belongs to another tenant",
+        "gate": "Resource tenant guard",
+        "failure": "TENANT_CONTEXT_MISMATCH",
+        "http": "404",
+        "owner": "Kernel guard + product resource lookup",
+        "recovery": "Resolve resource tenant from authoritative product storage; hide cross-tenant existence in responses."
+      },
+      {
+        "id": "membership",
+        "scope": "scoped",
+        "trigger": "Actor has no tenant membership",
+        "gate": "Membership port",
+        "failure": "TENANT_MEMBERSHIP_REQUIRED",
+        "http": "403",
+        "owner": "Application membership authority",
+        "recovery": "Inspect active tenant and authoritative membership. Do not bypass the guard or substitute an untrusted claim."
+      },
+      {
+        "id": "module",
+        "scope": "scoped",
+        "trigger": "Required module is not effectively enabled",
+        "gate": "Module entitlement",
+        "failure": "MODULE_DISABLED",
+        "http": "403",
+        "owner": "Application entitlement authority",
+        "recovery": "Check current module key, tenant, enabled state and effectiveAt. Module availability is not record permission."
+      },
+      {
+        "id": "denied",
+        "scope": "scoped",
+        "trigger": "Actor lacks permission on this resource",
+        "gate": "Domain authorization",
+        "failure": "DOMAIN_ACCESS_DENIED",
+        "http": "403",
+        "owner": "Owning application",
+        "recovery": "Evaluate product-specific action/resource policy and product-owned tenant-filtered SQL."
+      },
+      {
+        "id": "tenantless-denied",
+        "scope": "tenantless",
+        "scenario": "denied",
+        "trigger": "Global operation denied by domain policy",
+        "gate": "Domain authorization",
+        "failure": "DOMAIN_ACCESS_DENIED",
+        "http": "403",
+        "owner": "Owning application",
+        "recovery": "Tenantless remains authenticated and domain-authorized. No entitlement lookup or automatic allow."
+      }
+    ],
+    "diagnostics": "Use stable safe PLATFORM_* error codes, request_id and correlation_id from the HTTP response/observability boundary to locate the failed check. Keep all tokens, credential headers, personal claims and resource payloads out of logs or error details; map independent application/domain errors separately."
   },
   {
     "id": "jdbc",
