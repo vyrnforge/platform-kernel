@@ -63,7 +63,7 @@ export function DeveloperDocs({guideId='install'}){
           <section><h3>Check your integration</h3><p>{guide.verify}</p></section>
           <section><h3>Ownership boundary</h3><p>{guide.ownership}</p></section>
         </div>
-        <div className="guide-resource-links"><a href={source(guide.source)} target="_blank" rel="noopener noreferrer">Published v{version} source ↗</a></div>
+        <div className="guide-resource-links">{guide.id==='request'||guide.id==='jdbc'||guide.id==='first'?<a className="guide-try-link" href={guide.id==='request'?'#/playground?mode=request&scope=scoped&scenario=success':guide.id==='jdbc'?'#/playground?mode=mutation&scenario=replay':'#/playground?mode=core&scenario=success'}>Walk through this flow in the Playground →</a>:null}<a href={source(guide.source)} target="_blank" rel="noopener noreferrer">Published v{version} source ↗</a></div>
         <p className="guide-note">The practical integration guide is on this website; the GitHub link above points only to immutable released source for verification.</p>
         <nav className="guide-pager" aria-label="Previous and next guides">
           {index>0?<a href={'#/docs/'+developerGuides[index-1].id}><span>← Previous</span><strong>{developerGuides[index-1].title}</strong></a>:<span/>}
