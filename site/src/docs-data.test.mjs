@@ -51,6 +51,9 @@ test('first program provides a source-verified main class and reproducible run c
   const first=developerGuides.find(g=>g.id==='first');
   assert.ok(first.samples.find(s=>s.label==='Java 21').code.includes('CorrelationContext.create()'));
   assert.ok(first.samples.find(s=>s.label==='Run').code.includes('javac --release 21'));
+  assert.ok(first.samples.find(s=>s.label==='Run').code.includes('repo.maven.apache.org/maven2/io/github/vyrnforge/platform-kernel/0.3.2/'));
+  assert.ok(first.samples.find(s=>s.label==='Run').code.includes('curl --fail --location'));
+  assert.doesNotMatch(first.samples.find(s=>s.label==='Run').code,/maven-dependency-plugin/);
   assert.ok(first.samples.find(s=>s.label==='Run').code.includes('platform-kernel-0.3.2.jar'));
   assert.ok(developerGuides.find(g=>g.id==='install').samples.every(s=>s.kind.includes('fragment')));
 });

@@ -52,7 +52,7 @@ export const developerGuides = [
     "when": "A service, CLI or worker needs consistent identifiers or correlation before deeper integration.",
     "steps": [
       "Create `FirstKernelProgram.java` in an empty working directory and paste the Java 21 example.",
-      "Select the Run tab to download the published JAR using Maven, then compile and run the class.",
+      "Select the Run tab to download the published JAR directly from Maven Central using curl, then compile and run the class.",
       "Confirm that it prints two UUID values; each run creates new IDs.",
       "Propagate correlation across your own HTTP, event or job boundaries as needed; the Kernel does not install middleware automatically."
     ],
@@ -66,10 +66,10 @@ export const developerGuides = [
       },
       {
         "label": "Run",
-        "kind": "Commands after saving FirstKernelProgram.java (macOS / Linux)",
+        "kind": "Commands after saving FirstKernelProgram.java (macOS / Linux, curl required)",
         "language": "bash",
         "filename": "terminal",
-        "code": "mvn org.apache.maven.plugins:maven-dependency-plugin:3.7.1:copy \\\n  -Dartifact=io.github.vyrnforge:platform-kernel:0.3.2 \\\n  -DoutputDirectory=.\njavac --release 21 -cp platform-kernel-0.3.2.jar FirstKernelProgram.java\njava -cp \".:platform-kernel-0.3.2.jar\" FirstKernelProgram"
+        "code": "curl --fail --location --silent --show-error \\\n  --output platform-kernel-0.3.2.jar \\\n  https://repo.maven.apache.org/maven2/io/github/vyrnforge/platform-kernel/0.3.2/platform-kernel-0.3.2.jar\njavac --release 21 -cp platform-kernel-0.3.2.jar FirstKernelProgram.java\njava -cp \".:platform-kernel-0.3.2.jar\" FirstKernelProgram"
       }
     ],
     "verify": "The program should print two valid UUIDv7 values. On Windows, replace the `:` classpath separator with `;`; Maven Central and Java 21 must be accessible.",
