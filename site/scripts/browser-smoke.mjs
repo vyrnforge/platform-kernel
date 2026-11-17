@@ -55,7 +55,31 @@ try{
   assert.ok((await evaluate('document.body.innerText')).includes('Not published · No adoption implied'),'candidate must not be represented as released');
   assert.equal(await evaluate('document.querySelector(".skip-link").getAttribute("href")'),'#content');
   assert.equal(await evaluate('document.querySelectorAll(".docs-topic").length'),developerGuides.length,'all developer guides are available');
-  assert.equal(await evaluate('document.querySelector(".docs-nav-link").getAttribute("href")'),'#docs');
+  assert.equal(await evaluate('document.querySelector(".docs-nav-link").getAttribute("href")'),'#workbench');
+  assert.equal(await evaluate('document.querySelectorAll(".wb-profile").length'),3,'three integration paths');
+  assert.ok((await evaluate(q(".wb-code-pane code")+".textContent")).includes("platform-kernel"),'core recipe is initially present');
+  await click('.wb-profile:nth-child(2)');
+  assert.ok((await evaluate(q('.wb-stage-heading h3')+'.textContent')).includes('Protected API'),'switching profiles updates architecture');
+  await click('.wb-scenario:nth-child(2)');
+  assert.ok((await evaluate(q('.wb-outcome')+'.textContent')).includes('401'),'missing verified actor fails closed');
+  await click('.wb-scope-options button:nth-child(2)');
+  await click('.wb-scenario:nth-child(3)');
+  assert.ok((await evaluate(q('.wb-outcome')+'.textContent')).includes('400'),'tenantless active tenant is invalid');
+  await click('.wb-code-tabs button:nth-child(2)');
+  assert.ok((await evaluate(q('.wb-code-pane code')+'.textContent')).includes('EndpointPolicy.tenantless'),'scope changes Java guidance');
+  await click('.wb-trace-actions .wb-next');
+  assert.equal(await evaluate(q('.wb-inspection-tag')+'.textContent'),'INSPECTING STEP 2 OF 4','step navigation advances');
+  await click('.wb-profile:nth-child(3)');
+  assert.ok((await evaluate(q('.wb-code-pane code')+'.textContent')).includes('platform-kernel-jdbc'),'JDBC is an optional runtime artifact');
+  await click('.wb-testkit input');
+  assert.ok((await evaluate(q('.wb-code-pane code')+'.textContent')).includes('<scope>test</scope>'),'testkit remains test-scoped');
+  await click('.wb-code-tabs button:nth-child(2)');
+  assert.ok((await evaluate(q('.wb-code-pane code')+'.textContent')).includes('executeIdempotent'),'JDBC Java excerpt is generated');
+  await click('.wb-scenario:nth-child(2)');
+  assert.ok((await evaluate(q('.wb-outcome')+'.textContent')).includes('SAFE REPLAY'),'retry scenario illustrates replay');
+  await click('.wb-profile:nth-child(1)');
+  assert.ok((await evaluate(q('.wb-code-pane code')+'.textContent')).includes('platform-kernel'),'core mode restores dependencies');
+
   assert.equal(await evaluate('getComputedStyle(document.querySelector(".docs-topic-nav")).display'),'block','desktop guide groups stack vertically');
   // Keyboard users can select a guide with a native button and Enter.
   await evaluate('document.querySelector(".docs-nav-group:nth-child(2) .docs-topic").focus()');
@@ -81,7 +105,9 @@ try{
   await click('.nav-actions button.primary');
   assert.ok(await evaluate('document.body.classList.contains("presenting")'),'presentation mode opens');
   await click('.present-controls button:nth-of-type(2)');
-  assert.ok(await evaluate('document.querySelector("#journeys").getBoundingClientRect().height > 0'),'new presentation slide reachable');
+  assert.ok(await evaluate('document.querySelector("#workbench").getBoundingClientRect().height > 0'),'interactive workbench presentation slide reachable');
+  await click('.present-controls button:nth-of-type(2)');
+  assert.ok(await evaluate('document.querySelector("#journeys").getBoundingClientRect().height > 0'),'journey presentation slide reachable');
   await click('.present-controls button:last-child');
   assert.equal(await evaluate('document.body.classList.contains("presenting")'),false,'presentation mode exits');
   assert.equal(await evaluate('document.querySelectorAll("[data-mode]").length'),4);
@@ -121,6 +147,10 @@ try{
   await send('Emulation.setDeviceMetricsOverride',{width:390,height:844,deviceScaleFactor:1,mobile:true});
   await sleep(200);
   assert.ok(await evaluate('document.documentElement.scrollWidth <= window.innerWidth+1'),'Page overflows mobile viewport');
+  assert.ok(await evaluate('document.querySelector(".wb-architecture").getBoundingClientRect().width <= innerWidth'),'Workbench architecture reflows on mobile');
+  await click('.wb-profile:nth-child(2)');
+  assert.ok((await evaluate(q('.wb-stage-heading h3')+'.textContent')).includes('Protected API'),'mobile configuration works');
+  assert.ok(await evaluate('document.documentElement.scrollWidth <= window.innerWidth+1'),'Workbench must not overflow mobile viewport');
   await click('.docs-nav-group:first-child .docs-topic:nth-of-type(2)');
   assert.ok((await evaluate(q('.docs-code code')+'.textContent')).includes('FirstKernelProgram'),'mobile developer guide is usable');
   assert.ok(await evaluate('document.documentElement.scrollWidth <= window.innerWidth+1'),'Documentation must not overflow mobile viewport');
