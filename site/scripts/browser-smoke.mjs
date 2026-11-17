@@ -145,8 +145,8 @@ try{
   assert.ok((await evaluate(q('.request-diagnostics')+'.textContent')).includes('correlation_id'),'safe error correlation must be explicit');
   await click('.guide-code-tabs button:nth-child(3)');
   assert.ok((await evaluate(q('.guide-code-shell code')+'.textContent')).includes('new RequestContextPipeline<>'),'published constructor visible');
-  await evaluate('document.querySelector(".request-failures a[href*=\"scenario=membership\"]").focus()');
-  await send('Input.dispatchKeyEvent',{type:'keyDown',key:'Enter',code:'Enter',windowsVirtualKeyCode:13,nativeVirtualKeyCode:13,text:'\\r',unmodifiedText:'\\r'});
+  await evaluate('document.querySelector(".request-failures a[href*=membership]").focus()');
+  await send('Input.dispatchKeyEvent',{type:'keyDown',key:'Enter',code:'Enter',windowsVirtualKeyCode:13,nativeVirtualKeyCode:13,text:'\r',unmodifiedText:'\r'});
   await send('Input.dispatchKeyEvent',{type:'keyUp',key:'Enter',code:'Enter',windowsVirtualKeyCode:13,nativeVirtualKeyCode:13});
   await wait('location.hash.includes("scenario=membership")','failed scenario keyboard navigation');
   assert.equal(await evaluate('document.activeElement.id'),'workbench-title','Playground heading gets focus');
