@@ -47,7 +47,7 @@ The atomic scope is:
 tenant_id + operation + idempotency_key
 ```
 
-The caller also supplies an opaque `requestFingerprint` representing the effective request semantics.
+The caller also supplies an opaque `requestFingerprint` representing the effective request semantics. The existing PostgreSQL V1 schema bounds `operation` to 192 Unicode characters, and both `key` and `requestFingerprint` to 512; the Java constructor rejects overlength values before persistence. This is strict-input validation, not a schema or storage migration.
 
 `begin()` returns one of:
 
