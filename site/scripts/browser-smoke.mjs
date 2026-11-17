@@ -148,7 +148,7 @@ try{
   await evaluate('document.querySelector(".request-failures a[href*=membership]").focus()');
   await send('Input.dispatchKeyEvent',{type:'keyDown',key:'Enter',code:'Enter',windowsVirtualKeyCode:13,nativeVirtualKeyCode:13,text:'\r',unmodifiedText:'\r'});
   await send('Input.dispatchKeyEvent',{type:'keyUp',key:'Enter',code:'Enter',windowsVirtualKeyCode:13,nativeVirtualKeyCode:13});
-  await wait('location.hash.includes("scenario=membership")','failed scenario keyboard navigation');
+  await wait('location.hash.includes("scenario=membership") && document.activeElement?.id==="workbench-title"','failed scenario keyboard navigation/focus');
   assert.equal(await evaluate('document.activeElement.id'),'workbench-title','Playground heading gets focus');
   assert.ok((await evaluate(q('.wb-outcome')+'.textContent')).includes('403'),'membership maps 403');
   await evaluate('location.hash="#/docs/request"');
@@ -230,7 +230,7 @@ try{
   await evaluate('document.querySelector(".not-found a").focus()');
   await send('Input.dispatchKeyEvent',{type:'keyDown',key:'Enter',code:'Enter',windowsVirtualKeyCode:13,nativeVirtualKeyCode:13,text:'\r',unmodifiedText:'\r'});
   await send('Input.dispatchKeyEvent',{type:'keyUp',key:'Enter',code:'Enter',windowsVirtualKeyCode:13,nativeVirtualKeyCode:13});
-  await wait('location.hash==="#/docs/install"','unknown-route recovery did not navigate');
+  await wait('location.hash==="#/docs/install" && document.activeElement?.id==="guide-heading"','unknown-route recovery did not navigate and focus guide heading');
   assert.equal(await evaluate('document.activeElement.id'),'guide-heading','recovered guide heading should receive focus');
 
   // Full-width desktop regression: previous 1180px shell must not return at 1920/2560px.
