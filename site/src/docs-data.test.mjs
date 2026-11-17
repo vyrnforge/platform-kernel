@@ -119,7 +119,7 @@ test('published JDBC decisions and consumer conformance connect to one Playgroun
   }
   for(const id of ['replay','in-progress','conflict']){
     const outcome=jdbc.decisionStates.find(x=>x.id===id);
-    assert.match(outcome.effect,/No new domain SQL or intent/i);
+    assert.match(outcome.effect,/No new domain SQL or (?:event\/audit )?intent/i);
   }
   assert.match(jdbc.decisionStates.find(x=>x.id==='conflict').next,/illustrative HTTP 409 is application-owned/);
   assert.match(jdbc.steps.join(' '),/executeIdempotent/);
