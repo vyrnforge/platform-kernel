@@ -56,6 +56,12 @@ try{
   assert.equal(await evaluate('document.querySelector(".skip-link").getAttribute("href")'),'#content');
   assert.equal(await evaluate('document.querySelectorAll(".docs-topic").length'),developerGuides.length,'all developer guides are available');
   assert.equal(await evaluate('document.querySelector(".docs-nav-link").getAttribute("href")'),'#workbench');
+  assert.equal(await evaluate('document.querySelectorAll(".hero-console-modes button").length'),3,'hero offers interactive paths');
+  await click('.hero-console-modes button:nth-child(3)');
+  assert.ok((await evaluate(q('.hero-console-result strong')+'.textContent')).includes('ATOMIC'),'hero demo reacts to mode selection');
+  assert.ok((await evaluate(q('.hero-console-window code')+'.textContent')).includes('executeIdempotent'),'hero snippet updates');
+  await click('.hero-console-modes button:nth-child(1)');
+  assert.ok((await evaluate(q('.hero-console-window code')+'.textContent')).includes('UuidV7.generate'),'hero can return to core example');
   assert.equal(await evaluate('document.querySelectorAll(".wb-profile").length'),3,'three integration paths');
   assert.ok((await evaluate(q(".wb-code-pane code")+".textContent")).includes("platform-kernel"),'core recipe is initially present');
   await click('.wb-profile:nth-child(2)');
