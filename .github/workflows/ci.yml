@@ -5,6 +5,7 @@ on:
     branches: [main]
   pull_request:
     branches: [main]
+  workflow_dispatch:
 
 permissions:
   contents: read
@@ -24,9 +25,34 @@ jobs:
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
-          fetch-depth: 1
+          fetch-depth: 2
 
+      # Required 'verify' check remains present for every PR. Pages/docs-only
+      # changes must not execute the expensive Java/PostgreSQL/consumer suite.
+      # Path classification is fail-closed and shared with security workflows.
+      - name: Test change-scope routing
+        run: python3 -m unittest discover -s scripts/tests -p test_ci_scope.py -v
+
+      - name: Determine library scope
+        id: scope
+        env:
+          BEFORE_SHA: ${{ github.event.before }}
+        run: python3 scripts/ci_scope.py --event "$GITHUB_EVENT_NAME" --before "$BEFORE_SHA" --output "$GITHUB_OUTPUT"
+
+      - name: Explain library CI routing
+        env:
+          RUN_LIBRARY: ${{ steps.scope.outputs.library }}
+          FILES: ${{ steps.scope.outputs.files }}
+          REASON: ${{ steps.scope.outputs.reason }}
+        run: |
+          echo "Changed files: $FILES; diff: $REASON"
+          if [[ "$RUN_LIBRARY" == true ]]; then
+            echo 'Kernel library verification required.'
+          else
+            echo 'No Kernel/runtime/contract/release changes: Java, PostgreSQL, schema and consumer checks not applicable.'
+          fi
       - name: Set up Java 21
+        if: steps.scope.outputs.library == 'true'
         uses: actions/setup-java@77dd5b2ce225ea11469928ac317850245a74ae78 # v6.2.0
         with:
           distribution: temurin
@@ -34,19 +60,23 @@ jobs:
           cache: maven
 
       - name: Contract compatibility baseline
+        if: steps.scope.outputs.library == 'true'
         run: python3 scripts/check-contract-compatibility.py
 
       - name: Dependency-free core smoke verification
+        if: steps.scope.outputs.library == 'true'
         run: bash scripts/verify-core.sh
 
       # This verifier is test-only; keep the interpreter and its entire
       # resolved wheel closure reproducible rather than floating on runner updates.
       - name: Set up Python 3.14.10 for schema conformance
+        if: steps.scope.outputs.library == 'true'
         uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6.3.0
         with:
           python-version: '3.14.10'
 
       - name: Released JSON Schema draft 2020-12 behavioral shape vectors
+        if: steps.scope.outputs.library == 'true'
         shell: bash
         run: |
           python3 -m venv "$RUNNER_TEMP/schema-validation-venv"
@@ -57,13 +87,17 @@ jobs:
           "$RUNNER_TEMP/schema-validation-venv/bin/python" scripts/test-json-schema-202012.py
 
       - name: Maven verification
+        if: steps.scope.outputs.library == 'true'
         run: mvn --batch-mode --no-transfer-progress --strict-checksums -Prelease-docs clean verify
 
       - name: Verify three physical JARs and packaged consumer
+        if: steps.scope.outputs.library == 'true'
         run: python3 scripts/check-distribution.py --release-docs
 
       - name: Real File Storage candidate compatibility
+        if: steps.scope.outputs.library == 'true'
         run: bash scripts/verify-file-storage-consumer.sh
 
       - name: Stage Maven publication inventory (no credentials)
+        if: steps.scope.outputs.library == 'true'
         run: python3 scripts/stage-release.py "$RUNNER_TEMP/release-stage"
