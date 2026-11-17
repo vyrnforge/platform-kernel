@@ -126,6 +126,28 @@ class HttpRequestContextAdapterTest {
     }
 
     @Test
+    void caseInsensitiveDuplicateTenantAndCorrelationHeadersFailSafely() {
+        var headers = HttpHeaderConfiguration.v1Defaults();
+        var adapter = adapter(headers, true, true, Set.of("asset.read"));
+        var mapper = new HttpKernelErrorMapper(headers);
+
+        for (Map<String, List<String>> headerValues : List.of(
+                Map.of("Authorization", List.of("Bearer native-token"),
+                       "X-Tenant-Id", List.of(TENANT_A.toString()),
+                       "x-tenant-id", List.of(TENANT_B.toString())),
+                Map.of("Authorization", List.of("Bearer native-token"),
+                       "X-Tenant-Id", List.of(TENANT_A.toString()),
+                       "X-Correlation-Id", List.of(CORRELATION_ID),
+                       "x-correlation-id", List.of(CORRELATION_ID)))) {
+            var request = HttpRequestMetadata.of(headerValues);
+            var error = assertThrows(HttpContextException.class, () ->
+                    adapter.resolve(request, EndpointPolicy.tenantModule("asset", "asset.read"), null));
+            assertEquals(400, mapper.map(error).status());
+            assertEquals(KernelFailure.INVALID_CONTEXT.code(), mapper.map(error).body().code());
+        }
+    }
+
+    @Test
     void customHeaderNamesAreSupported() {
         var headers = new HttpHeaderConfiguration(
                 "Authorization",
