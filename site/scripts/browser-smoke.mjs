@@ -137,7 +137,7 @@ try{
     await evaluate('location.hash="#/docs/first"');
     await wait('!!document.querySelector(".guide-article")','mobile docs missing');
     assert.ok(await evaluate('document.documentElement.scrollWidth<=window.innerWidth+1'),'Docs overflow viewport '+width);
-    if(width<=640)assert.ok(await evaluate('document.querySelector(".docs-sidebar").getBoundingClientRect().height<370'),'Mobile guide navigation should remain compact at '+width);
+    if(width<=640)assert.equal(await evaluate('getComputedStyle(document.querySelector(".docs-guide-nav")).display'),'flex','mobile guide links use compact wrapping navigation at '+width);
     assert.equal(await evaluate('getComputedStyle(document.querySelector(".guide-code-shell pre")).overflowX'),'auto','code has local horizontal scrolling at '+width);
     if(width<=390)assert.ok(await evaluate('document.querySelector(".guide-code-shell pre").scrollWidth>document.querySelector(".guide-code-shell pre").clientWidth'),'long code scrolls at narrow viewport');
     await evaluate('location.hash="#/reference/architecture"');

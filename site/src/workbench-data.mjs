@@ -119,9 +119,6 @@ export function getWorkbenchRecipe(mode='core',scope='scoped',testkit=false){
     checks,
     appOwnership: mode==='core'?'Runtime composition, logging and propagation':
       mode==='request'?'Authentication, membership sources, domain authorization and data':
-      'Business SQL, connection lifecycle, delivery transport and recovery',
-    kernelProvision: mode==='core'?'Identifiers, correlation and transport-neutral primitives':
-      mode==='request'?'Provider-neutral context and tenant/module guard contracts':
-      'Optional JDBC idempotency, atomic intent and outbox mechanics'
+      'Business SQL, connection lifecycle, delivery transport and recovery'
   };
 }
