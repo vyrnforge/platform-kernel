@@ -9,6 +9,7 @@
 .docs-side label{display:block;font-weight:750;font-size:13px;color:#334c6d;margin-bottom:9px}
 .docs-side input{width:100%;min-width:0;padding:11px 13px;background:#f9fbff;border:1px solid #bfcfe4;border-radius:9px;color:#18314f}
 .docs-side input::placeholder{color:#71839c}
+.docs-topic-nav{display:block}
 .docs-nav-group{margin-top:20px}
 .docs-group-title{display:block;font-size:11px;letter-spacing:1.1px;font-weight:800;text-transform:uppercase;color:#667b94;margin:0 0 7px}
 .docs-topic{display:block;width:100%;text-align:left;padding:10px 12px;margin:2px 0;border:1px solid transparent;border-radius:9px;background:transparent;color:#2d4262;line-height:1.4;font-size:13px;font-weight:650}
