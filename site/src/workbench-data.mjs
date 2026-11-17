@@ -79,8 +79,8 @@ export function getWorkbenchTrace(mode='core',scope='scoped',scenario='success')
         'Only after the required checks pass does the application perform its own business logic and tenant-filtered SQL.')
     ];
     if(scenario==='unverified')return stopAt(steps,0,'DENIED · 401',
-      'Unverified credentials fail before request or resource policies. The application must not build a trusted actor from raw client claims.',
-      'No trusted credential or actor projection was established.');
+      'The application or IAM verifier must reject unverified credentials before building trusted identity; if a Kernel identity-adapter failure reaches its HTTP mapper, AUTHENTICATION_FAILED maps to 401.',
+      'Upstream authentication did not establish a validated actor. Do not pass raw JWT claims or bearer strings as trusted identity.');
     if(scenario==='scope')return stopAt(steps,1,tenantless?'REJECTED · 400':'DENIED · 403',
       tenantless?'An active tenant on an explicitly tenantless endpoint is INVALID_CONTEXT (400).':
         'A tenant-scoped policy without an active tenant is TENANT_REQUIRED (403).',

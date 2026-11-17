@@ -50,6 +50,26 @@ try {
   out.forEach(x=>assert.match(x,uuid));
   assert.notEqual(out[0],out[1]);
   console.log('Java 21 CLI: PASS. JAR bytes='+jar.length+' SHA-256='+sha256);
+  // Validate the actual on-site request wiring excerpt against the published JAR.
+  // Application ports are supplied as typed method arguments, so the snippet
+  // remains clearly an excerpt rather than a runnable authentication service.
+  const requestGuide=developerGuides.find(x=>x.id==='request');
+  const wiring=requestGuide?.samples.find(x=>x.label==='Wiring');
+  assert.ok(wiring?.kind.includes('Integration excerpt'),'source-reviewed wiring excerpt missing');
+  const wiringLines=wiring.code.split('\n');
+  const imports=wiringLines.filter(x=>x.startsWith('import '));
+  const body=wiringLines.filter(x=>!x.startsWith('import ')).join('\n');
+  const wrapper=imports.join('\n')+'\n\npublic final class RequestWiringCompileProof {\n'+
+    '  public static void configure(\n'+
+    '      TenantMembershipPort tenantMembershipPort,\n'+
+    '      ModuleEntitlementPort moduleEntitlementPort,\n'+
+    '      DomainAuthorizationHook domainAuthorizationHook) {\n'+
+    body+'\n  }\n}\n';
+  await writeFile(join(root,'RequestWiringCompileProof.java'),wrapper);
+  run('javac',['--release','21','-cp',filename,'RequestWiringCompileProof.java'],root);
+  console.log('Published v'+version+' four-port request-wiring excerpt: COMPILED against anonymous Central JAR');
+
+
 
   // Build minimal, anonymous consumer projects from the site's own dependency fragments.
   const mdir=join(root,'maven'),gdir=join(root,'gradle');

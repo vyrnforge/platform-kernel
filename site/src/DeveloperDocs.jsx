@@ -51,6 +51,30 @@ export function DeveloperDocs({guideId='install'}){
         <div className="guide-callout"><strong>When to use this</strong><p>{guide.when}</p><strong>What the Kernel provides</strong><p>{guide.provides}</p></div>
         <section className="guide-section"><h3>Before you start</h3><p>{guide.prerequisite}</p></section>
         <section className="guide-section"><h3>Steps</h3><ol>{guide.steps.map((step,i)=><li key={i}>{step}</li>)}</ol></section>
+        {guide.id==='request'&&<section className="request-decisions" aria-labelledby="request-choices-heading">
+          <h3 id="request-choices-heading">Choose the right request scope</h3>
+          <p>One verified identity can use either path, but a tenantless endpoint is never anonymous or a bypass for tenant-owned records. These are published v{version} rules.</p>
+          <div className="request-scope-grid">{guide.endpointChoices.map(item=><section key={item.id}>
+            <h4>{item.name}</h4><p><strong>When:</strong> {item.when}</p><p><strong>Policy:</strong> <code>{item.policy}</code></p><p><strong>Checks:</strong> {item.guards}</p><p><strong>Application owns:</strong> {item.ownership}</p>
+            <a href={'#/playground?mode=request&scope='+item.id+'&scenario='+item.scenario}>Inspect {item.name.toLowerCase()} flow →</a>
+          </section>)}</div>
+        </section>}
+        {guide.id==='request'&&<section className="request-decisions" aria-labelledby="request-denials-heading">
+          <h3 id="request-denials-heading">Failure and recovery reference</h3>
+          <p>Find the first blocked gate. Subsequent checks are <strong>not reached</strong>; for valid tenantless requests membership and entitlement are <strong>not required</strong>. The HTTP statuses below are the released Kernel HTTP mapper's mappings; application verification failures may be handled before Kernel.</p>
+          <div className="request-failures-scroll" role="region" tabIndex={0} aria-label="Request failure and recovery table; scroll horizontally if needed">
+            <table className="request-failures">
+              <thead><tr><th scope="col">Scenario / first gate</th><th scope="col">Kernel failure / HTTP</th><th scope="col">Owner and recovery</th><th scope="col">Walkthrough</th></tr></thead>
+              <tbody>{guide.failureCases.map(item=><tr key={item.id}>
+                <th scope="row"><strong>{item.trigger}</strong><span>{item.gate} · {item.scope==='scoped'?'tenant-scoped':'tenantless'}</span></th>
+                <td><code>{item.failure}</code><span className="request-http">{item.http} HTTP</span></td>
+                <td><strong>{item.owner}</strong><p>{item.recovery}</p></td>
+                <td><a href={'#/playground?mode=request&scope='+item.scope+'&scenario='+(item.scenario||item.id)}>View failure →</a></td>
+              </tr>)}</tbody>
+            </table>
+          </div>
+          <p className="request-diagnostics"><strong>Safe diagnostics:</strong> {guide.diagnostics}</p>
+        </section>}
         <section className="guide-section" aria-label="Published library example">
           <div className="guide-code-heading"><h3>Example</h3><span>{sample.kind}</span></div>
           <div className="guide-code-shell">
