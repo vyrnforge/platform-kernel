@@ -28,9 +28,15 @@ jobs:
         with:
           distribution: temurin
           java-version: '21'
-      - name: Set up Gradle 8.14.3
-        uses: gradle/actions/setup-gradle@748248ddd2a24f49513d8f472f81c3a07d4d50e1 # v4.4.4
-        with:
-          gradle-version: '8.14.3'
+      - name: Install SHA-256-verified Gradle 8.14.3
+        shell: bash
+        run: |
+          set -euo pipefail
+          base='https://services.gradle.org/distributions/gradle-8.14.3-bin.zip'
+          curl --fail --location --retry 3 --silent --show-error "$base" --output "$RUNNER_TEMP/gradle.zip"
+          curl --fail --location --retry 3 --silent --show-error "$base.sha256" --output "$RUNNER_TEMP/gradle.sha256"
+          (cd "$RUNNER_TEMP" && echo "$(cat gradle.sha256)  gradle.zip" | sha256sum --check --status)
+          unzip -q "$RUNNER_TEMP/gradle.zip" -d "$RUNNER_TEMP"
+          echo "$RUNNER_TEMP/gradle-8.14.3/bin" >> "$GITHUB_PATH"
       - name: Verify published Java 21 consumer from the website examples
         run: node site/scripts/verify-onboarding.mjs
