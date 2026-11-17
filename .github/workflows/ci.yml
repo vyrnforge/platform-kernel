@@ -39,6 +39,15 @@ jobs:
       - name: Dependency-free core smoke verification
         run: bash scripts/verify-core.sh
 
+      - name: Released JSON Schema draft 2020-12 behavioral shape vectors
+        shell: bash
+        run: |
+          python3 -m venv "$RUNNER_TEMP/schema-validation-venv"
+          "$RUNNER_TEMP/schema-validation-venv/bin/python" -m pip install --no-input --disable-pip-version-check --only-binary=:all: "jsonschema==4.26.0" "rfc3339-validator==0.1.4"
+          "$RUNNER_TEMP/schema-validation-venv/bin/python" -m pip check
+          "$RUNNER_TEMP/schema-validation-venv/bin/python" scripts/test-json-schema-202012.py
+
+
       - name: Maven verification
         run: mvn --batch-mode --no-transfer-progress --strict-checksums -Prelease-docs clean verify
 
