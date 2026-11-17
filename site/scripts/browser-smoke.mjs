@@ -49,6 +49,19 @@ try{
   await send('Emulation.setDeviceMetricsOverride',{width:1440,height:1000,deviceScaleFactor:1,mobile:false});
   await wait('!!document.querySelector("[data-testid=flow-studio]")','React Flow Studio did not render');
   assert.ok((await evaluate('document.body.innerText')).includes(version+' RELEASED'),'Expected released version '+version);
+  assert.equal(await evaluate('document.querySelectorAll(".feature-card").length'),4,'four reviewed candidate highlights');
+  assert.equal(await evaluate('document.querySelectorAll(".boundary-products > div").length'),3,'application-owned authority shown');
+  assert.ok((await evaluate('document.body.innerText')).includes('Not published · No adoption implied'),'candidate must not be represented as released');
+  assert.equal(await evaluate('document.querySelector(".skip-link").getAttribute("href")'),'#content');
+  await click('.journey-choice:nth-child(2)');
+  assert.ok((await evaluate('document.querySelector(".journey-detail").innerText')).includes('Commit a business change'),'path selector updates content');
+  await click('.journey-choice:nth-child(1)');
+  await click('.nav-actions button.primary');
+  assert.ok(await evaluate('document.body.classList.contains("presenting")'),'presentation mode opens');
+  await click('.present-controls button:nth-of-type(2)');
+  assert.ok(await evaluate('document.querySelector("#journeys").getBoundingClientRect().height > 0'),'new presentation slide reachable');
+  await click('.present-controls button:last-child');
+  assert.equal(await evaluate('document.body.classList.contains("presenting")'),false,'presentation mode exits');
   assert.equal(await evaluate('document.querySelectorAll("[data-mode]").length'),4);
   // Traverse every scenario, inspect the terminal step and prove restart works.
   for(const f of flows){

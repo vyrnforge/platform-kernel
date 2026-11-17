@@ -1,4 +1,4 @@
-// Illustrative, deterministic sequences based on released v0.3.1 source.
+// Illustrative, deterministic sequences based on published v0.3.2 source.
 // No network, credentials, production telemetry, or execution of Java code.
 const core='platform-kernel/src/main/java/io/vyrnforge/platform/kernel/';
 const jdbc='kernel-persistence-jdbc/src/main/java/io/vyrnforge/platform/kernel/persistence/jdbc/';

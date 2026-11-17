@@ -1,6 +1,10 @@
 export const repo='https://github.com/vyrnforge/platform-kernel';
 export const commit='c86eb33a46fae2843c75181c6b395cd0dc6710fe';
 export const version='0.3.2';
+// The source-reviewed v0.4.0 candidate is not a published release.
+export const candidateVersion='0.4.0';
+export const candidateStatus='unpublished';
+export const candidatePr=repo+'/pull/65';
 export const releaseRun='43663775552';
 export const source=(path)=>repo+'/'+(path.endsWith('/')?'tree':'blob')+'/'+commit+'/'+path;
 export const capabilities=[
@@ -20,4 +24,4 @@ export const architectures=[
 {title:'Scaled SaaS',label:'03 / SCALE HORIZONTALLY',description:'Replicate each product behind a gateway. Keep tenant-aware data access and durable outbox/idempotency stores shared within each product deployment.',products:[{name:'Application A',instances:3,db:'App A data + optional reliability'},{name:'Application B',instances:3,db:'App B data + optional reliability'}],external:'Event transport · telemetry collectors · worker scheduling',note:'Illustrative topology; throughput, DB capacity and tenant isolation require deployment testing.'},
 {title:'Dedicated environment',label:'04 / ISOLATE BY CUSTOMER',description:'Run independent product instances and storage inside a dedicated customer environment, with its own identity provider and operations.',products:[{name:'Customer A / App',instances:2,db:'Customer A DB'},{name:'Customer B / App',instances:2,db:'Customer B DB'}],external:'Per-environment identity, transport and telemetry',note:'Deployment portability is a design goal, not a certified customer-VPC deployment.'}
 ];
-export const sections=['overview','demo','product','capabilities','architecture','usecases','readiness','adoption','start'];
+export const sections=['overview','journeys','next','product','capabilities','boundaries','architecture','usecases','demo','readiness','adoption','start'];
