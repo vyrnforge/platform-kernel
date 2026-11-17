@@ -73,7 +73,11 @@ try{
   assert.ok(await evaluate('document.querySelectorAll(".guide-code-shell .tok-keyword").length>0'),'syntax highlighting is rendered without altering code text');
   await click('.guide-code-tabs button:nth-child(2)');
   assert.ok((await evaluate(q('.guide-code-shell code')+'.textContent')).includes('javac --release 21'),'run commands are directly accessible');
-  assert.equal(await evaluate('document.querySelector(".guide-code-caption").textContent.includes("terminal")'),true,'filename/language is identified');
+  assert.ok((await evaluate(q('.guide-expected-output')+'.textContent')).includes('UUIDv7'),'expected output is explained');
+  assert.ok((await evaluate(q('.guide-code-caption')+'.textContent')).includes('Terminal'),'source platform is identified');
+  await click('.guide-code-tabs button:nth-child(3)');
+  assert.ok((await evaluate(q('.guide-code-shell code')+'.textContent')).includes('Invoke-WebRequest'),'Windows PowerShell instructions are available');
+  assert.ok((await evaluate(q('.guide-code-shell code')+'.textContent')).includes("java -cp '.;."),'Windows classpath separator is correct');
   await click('.docs-guide-group:nth-child(2) a:first-of-type');
   await wait('location.hash==="#/docs/request"','request guide navigation failed');
   assert.equal(await evaluate('document.querySelector(".docs-guide-group:nth-child(2) a:first-of-type").getAttribute("aria-current")'),'page');

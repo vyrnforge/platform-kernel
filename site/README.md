@@ -57,3 +57,9 @@ The one Playground is a deterministic **simulation**, not a running JVM, IAM ver
 ## Accessibility baseline (issue #77)
 
 See [the QA accessibility task and evidence matrix](qa/accessibility-baseline.md) for source findings, focused Chromium regressions, and separately outstanding actual browser zoom and screen-reader tasks. WCAG 2.2 AA is a *proposed* site quality target, not a certification. This work does not alter the published Java library.
+
+## Published v0.3.2 first-program verification — Issue #78
+
+The documentation first-run examples (Java 21 source, Maven dependency fragment and Gradle Kotlin DSL fragment) are maintained in `src/docs-data.mjs`. A narrow [published onboarding consumer](../.github/workflows/onboarding-consumer.yml) workflow is triggered only for guide/source changes and independently downloads the **released** core JAR from anonymous Maven Central, compares its SHA-1 checksum, records a computed SHA-256, compiles and runs the exact site Java class, and compiles minimal Maven/Gradle consumers. It does not run the full Java/PostgreSQL/release-staging suite. No 0.4.0 APIs or candidate builds may enter this proof.
+
+See [QA onboarding task notes](qa/onboarding-first-program.md) for evidence, blocked local verification and remaining human testing.
