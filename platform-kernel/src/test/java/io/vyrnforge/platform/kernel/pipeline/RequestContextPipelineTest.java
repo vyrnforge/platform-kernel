@@ -67,6 +67,38 @@ class RequestContextPipelineTest {
     }
 
     @Test
+    void tenantlessFactoryMinimizesWiringWithoutGrantingTenantAccess() {
+        var pipeline = RequestContextPipeline.tenantless(
+                identityAdapter(Set.of("profile.read")),
+                (actor, action, resource) -> actor.authorization().hasPermission(action));
+
+        var accepted = pipeline.resolve(new RequestContextInput<>(
+                "valid", TenantContext.none(), CorrelationContext.create(),
+                EndpointPolicy.tenantless("profile.read"), null));
+        assertEquals(TenantContext.none(), accepted.actorContext().tenant());
+        assertEquals(null, accepted.moduleEntitlement());
+
+        var unauthorized = assertThrows(KernelAccessException.class, () ->
+                pipeline.resolve(new RequestContextInput<>(
+                        "valid", TenantContext.none(), CorrelationContext.create(),
+                        EndpointPolicy.tenantless("profile.delete"), null)));
+        assertEquals(KernelFailure.DOMAIN_ACCESS_DENIED, unauthorized.failure());
+
+        var tenantOwnedResource = assertThrows(KernelAccessException.class, () ->
+                pipeline.resolve(new RequestContextInput<>(
+                        "valid", TenantContext.none(), CorrelationContext.create(),
+                        EndpointPolicy.tenantless("profile.read"),
+                        new ResourceReference("asset.asset", "asset-1", TENANT_A))));
+        assertEquals(KernelFailure.TENANT_CONTEXT_MISMATCH, tenantOwnedResource.failure());
+
+        var tenantScoped = assertThrows(KernelAccessException.class, () ->
+                pipeline.resolve(new RequestContextInput<>(
+                        "valid", TenantContext.tenant(TENANT_A), CorrelationContext.create(),
+                        EndpointPolicy.tenantModule("asset", "profile.read"), null)));
+        assertEquals(KernelFailure.TENANT_MEMBERSHIP_REQUIRED, tenantScoped.failure());
+    }
+
+    @Test
     void rejectsTenantlessActorForTenantOwnedEndpoint() {
         var pipeline = pipeline(identityAdapter(Set.of("asset.read")), true, true, true);
 

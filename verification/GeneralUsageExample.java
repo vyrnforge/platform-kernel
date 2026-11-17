@@ -41,6 +41,16 @@ public final class GeneralUsageExample {
                 EndpointPolicy.tenantless("profile.read"), null));
         check(profile.moduleEntitlement() == null, "tenantless entitlement must be absent");
 
+        // Simplified composition for applications with only authenticated global endpoints.
+        // This factory is fail-closed for tenant-scoped operations.
+        var tenantlessOnly = RequestContextPipeline.tenantless(
+                new ValidatedIdentityAdapter(),
+                (actor, action, resource) -> actor.authorization().hasPermission(action));
+        check(tenantlessOnly.resolve(new RequestContextInput<>(
+                identity, TenantContext.none(), correlation,
+                EndpointPolicy.tenantless("profile.read"), null)).moduleEntitlement() == null,
+                "tenantless-only composition");
+
         // Tenant-scoped operation with application-defined module and resource.
         // Resource ownership must come from authoritative application data.
         var policy = EndpointPolicy.tenantModule("records", "records.read");

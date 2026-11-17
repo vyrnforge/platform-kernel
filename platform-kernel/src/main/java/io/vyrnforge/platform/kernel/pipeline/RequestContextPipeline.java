@@ -45,6 +45,20 @@ public final class RequestContextPipeline<C> {
         this.domainAuthorizationHook = Objects.requireNonNull(domainAuthorizationHook, "domainAuthorizationHook");
     }
 
+    /**
+     * Compose authenticated tenantless operations without unused tenant provider plumbing.
+     * Tenant-scoped policies still fail closed; use the full constructor for tenant data.
+     */
+    public static <C> RequestContextPipeline<C> tenantless(
+            IdentityAdapter<C> identityAdapter,
+            DomainAuthorizationHook domainAuthorizationHook) {
+        return new RequestContextPipeline<>(
+                identityAdapter,
+                (actorId, tenantId) -> false,
+                (tenantId, moduleKey) -> null,
+                domainAuthorizationHook);
+    }
+
     public ResolvedRequestContext resolve(RequestContextInput<C> input) {
         Objects.requireNonNull(input, "input");
 
