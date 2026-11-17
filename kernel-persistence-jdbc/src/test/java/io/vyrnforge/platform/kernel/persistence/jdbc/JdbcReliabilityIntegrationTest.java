@@ -4,6 +4,7 @@ import io.vyrnforge.platform.kernel.audit.*;
 import io.vyrnforge.platform.kernel.context.*;
 import io.vyrnforge.platform.kernel.event.EventEnvelope;
 import io.vyrnforge.platform.kernel.idempotency.*;
+import org.flywaydb.core.Flyway;
 import org.junit.jupiter.api.*;
 import org.testcontainers.containers.PostgreSQLContainer;
 
@@ -42,6 +43,35 @@ class JdbcReliabilityIntegrationTest {
     @BeforeEach void clean() throws Exception {
         try(Connection c=dataSource.getConnection(); Statement s=c.createStatement()){
             s.execute("TRUNCATE asset_reference, platform_event_outbox, platform_audit_event, platform_idempotency");
+        }
+    }
+
+    @Test
+    void applicationMigrationOwnershipCanCoexistWithKernelTables() throws Exception {
+        // Host migration history and location are application-owned, rather than
+        // relying on KernelJdbcMigrator to discover everything under db/migration.
+        Flyway.configure()
+                .dataSource(dataSource)
+                .locations("classpath:app-owned-migrations")
+                .schemas("app_reference")
+                .defaultSchema("app_reference")
+                .table("app_reference_flyway_history")
+                .load()
+                .migrate();
+
+        try (Connection c = dataSource.getConnection();
+             Statement s = c.createStatement();
+             ResultSet rs = s.executeQuery(
+                     "SELECT to_regclass('app_reference.app_migration_reference')")) {
+            assertTrue(rs.next());
+            assertNotNull(rs.getString(1));
+        }
+        try (Connection c = dataSource.getConnection();
+             Statement s = c.createStatement();
+             ResultSet rs = s.executeQuery(
+                     "SELECT to_regclass('public.platform_event_outbox')")) {
+            assertTrue(rs.next());
+            assertNotNull(rs.getString(1));
         }
     }
 
