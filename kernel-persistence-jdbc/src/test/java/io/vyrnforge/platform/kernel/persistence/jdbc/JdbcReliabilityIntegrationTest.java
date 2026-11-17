@@ -390,6 +390,73 @@ class JdbcReliabilityIntegrationTest {
         assertEquals("ATTEMPTS_EXHAUSTED",errorCode(id));
     }
 
+    /**
+     * RD2-AC03 / R12-17: a simulated process crash after acquiring a durable
+     * claim must not discard the pending event. A successor recovers it only
+     * after the original claim expires. This is not remote exactly-once proof.
+     */
+    @Test void crashAfterClaimIsRecoveredByNewPublisherAfterLeaseExpiry() {
+        var codec = new JacksonRecordCodec();
+        UUID assetId = UUID.fromString("019a7f0e-5234-7abc-8def-1234567890ab");
+        new JdbcEventIntentPort(dataSource, codec).accept(event(assetId, Map.of("label", "Laptop")));
+
+        var clock = new MutableClock(Instant.now());
+        var sends = new AtomicInteger();
+        var crashedWorker = new JdbcOutboxPublisher(dataSource, codec, envelope -> {
+            sends.incrementAndGet();
+            // Error deliberately escapes the publisher's Exception catch;
+            // this emulates abrupt termination before its DB status update.
+            throw new AssertionError("synthetic-worker-crash-after-claim");
+        }, clock, 3, Duration.ZERO, Duration.ofSeconds(5));
+
+        assertThrows(AssertionError.class, () -> crashedWorker.publishBatch(1));
+        assertEquals(1, sends.get());
+        assertEquals("PENDING", status(assetId));
+
+        var successor = new JdbcOutboxPublisher(dataSource, codec, envelope -> sends.incrementAndGet(),
+                clock, 3, Duration.ZERO, Duration.ofSeconds(5));
+        assertEquals(0, successor.publishBatch(1).published(),
+                "lease remains owned before expiry");
+
+        clock.advance(Duration.ofSeconds(6));
+        assertEquals(1, successor.publishBatch(1).published(),
+                "expired claim must be recoverable by a new worker");
+        assertEquals(2, sends.get(), "a crashed send may have externally succeeded");
+        assertEquals("PUBLISHED", status(assetId));
+        assertEquals(1, countUnchecked("platform_event_outbox"));
+    }
+
+    /**
+     * R12-10 / R12-17: A may finish external transport after B has reclaimed
+     * and committed; A must NOT overwrite B's authoritative outbox status.
+     * Both transports may have delivered the same event (at-least-once).
+     */
+    @Test void lateSuccessfulTransportAfterTakeoverDoesNotOverwriteNewClaim() {
+        var codec = new JacksonRecordCodec();
+        UUID assetId = UUID.fromString("019a7f0e-5234-7abc-8def-1234567890ab");
+        new JdbcEventIntentPort(dataSource, codec).accept(event(assetId, Map.of("label", "Laptop")));
+        var clock = new MutableClock(Instant.now());
+        var externalSends = new AtomicInteger();
+        var successor = new JdbcOutboxPublisher(dataSource, codec,
+                envelope -> externalSends.incrementAndGet(),
+                clock, 3, Duration.ZERO, Duration.ofSeconds(5));
+        var original = new JdbcOutboxPublisher(dataSource, codec, envelope -> {
+            externalSends.incrementAndGet();
+            clock.advance(Duration.ofSeconds(6));
+            assertEquals(1, successor.publishBatch(1).published());
+            // Original transport now returns "success" after losing its lease.
+        }, clock, 3, Duration.ZERO, Duration.ofSeconds(5));
+
+        var staleResult = original.publishBatch(1);
+        assertEquals(1, staleResult.lostClaims(),
+                "late worker must not commit a stale success");
+        assertEquals(0, staleResult.published());
+        assertEquals("PUBLISHED", status(assetId));
+        assertEquals(2, externalSends.get(),
+                "DB fencing cannot prevent duplicate external side effects");
+        assertEquals(1, countUnchecked("platform_event_outbox"));
+    }
+
     private EventEnvelope<Map<String,Object>> event(UUID assetId,Map<String,Object> payload){
         return new EventEnvelope<>(
                 UUID.fromString("019a7f0e-4234-7abc-8def-1234567890ab"),
