@@ -47,15 +47,19 @@ def library_sensitive(path: str) -> bool:
 
 def dependency_sensitive(path: str) -> bool:
     """Only manifests, lockfiles and supply-chain configuration need PR dep diff."""
+    name = Path(path).name.lower()
     return (
-        path == "pom.xml"
-        or path.endswith("/pom.xml")
-        or path in {".github/dependabot.yml", "site/package.json", "site/package-lock.json"}
+        name in {
+            "pom.xml", "package.json", "package-lock.json", "pnpm-lock.yaml",
+            "yarn.lock", "pyproject.toml", "poetry.lock", "pipfile.lock",
+            "requirements.txt", "gradle.lockfile", "build.gradle",
+            "build.gradle.kts", "libs.versions.toml", "go.mod", "go.sum",
+            "cargo.toml", "cargo.lock", "gemfile", "gemfile.lock",
+        }
+        or name.endswith((".lock", ".requirements"))
+        or name.startswith(("requirements-", "requirements_"))
+        or path == ".github/dependabot.yml"
         or path.startswith((".github/workflows/", ".github/actions/"))
-        or (path.startswith("scripts/") and (
-            path.endswith((".lock", ".requirements", "requirements.txt"))
-            or Path(path).name.startswith("requirements-")
-        ))
     )
 
 
