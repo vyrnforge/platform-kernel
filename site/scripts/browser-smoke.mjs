@@ -177,7 +177,7 @@ try{
     ]){
       await evaluate('location.hash='+JSON.stringify(hash));
       await wait('!!document.querySelector('+JSON.stringify(selector)+')','wide route '+hash+' missing');
-      const measurement=await evaluate('(()=>{const wrap=document.querySelector(".wrap");const r=wrap.getBoundingClientRect();return {width:r.width,left:r.left,right:innerWidth-r.right,body:document.documentElement.scrollWidth}})()');
+      const measurement=await evaluate('(()=>{const wrap=document.querySelector(".wrap");const r=wrap.getBoundingClientRect();return {width:r.width,left:r.left,right:document.documentElement.clientWidth-r.right,body:document.documentElement.scrollWidth}})()');
       assert.ok(measurement.width>=width*.9,'Page shell constrained at '+width+' on '+hash+': '+JSON.stringify(measurement));
       assert.ok(Math.abs(measurement.left-measurement.right)<=2,'Asymmetric desktop page gutters '+width+' '+hash);
       assert.ok(measurement.body<=width+1,'Unexpected page overflow at '+width+' '+hash);
