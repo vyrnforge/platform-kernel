@@ -1,6 +1,16 @@
-# Platform Kernel product showcase
+# Platform Kernel product site and developer documentation
 
-A standalone React product site for the **published v0.3.2** library and a clearly labeled **unpublished v0.4.0 candidate preview**. The Java modules and Maven release pipeline are independent of this site.
+A standalone React site combining task-based developer documentation, capability discovery and an interactive Flow Studio. Usage examples target the **published v0.3.2** library; the **v0.4.0 candidate is unpublished** and isolated in the preview. The Java modules and Maven release pipeline are independent of this site.
+
+## Developer documentation experience
+
+The #docs section is the primary first-time developer route. Its searchable guide navigation offers installation (Maven/Gradle), standalone Java code, authenticated tenantless and tenant-scoped request excerpts, optional JDBC idempotent writes, and testkit/consumer conformance. Each guide states prerequisites, when to use it, exact code status (complete vs. excerpt), verification and which responsibilities belong to the application. Every capability explorer card also links to a detailed usage guide.
+
+- `src/docs-data.mjs`: published-version guide data, code examples and link paths; `src/docs-data.test.mjs` enforces version pinning and coverage.
+- `src/DeveloperDocs.jsx` and `src/developer-docs.css`: accessible guide navigation, search, code choice, copy with fallback, responsive layout and source links.
+- `scripts/browser-smoke.mjs`: exercises guide selection, example switching and 390 px code overflow in addition to the existing Flow Studio and presentation behavior.
+
+Do not expose a main-branch **candidate** API in a published v0.3.2 example. In particular, `RequestContextPipeline.tenantless(...)` and the optional `JacksonRecordCodec(applicationMapper)` constructor are candidate-only until a separate release is approved. For a runnable published-release sample, link to the pinned `c86eb33a...` source, not to `main/verification/GeneralUsageExample.java`. Detailed living documents on main may mention candidate changes; clearly label version gates.
 
 ## Local development
 
@@ -18,7 +28,7 @@ In repository Settings → Pages, select **GitHub Actions** as the source (one-t
 
 ## Visitor paths and presentation contract
 
-The site has three goals: (1) help a first-time developer select the smallest useful module, (2) explain independently owned product and infrastructure boundaries without implying a Kernel server, and (3) distinguish verified published artifacts from candidate source. Read the capability explorer as **published v0.3.2**, and the feature-preview section as **v0.4.0 candidate, NOT yet published**. Do not change `src/data.mjs` `version`, `commit` or `releaseRun` until the new public Maven Central/GitHub release has actually been verified.
+The site has four goals: (1) help a first-time developer install and run a published library API, (2) make capability-to-usage guidance discoverable, (3) explain independently owned product and infrastructure boundaries without implying a Kernel server, and (4) distinguish verified published artifacts from candidate source. Read the capability explorer as **published v0.3.2**, and the feature-preview section as **v0.4.0 candidate, NOT yet published**. Do not change `src/data.mjs` `version`, `commit` or `releaseRun` until the new public Maven Central/GitHub release has actually been verified.
 
 The presentation control uses native buttons, keyboard arrows and Escape; a skip-to-content link supports keyboard users. The guided adoption path selector uses pressed buttons and an announced content region; focus remains on the chosen button. Flow Studio supports keyboard step controls and a reduced-motion rendering. Labels, reading order, focus visibility and 390 px reflow are checked in browser smoke where possible. Real screen reader/zoom/browser testing is still a manual QA requirement; CI is not WCAG certification.
 
