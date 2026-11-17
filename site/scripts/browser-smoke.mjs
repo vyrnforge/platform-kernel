@@ -8,6 +8,7 @@ import { tmpdir } from 'node:os';
 import { resolve, join, extname } from 'node:path';
 import { flows } from '../src/flow-data.mjs';
 import { version } from '../src/data.mjs';
+import { developerGuides } from '../src/docs-data.mjs';
 const sleep=ms=>new Promise(r=>setTimeout(r,ms));
 const dist=resolve('dist'),prefix='/platform-kernel/';
 const server=createServer(async(req,res)=>{try{
@@ -53,6 +54,27 @@ try{
   assert.equal(await evaluate('document.querySelectorAll(".boundary-products > div").length'),3,'application-owned authority shown');
   assert.ok((await evaluate('document.body.innerText')).includes('Not published · No adoption implied'),'candidate must not be represented as released');
   assert.equal(await evaluate('document.querySelector(".skip-link").getAttribute("href")'),'#content');
+  assert.equal(await evaluate('document.querySelectorAll(".docs-topic").length'),developerGuides.length,'all developer guides are available');
+  assert.equal(await evaluate('document.querySelector(".docs-nav-link").getAttribute("href")'),'#docs');
+  assert.equal(await evaluate('getComputedStyle(document.querySelector(".docs-topic-nav")).display'),'block','desktop guide groups stack vertically');
+  // Keyboard users can select a guide with a native button and Enter.
+  await evaluate('document.querySelector(".docs-nav-group:nth-child(2) .docs-topic").focus()');
+  assert.equal(await evaluate('document.activeElement.classList.contains("docs-topic")'),true);
+  await send('Input.dispatchKeyEvent',{type:'keyDown',key:'Enter',code:'Enter',windowsVirtualKeyCode:13,nativeVirtualKeyCode:13,text:'\r',unmodifiedText:'\r'});
+  await send('Input.dispatchKeyEvent',{type:'char',key:'Enter',code:'Enter',windowsVirtualKeyCode:13,nativeVirtualKeyCode:13,text:'\r',unmodifiedText:'\r'});
+  await send('Input.dispatchKeyEvent',{type:'keyUp',key:'Enter',code:'Enter',windowsVirtualKeyCode:13,nativeVirtualKeyCode:13});
+  await wait('document.querySelector("#docs-guide-title").textContent === "Resolve a trusted request"','Keyboard Enter must activate the guide');
+  await click('.docs-code-choices button:nth-child(2)');
+  assert.ok((await evaluate(q('.docs-code code')+'.textContent')).includes('TenantContext.tenant(tenantId)'),'tenant-scoped usage snippet visible');
+  await click('.docs-nav-group:first-child .docs-topic');
+  await click('.docs-code-choices button:nth-child(2)');
+  assert.ok((await evaluate(q('.docs-code code')+'.textContent')).includes('mavenCentral()'),'Gradle tab changes code');
+  // At an effective 200%-zoom desktop content width (720 CSS px), the layout still reflows.
+  await send('Emulation.setDeviceMetricsOverride',{width:720,height:1000,deviceScaleFactor:1,mobile:false});
+  await sleep(200);
+  assert.ok(await evaluate('document.documentElement.scrollWidth <= window.innerWidth+1'),'Guide layout overflows an effective 200%-zoom desktop width');
+  assert.ok(await evaluate('document.querySelector(".docs-code pre").scrollWidth >= document.querySelector(".docs-code pre").clientWidth'),'code panel remains scrollable');
+  await send('Emulation.setDeviceMetricsOverride',{width:1440,height:1000,deviceScaleFactor:1,mobile:false});
   await click('.journey-choice:nth-child(2)');
   assert.ok((await evaluate('document.querySelector(".journey-detail").innerText')).includes('Commit a business change'),'path selector updates content');
   await click('.journey-choice:nth-child(1)');
@@ -99,6 +121,10 @@ try{
   await send('Emulation.setDeviceMetricsOverride',{width:390,height:844,deviceScaleFactor:1,mobile:true});
   await sleep(200);
   assert.ok(await evaluate('document.documentElement.scrollWidth <= window.innerWidth+1'),'Page overflows mobile viewport');
+  await click('.docs-nav-group:first-child .docs-topic:nth-of-type(2)');
+  assert.ok((await evaluate(q('.docs-code code')+'.textContent')).includes('FirstKernelProgram'),'mobile developer guide is usable');
+  assert.ok(await evaluate('document.documentElement.scrollWidth <= window.innerWidth+1'),'Documentation must not overflow mobile viewport');
+  assert.ok(await evaluate('document.querySelector(".docs-code pre").scrollWidth > document.querySelector(".docs-code pre").clientWidth'),'Long code lines scroll inside code panel');
   assert.ok(await evaluate('document.querySelector(".fs-canvas").scrollWidth > document.querySelector(".fs-canvas").clientWidth'),'Mobile graph should scroll within its canvas');
   await click('[data-mode="request"]');await click('[data-scenario="tenantless"]');await click('[data-step="4"]');
   assert.equal(await evaluate(q('[data-testid=flow-state]')+'.textContent'),'400 · invalid context');
