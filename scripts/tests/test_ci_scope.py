@@ -53,6 +53,10 @@ class ScopeTests(unittest.TestCase):
 
     def test_lockfile_reviews(self):
         self.check(["scripts/requirements-schema-202012.lock"], True, True, True)
+        self.check(["site/pnpm-lock.yaml"], False, False, True)
+        self.check(["site/yarn.lock"], False, False, True)
+        self.check(["new-module/build.gradle.kts"], True, True, True)
+        self.check(["requirements-dev.txt"], True, True, True)
 
     def test_mixed_change_keeps_each_affected_pipeline(self):
         self.check(["site/src/main.jsx", "platform-kernel/src/main/java/Foo.java",
