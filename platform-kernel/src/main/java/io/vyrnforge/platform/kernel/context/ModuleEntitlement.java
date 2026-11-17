@@ -1,6 +1,7 @@
 package io.vyrnforge.platform.kernel.context;
 
 import io.vyrnforge.platform.kernel.ids.UuidV7;
+import io.vyrnforge.platform.kernel.module.ModuleKeys;
 
 import java.time.Instant;
 import java.util.Objects;
@@ -13,8 +14,6 @@ public record ModuleEntitlement(UUID tenantId, String moduleKey, boolean enabled
         if (!UuidV7.isCanonical(tenantId.toString())) {
             throw new IllegalArgumentException("tenantId must be UUIDv7");
         }
-        if (moduleKey == null || moduleKey.length() > 128 || !moduleKey.matches("^[a-z][a-z0-9_.:-]*$")) {
-            throw new IllegalArgumentException("moduleKey must be a valid namespaced key (max 128 characters)");
-        }
+        moduleKey = ModuleKeys.require(moduleKey);
     }
 }

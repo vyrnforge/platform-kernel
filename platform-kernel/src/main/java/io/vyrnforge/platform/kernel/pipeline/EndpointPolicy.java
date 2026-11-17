@@ -1,10 +1,12 @@
 package io.vyrnforge.platform.kernel.pipeline;
 
+import io.vyrnforge.platform.kernel.module.ModuleKeys;
+
 /** Cross-cutting endpoint requirements. Domain authorization remains in DomainAuthorizationHook. */
 public record EndpointPolicy(boolean tenantRequired, String moduleKey, String action) {
     public EndpointPolicy {
-        if (tenantRequired && (moduleKey == null || moduleKey.isBlank())) {
-            throw new IllegalArgumentException("moduleKey is required for tenant-scoped module endpoints");
+        if (tenantRequired) {
+            moduleKey = ModuleKeys.require(moduleKey);
         }
         if (action == null || action.isBlank()) {
             throw new IllegalArgumentException("action must not be blank");
