@@ -23,7 +23,7 @@ h3{font-size:19px;letter-spacing:-.4px}
 .visually-hidden{position:absolute!important;width:1px!important;height:1px!important;padding:0!important;margin:-1px!important;overflow:hidden!important;clip:rect(0,0,0,0)!important;white-space:nowrap!important;border:0!important}
 .skip-link{position:fixed;top:-90px;left:16px;background:#fff;border:2px solid #2159aa;z-index:101;padding:10px 14px;color:#122c52;border-radius:8px}
 .skip-link:focus{top:12px}
-.site-header{position:sticky;top:0;z-index:50;background:#fffffff5;backdrop-filter:blur(12px);border-bottom:1px solid var(--line)}
+.site-header{position:sticky;top:0;z-index:50;background:#fff;border-bottom:1px solid var(--line)}
 .header-inner{min-height:73px;display:flex;align-items:center;justify-content:space-between;gap:24px}
 .brand{display:flex;gap:10px;align-items:center;flex:none;color:#172c47}
 .brand:hover{text-decoration:none}
@@ -57,7 +57,7 @@ h3{font-size:19px;letter-spacing:-.4px}
 
 /* Home: only an introduction, one install preview and a directed start. */
 .home-hero{background:radial-gradient(ellipse at 80% 18%,#224473 0%,#0c2038 51%,#07192d 100%);color:#fff;padding:87px 0 89px}
-.home-hero-layout{display:grid;grid-template-columns:minmax(0,1.08fr) minmax(0,.92fr);align-items:center;gap:65px}
+.home-hero-layout{display:grid;grid-template-columns:minmax(0,1.08fr) minmax(0,.92fr);align-items:center;gap:52px}
 .home-hero .eyebrow{color:#9bbfff;display:flex;align-items:center;gap:10px}
 .eyebrow-dot{width:8px;height:8px;border-radius:50%;background:#6ad4c9;box-shadow:0 0 0 4px #6ad4c91f}
 .home-hero h1{color:#fff;margin:25px 0 24px;font-size:clamp(39px,5.1vw,69px);line-height:1.06}
@@ -68,7 +68,7 @@ h3{font-size:19px;letter-spacing:-.4px}
 .home-hero .btn.subtle{color:#e4f0ff;background:#233b5c;border-color:#59759d}
 .home-facts{display:flex;flex-wrap:wrap;gap:10px 19px;margin-top:31px}
 .home-facts span{font-size:11px;font-weight:650;color:#9fbbd8;border-left:2px solid #4975ad;padding-left:9px}
-.home-code{border:1px solid #5276a1;border-radius:17px;background:#09182a;box-shadow:0 26px 74px #0005;overflow:hidden;min-width:0}
+.home-code{border:1px solid #5276a1;border-radius:17px;background:#09182a;box-shadow:0 12px 35px #0003;overflow:hidden;min-width:0}
 .home-code-heading{padding:14px 18px;display:flex;align-items:center;gap:12px;background:#172f4d;border-bottom:1px solid #3a5878;color:#d1e2f6;font-size:12px;font-weight:700}
 .home-code-heading span:nth-child(2){flex:1}
 .home-code-heading span:last-child{font:800 10px ui-monospace,Consolas,monospace;color:#a1dfca}
@@ -156,3 +156,6 @@ h3{font-size:19px;letter-spacing:-.4px}
 @media(max-width:640px){.wrap{width:min(calc(100% - 34px),1180px)}.header-end .github-link{display:none}.brand-name{font-size:11px}.primary-nav{gap:2px}.primary-nav a{font-size:12px;padding:8px 9px}.section{padding:54px 0}.home-hero{padding:53px 0 58px}.home-hero h1{letter-spacing:-1.9px}.home-hero-copy>p{font-size:15px}.home-facts{gap:8px 13px}.home-code pre{font-size:11px;padding:19px 14px}.next-grid{grid-template-columns:1fr}.next-grid>a{padding:20px}.release-note a{margin-left:0}.reference-article{padding:23px 19px}.ownership-grid,.versions-grid{grid-template-columns:1fr}.capability-row{padding:18px}.capability-row dl{grid-template-columns:1fr;gap:3px}.capability-row dt:not(:first-child){margin-top:9px}.footer-inner{flex-direction:column;align-items:flex-start;padding-block:22px;gap:8px}}
 @media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}.next-grid>a{transition:none}}
 @media print{.site-header,.site-footer,.docs-sidebar,.reference-aside{display:none!important}.content-surface{padding-bottom:0}.reference-layout,.docs-layout{display:block}.home-hero{background:#fff!important;color:#142843!important}.home-hero :where(h1,p){color:#142843!important}}
+
+/* Reflow is the responsive baseline, including narrow 200%-zoom equivalents. */
+@media(max-width:400px){.primary-nav{justify-content:flex-start}.primary-nav a{padding:8px 7px}.header-inner{gap:6px}.header-end{margin-left:auto}.version-chip{padding:6px 8px}.wb-section{overflow-wrap:anywhere}}

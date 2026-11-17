@@ -74,10 +74,8 @@ function App(){
   useEffect(()=>{
     document.title=route.title+' · VyrnForge Platform Kernel';
     window.scrollTo({top:0,behavior:'instant'});
-    if(route.page!=='home'){
-      const title=document.getElementById('page-title');
-      title?.focus({preventScroll:true});
-    }
+    const title=document.getElementById('page-title');
+    title?.focus({preventScroll:true});
   },[route.page,route.id,route.title]);
   return <>
     <a className="skip-link" href="#main" onClick={e=>{e.preventDefault();document.getElementById("main")?.focus()}}>Skip to content</a>
