@@ -14,6 +14,10 @@ Current maintainer entry point. See [Central publication](central-publication.md
 
 Dependabot covers Maven, GitHub Actions and site npm. The one-time signing bootstrap is retired. Historical run records may still appear in GitHub Actions; retain those for audit.
 
+## Prepared candidate
+
+- [v0.4.0 release readiness](v0.4.0-readiness.md) is an **unpublished draft**. Its PR remains open and must not be merged or published before a separate explicit owner authorization. v0.3.2 remains the latest verified published version until publication is confirmed.
+
 ## Release checklist
 
 1. Update VERSION, all Maven module versions and changelog. Keep Java package names, released wire contracts and migration bytes compatible unless explicitly approved. Do not reuse a version.
