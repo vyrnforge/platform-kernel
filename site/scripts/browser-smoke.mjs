@@ -6,8 +6,7 @@ import { createServer } from 'node:http';
 import { mkdtemp, readFile, rm, mkdir, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { resolve, join, extname } from 'node:path';
-import { flows } from '../src/flow-data.mjs';
-import { version } from '../src/data.mjs';
+import { version,capabilities } from '../src/data.mjs';
 import { developerGuides } from '../src/docs-data.mjs';
 const sleep=ms=>new Promise(r=>setTimeout(r,ms));
 const dist=resolve('dist'),prefix='/platform-kernel/';
@@ -48,128 +47,100 @@ try{
   const q=selector=>'document.querySelector('+JSON.stringify(selector)+')';
   await send('Runtime.enable');
   await send('Emulation.setDeviceMetricsOverride',{width:1440,height:1000,deviceScaleFactor:1,mobile:false});
-  await wait('!!document.querySelector("[data-testid=flow-studio]")','React Flow Studio did not render');
-  assert.ok((await evaluate('document.body.innerText')).includes(version+' RELEASED'),'Expected released version '+version);
-  assert.equal(await evaluate('document.querySelectorAll(".feature-card").length'),4,'four reviewed candidate highlights');
-  assert.equal(await evaluate('document.querySelectorAll(".boundary-products > div").length'),3,'application-owned authority shown');
-  assert.ok((await evaluate('document.body.innerText')).includes('Not published · No adoption implied'),'candidate must not be represented as released');
-  assert.equal(await evaluate('document.querySelector(".skip-link").getAttribute("href")'),'#content');
-  assert.equal(await evaluate('document.querySelectorAll(".docs-topic").length'),developerGuides.length,'all developer guides are available');
-  assert.equal(await evaluate('document.querySelector(".docs-nav-link").getAttribute("href")'),'#workbench');
-  assert.equal(await evaluate('document.querySelectorAll(".hero-console-modes button").length'),3,'hero offers interactive paths');
-  await click('.hero-console-modes button:nth-child(3)');
-  assert.ok((await evaluate(q('.hero-console-result strong')+'.textContent')).includes('ATOMIC'),'hero demo reacts to mode selection');
-  assert.ok((await evaluate(q('.hero-console-window code')+'.textContent')).includes('executeIdempotent'),'hero snippet updates');
-  await click('.hero-console-modes button:nth-child(1)');
-  assert.ok((await evaluate(q('.hero-console-window code')+'.textContent')).includes('UuidV7.generate'),'hero can return to core example');
-  assert.equal(await evaluate('document.querySelectorAll(".wb-profile").length'),3,'three integration paths');
-  assert.ok((await evaluate(q(".wb-code-pane code")+".textContent")).includes("platform-kernel"),'core recipe is initially present');
-  await click('.wb-profile:nth-child(2)');
-  assert.ok((await evaluate(q('.wb-stage-heading h3')+'.textContent')).includes('Protected API'),'switching profiles updates architecture');
-  await click('.wb-scenario:nth-child(2)');
-  assert.ok((await evaluate(q('.wb-outcome')+'.textContent')).includes('401'),'missing verified actor fails closed');
-  await click('.wb-scope-options button:nth-child(2)');
-  await click('.wb-scenario:nth-child(3)');
-  assert.ok((await evaluate(q('.wb-outcome')+'.textContent')).includes('400'),'tenantless active tenant is invalid');
-  await click('.wb-code-tabs button:nth-child(2)');
-  assert.ok((await evaluate(q('.wb-code-pane code')+'.textContent')).includes('EndpointPolicy.tenantless'),'scope changes Java guidance');
-  await click('.wb-trace-actions .wb-next');
-  assert.equal(await evaluate(q('.wb-inspection-tag')+'.textContent'),'INSPECTING STEP 2 OF 4','step navigation advances');
-  await click('.wb-profile:nth-child(3)');
-  assert.ok((await evaluate(q('.wb-code-pane code')+'.textContent')).includes('platform-kernel-jdbc'),'JDBC is an optional runtime artifact');
-  await click('.wb-testkit input');
-  assert.ok((await evaluate(q('.wb-code-pane code')+'.textContent')).includes('<scope>test</scope>'),'testkit remains test-scoped');
-  await click('.wb-code-tabs button:nth-child(2)');
-  assert.ok((await evaluate(q('.wb-code-pane code')+'.textContent')).includes('executeIdempotent'),'JDBC Java excerpt is generated');
-  await click('.wb-scenario:nth-child(2)');
-  assert.ok((await evaluate(q('.wb-outcome')+'.textContent')).includes('SAFE REPLAY'),'retry scenario illustrates replay');
-  await click('.wb-profile:nth-child(1)');
-  assert.ok((await evaluate(q('.wb-code-pane code')+'.textContent')).includes('platform-kernel'),'core mode restores dependencies');
+  await wait('!!document.querySelector(".home-hero")','Home route did not render');
+  assert.equal(await evaluate('document.querySelectorAll(".primary-nav a").length'),4,'four top-level destinations only');
+  assert.equal(await evaluate('document.querySelectorAll(".next-grid > a").length'),3,'one concise quickstart route');
+  assert.ok((await evaluate(q('.home-code code')+'.textContent')).includes(version),'published Maven version visible');
+  assert.equal(await evaluate('document.querySelectorAll(".flow-studio,.hero-console,.journey-choice,.feature-card").length'),0,'duplicate showcase layers removed');
+  assert.equal(await evaluate('document.querySelector(".skip-link").getAttribute("href")'),'#main');
+  await click('.skip-link');
+  assert.equal(await evaluate('document.activeElement.id'),'main','skip link focuses main without hijacking route');
+  assert.equal(await evaluate('location.hash'),'','skip link should preserve route');
 
-  assert.equal(await evaluate('getComputedStyle(document.querySelector(".docs-topic-nav")).display'),'block','desktop guide groups stack vertically');
-  // Keyboard users can select a guide with a native button and Enter.
-  await evaluate('document.querySelector(".docs-nav-group:nth-child(2) .docs-topic").focus()');
-  assert.equal(await evaluate('document.activeElement.classList.contains("docs-topic")'),true);
+  // Dedicated docs URL: selection, search, code tabs, keyboard links and guide navigation.
+  await click('.primary-nav a[href="#/docs/install"]');
+  await wait('document.querySelector(".guide-article") && location.hash==="#/docs/install"','Documentation page did not render');
+  assert.equal(await evaluate('document.querySelectorAll(".docs-guide-group a").length'),5,'five addressable developer guides');
+  assert.ok((await evaluate(q('#guide-heading')+'.textContent')).includes('Install the released library'));
+  await click('.guide-code-tabs button:nth-child(2)');
+  assert.ok((await evaluate(q('.guide-code-shell code')+'.textContent')).includes('mavenCentral()'),'Gradle tab changes example');
+  await click('.guide-pager a:last-child');
+  await wait('location.hash==="#/docs/first" && document.querySelector("#guide-heading").textContent.includes("first Java")','next guide deep link failed');
+  assert.ok((await evaluate(q('.guide-code-shell code')+'.textContent')).includes('UuidV7.generate'),'real first Java API visible');
+  await click('.docs-guide-group:nth-child(2) a:first-of-type');
+  await wait('location.hash==="#/docs/request"','request guide navigation failed');
+  assert.equal(await evaluate('document.querySelector(".docs-guide-group:nth-child(2) a:first-of-type").getAttribute("aria-current")'),'page');
+  await click('.guide-code-tabs button:nth-child(2)');
+  assert.ok((await evaluate(q('.guide-code-shell code')+'.textContent')).includes('TenantContext.tenant(tenantId)'),'tenant-scoped excerpt visible');
+  await evaluate('document.querySelector(".docs-guide-group:last-child a").focus()');
   await send('Input.dispatchKeyEvent',{type:'keyDown',key:'Enter',code:'Enter',windowsVirtualKeyCode:13,nativeVirtualKeyCode:13,text:'\r',unmodifiedText:'\r'});
   await send('Input.dispatchKeyEvent',{type:'char',key:'Enter',code:'Enter',windowsVirtualKeyCode:13,nativeVirtualKeyCode:13,text:'\r',unmodifiedText:'\r'});
   await send('Input.dispatchKeyEvent',{type:'keyUp',key:'Enter',code:'Enter',windowsVirtualKeyCode:13,nativeVirtualKeyCode:13});
-  await wait('document.querySelector("#docs-guide-title").textContent === "Resolve a trusted request"','Keyboard Enter must activate the guide');
-  await click('.docs-code-choices button:nth-child(2)');
-  assert.ok((await evaluate(q('.docs-code code')+'.textContent')).includes('TenantContext.tenant(tenantId)'),'tenant-scoped usage snippet visible');
-  await click('.docs-nav-group:first-child .docs-topic');
-  await click('.docs-code-choices button:nth-child(2)');
-  assert.ok((await evaluate(q('.docs-code code')+'.textContent')).includes('mavenCentral()'),'Gradle tab changes code');
-  // At an effective 200%-zoom desktop content width (720 CSS px), the layout still reflows.
-  await send('Emulation.setDeviceMetricsOverride',{width:720,height:1000,deviceScaleFactor:1,mobile:false});
-  await sleep(200);
-  assert.ok(await evaluate('document.documentElement.scrollWidth <= window.innerWidth+1'),'Guide layout overflows an effective 200%-zoom desktop width');
-  assert.ok(await evaluate('document.querySelector(".docs-code pre").scrollWidth >= document.querySelector(".docs-code pre").clientWidth'),'code panel remains scrollable');
-  await send('Emulation.setDeviceMetricsOverride',{width:1440,height:1000,deviceScaleFactor:1,mobile:false});
-  await click('.journey-choice:nth-child(2)');
-  assert.ok((await evaluate('document.querySelector(".journey-detail").innerText')).includes('Commit a business change'),'path selector updates content');
-  await click('.journey-choice:nth-child(1)');
-  await click('.nav-actions button.primary');
-  assert.ok(await evaluate('document.body.classList.contains("presenting")'),'presentation mode opens');
-  await click('.present-controls button:nth-of-type(2)');
-  assert.ok(await evaluate('document.querySelector("#workbench").getBoundingClientRect().height > 0'),'interactive workbench presentation slide reachable');
-  await click('.present-controls button:nth-of-type(2)');
-  assert.ok(await evaluate('document.querySelector("#journeys").getBoundingClientRect().height > 0'),'journey presentation slide reachable');
-  await click('.present-controls button:last-child');
-  assert.equal(await evaluate('document.body.classList.contains("presenting")'),false,'presentation mode exits');
-  assert.equal(await evaluate('document.querySelectorAll("[data-mode]").length'),4);
-  // Traverse every scenario, inspect the terminal step and prove restart works.
-  for(const f of flows){
-    await click('[data-mode="'+f.id+'"]');
-    for(const s of f.scenarios){
-      await click('[data-scenario="'+s.id+'"]');
-      await click('[data-step="'+(s.frames.length-1)+'"]');
-      assert.equal(await evaluate(q('[data-testid=step-title]')+'.textContent'),s.frames.at(-1).label);
-      assert.equal(await evaluate(q('[data-testid=flow-state]')+'.textContent'),s.outcome);
-      assert.equal(await evaluate('document.querySelectorAll(".fs-node.active").length'),1);
-      await click('[aria-label="Restart sequence"]');
-      assert.equal(await evaluate(q('[data-testid=step-title]')+'.textContent'),s.frames[0].label);
-    }
-  }
-  console.log('All '+flows.reduce((a,f)=>a+f.scenarios.length,0)+' scenarios passed terminal-state and restart checks');
-  await click('[data-mode="request"]');
-  await click('[data-testid="play"]');
-  await wait('document.querySelector(".fs-edge.active")!==null && document.querySelector(".fs-graph animateMotion")!==null','Animated packet did not appear');
-  const step=await evaluate(q('[data-testid=step-title]')+'.textContent');
-  await click('[data-testid="play"]');
-  await sleep(1700);
-  assert.equal(await evaluate(q('[data-testid=step-title]')+'.textContent'),step,'Pause did not stop playback');
-  await click('[aria-label="Next step"]');
-  await click('[aria-label="Previous step"]');
-  await click('[aria-label="Expand workspace"]');
-  assert.equal(await evaluate('document.querySelector(".flow-studio").getAttribute("aria-modal")'),'true');
-  await click('[aria-label="Close expanded view"]');
-  assert.equal(await evaluate('document.querySelector(".flow-studio").classList.contains("expanded")'),false);
-  await click('[data-mode="mutation"]');await click('[data-scenario="lost"]');await click('[data-step="5"]');
-  assert.equal(await evaluate(q('[data-testid=step-title]')+'.textContent'),'Atomic commit');
-  await click('[data-mode="outbox"]');await click('[data-scenario="stale"]');await click('[data-step="11"]');
-  assert.equal(await evaluate(q('[data-testid=step-title]')+'.textContent'),'Lost claim recorded');
-  // Scroll the studio into view; verify viewport fit and responsive graph scrolling.
-  await evaluate('document.querySelector("#demo").scrollIntoView()');
-  await send('Emulation.setDeviceMetricsOverride',{width:390,height:844,deviceScaleFactor:1,mobile:true});
-  await sleep(200);
-  assert.ok(await evaluate('document.documentElement.scrollWidth <= window.innerWidth+1'),'Page overflows mobile viewport');
-  assert.ok(await evaluate('document.querySelector(".wb-architecture").getBoundingClientRect().width <= innerWidth'),'Workbench architecture reflows on mobile');
+  await wait('location.hash==="#/docs/assure"','keyboard guide navigation failed');
+  // React controlled search: use the native setter to simulate the browser input path.
+  const setSearch=async text=>evaluate('(()=>{const el=document.querySelector("#guide-search");const setter=Object.getOwnPropertyDescriptor(HTMLInputElement.prototype,"value").set;setter.call(el,'+JSON.stringify(text)+');el.dispatchEvent(new Event("input",{bubbles:true}));return true})()');
+  await setSearch('retriable');
+  await wait('document.querySelectorAll(".docs-guide-group a").length===1','guide search did not filter topics');
+  await setSearch('unlikely-search-xyz');
+  await wait('!!document.querySelector(".docs-search-empty")','search empty state not visible');
+  await click('.docs-search-empty button');
+  await wait('document.querySelectorAll(".docs-guide-group a").length===5','clear search did not restore topics');
+
+  // Reference is documentation, not another homepage showcase.
+  await click('.primary-nav a[href="#/reference/architecture"]');
+  await wait('location.hash==="#/reference/architecture" && !!document.querySelector(".ownership-grid")','architecture reference failed');
+  assert.equal(await evaluate('document.querySelectorAll(".ownership-grid section").length'),4,'four separate ownership boundaries');
+  assert.equal(await evaluate('document.querySelectorAll(".reference-patterns details").length'),4,'deployment notes are consolidated in reference');
+  await click('.reference-patterns summary');
+  assert.equal(await evaluate('document.querySelector(".reference-patterns details").open'),true,'topology reference expands');
+  await click('.reference-nav a[href="#/reference/capabilities"]');
+  await wait('location.hash==="#/reference/capabilities"','capability reference failed');
+  assert.equal(await evaluate('document.querySelectorAll(".capability-row").length'),capabilities.length,'all release capabilities accounted for');
+  await click('.reference-nav a[href="#/reference/releases"]');
+  await wait('location.hash==="#/reference/releases"','release reference failed');
+  assert.ok((await evaluate(q('.reference-article')+'.innerText')).includes('NOT PUBLISHED'),'candidate not misrepresented as released');
+
+  // One playground only, with published code output and negative scenarios.
+  await click('.primary-nav a[href="#/playground"]');
+  await wait('location.hash==="#/playground" && !!document.querySelector(".wb-frame")','playground failed');
+  assert.equal(await evaluate('document.querySelectorAll(".wb-profile").length'),3,'supported modes present');
   await click('.wb-profile:nth-child(2)');
-  assert.ok((await evaluate(q('.wb-stage-heading h3')+'.textContent')).includes('Protected API'),'mobile configuration works');
-  assert.ok(await evaluate('document.documentElement.scrollWidth <= window.innerWidth+1'),'Workbench must not overflow mobile viewport');
-  await click('.docs-nav-group:first-child .docs-topic:nth-of-type(2)');
-  assert.ok((await evaluate(q('.docs-code code')+'.textContent')).includes('FirstKernelProgram'),'mobile developer guide is usable');
-  assert.ok(await evaluate('document.documentElement.scrollWidth <= window.innerWidth+1'),'Documentation must not overflow mobile viewport');
-  assert.ok(await evaluate('document.querySelector(".docs-code pre").scrollWidth > document.querySelector(".docs-code pre").clientWidth'),'Long code lines scroll inside code panel');
-  assert.ok(await evaluate('document.querySelector(".fs-canvas").scrollWidth > document.querySelector(".fs-canvas").clientWidth'),'Mobile graph should scroll within its canvas');
-  await click('[data-mode="request"]');await click('[data-scenario="tenantless"]');await click('[data-step="4"]');
-  assert.equal(await evaluate(q('[data-testid=flow-state]')+'.textContent'),'400 · invalid context');
+  await click('.wb-scenario:nth-child(2)');
+  assert.ok((await evaluate(q('.wb-outcome')+'.textContent')).includes('401'),'unverified identity denial visible');
+  await click('.wb-scope-options button:nth-child(2)');
+  await click('.wb-scenario:nth-child(3)');
+  assert.ok((await evaluate(q('.wb-outcome')+'.textContent')).includes('400'),'invalid tenantless context visible');
+  await click('.wb-code-tabs button:nth-child(2)');
+  assert.ok((await evaluate(q('.wb-code-pane code')+'.textContent')).includes('EndpointPolicy.tenantless'),'version-correct tenantless excerpt');
+  await click('.wb-profile:nth-child(3)');
+  await click('.wb-testkit input');
+  assert.ok((await evaluate(q('.wb-code-pane code')+'.textContent')).includes('<scope>test</scope>'),'testkit stays test-only');
+  await click('.wb-scenario:nth-child(2)');
+  assert.ok((await evaluate(q('.wb-outcome')+'.textContent')).includes('SAFE REPLAY'),'idempotent replay simulated');
+
+  // Wide, zoom-equivalent and narrow reflow: page has no horizontal overflow; code scrolls in its own pane.
+  for(const width of [720,390]){
+    await send('Emulation.setDeviceMetricsOverride',{width,height:900,deviceScaleFactor:1,mobile:width===390});
+    await sleep(180);
+    assert.ok(await evaluate('document.documentElement.scrollWidth<=window.innerWidth+1'),'Playground overflows viewport '+width);
+    await evaluate('location.hash="#/docs/first"');
+    await wait('!!document.querySelector(".guide-article")','mobile docs missing');
+    assert.ok(await evaluate('document.documentElement.scrollWidth<=window.innerWidth+1'),'Docs overflow viewport '+width);
+    assert.equal(await evaluate('getComputedStyle(document.querySelector(".guide-code-shell pre")).overflowX'),'auto','code has local horizontal scrolling at '+width);
+    if(width===390)assert.ok(await evaluate('document.querySelector(".guide-code-shell pre").scrollWidth>document.querySelector(".guide-code-shell pre").clientWidth'),'long code scrolls at narrow viewport');
+    await evaluate('location.hash="#/reference/architecture"');
+    await wait('!!document.querySelector(".ownership-grid")','responsive reference missing');
+    assert.ok(await evaluate('document.documentElement.scrollWidth<=window.innerWidth+1'),'Reference overflows viewport '+width);
+    await evaluate('location.hash="#/"');
+    await wait('!!document.querySelector(".home-hero")','responsive home missing');
+    assert.ok(await evaluate('document.documentElement.scrollWidth<=window.innerWidth+1'),'Home overflows viewport '+width);
+    await evaluate('location.hash="#/playground"');
+    await wait('!!document.querySelector(".wb-frame")','responsive playground missing');
+  }
   await send('Emulation.setEmulatedMedia',{features:[{name:'prefers-reduced-motion',value:'reduce'}]});
-  await click('[aria-label="Restart sequence"]');await click('[data-testid="play"]');await sleep(1650);
-  assert.equal(await evaluate('document.querySelector(".fs-graph animateMotion")!==null'),false,'Reduced motion must suppress packet animation');
-  await click('[data-testid="play"]');
-  assert.deepEqual(errors,[],'Browser JavaScript exceptions');
-  console.log('Browser smoke: motion, pause, stepping, expanded view, mobile layout, reduced motion and release-version outcomes passed');
+  assert.equal(await evaluate('matchMedia("(prefers-reduced-motion: reduce)").matches'),true,'reduced-motion preference present');
+  assert.deepEqual(errors,[],'browser JavaScript exceptions');
+  console.log('Browser smoke: four destinations, deep-link docs, search, keyboard guides, code, reference, playground and 720/390px reflow passed');
 } finally {
   ws?.close();chrome.kill('SIGTERM');server.close();await sleep(200);await rm(profile,{recursive:true,force:true}).catch(()=>{});
 }

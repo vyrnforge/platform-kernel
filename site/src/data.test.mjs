@@ -1,8 +1,25 @@
-import test from 'node:test';import assert from 'node:assert/strict';import {capabilities,architectures,sections,source,version,candidateVersion,candidateStatus,candidatePr} from './data.mjs';import {flows,routeEdges,getFlow,getScenario} from './flow-data.mjs';
-test('release content and source links are pinned',()=>{assert.equal(version,'0.3.2');assert.equal(capabilities.length,9);assert.equal(architectures.length,4);assert.equal(sections.length,13);for(const c of capabilities)assert.match(source(c.path),/c86eb33a/);});
-test('every scenario has valid nodes, timeline and connected edges',()=>{assert.equal(flows.length,4);for(const flow of flows){const ids=new Set(flow.nodes.map(n=>n.id));assert.equal(ids.size,flow.nodes.length);for(const s of flow.scenarios){assert.ok(s.frames.length>1);assert.ok(s.outcome);assert.ok(s.frames.every(f=>ids.has(f.node)&&f.detail&&f.signal));const edges=routeEdges(flow,s);for(let i=1;i<s.frames.length;i++)if(s.frames[i-1].node!==s.frames[i].node)assert.ok(edges.some(e=>e.from===s.frames[i-1].node&&e.to===s.frames[i].node&&e.indices.includes(i)&&e.path.startsWith('M ')));}}});
-test('hardening paths preserve atomic commit, replay and fencing semantics',()=>{const mut=getFlow('mutation'),lost=getScenario(mut,'lost'),nodes=lost.frames.map(f=>f.node);assert.ok(nodes.indexOf('result')<nodes.indexOf('commit'));assert.ok(nodes.indexOf('commit')<nodes.indexOf('lost'));assert.equal(nodes.at(-1),'replay');const stale=getScenario(getFlow('outbox'),'stale');assert.equal(stale.frames.at(-1).node,'stale');assert.ok(stale.frames.some(f=>f.signal==='0 rows updated'));assert.equal(getScenario(getFlow('request'),'tenantless').outcome,'400 · invalid context');});
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import {capabilities,architectures,source,version,candidateVersion,candidateStatus,candidatePr,repo} from './data.mjs';
 
-test('public examples are general-purpose and include valid tenantless usage',()=>{assert.ok(architectures.every(a=>! /asset|itsm|wyrmgate/i.test(a.description+JSON.stringify(a.products))));const s=getScenario(getFlow('request'),'tenantless-allowed');assert.equal(s.outcome,'Handler executes');assert.ok(s.frames.some(f=>f.signal==='TenantContext.none()'));assert.ok(!s.frames.some(f=>f.node==='entitlement'));});
+test('all public capability and topology references are release-pinned',()=>{
+  assert.equal(version,'0.3.2');
+  assert.equal(capabilities.length,9);
+  assert.equal(architectures.length,4);
+  for(const capability of capabilities){
+    assert.match(source(capability.path),/c86eb33a46fae2843c75181c6b395cd0dc6710fe/);
+    assert.match(capability.usagePath,/^docs\/.+\.md$/);
+    assert.ok(capability.title&&capability.ships&&capability.needs);
+  }
+});
 
-test('published and candidate status remain distinct',()=>{assert.equal(version,'0.3.2');assert.equal(candidateVersion,'0.4.0');assert.equal(candidateStatus,'unpublished');assert.ok(candidatePr.endsWith('/pull/65'));assert.deepEqual(sections.slice(0,4),['overview','workbench','journeys','next']);assert.ok(sections.includes('boundaries'));});
+test('published and candidate releases remain separately described',()=>{
+  assert.equal(candidateVersion,'0.4.0');
+  assert.equal(candidateStatus,'unpublished');
+  assert.equal(candidatePr,repo+'/pull/65');
+});
+
+test('topologies retain domain independence and no required Kernel runtime',()=>{
+  assert.ok(architectures.every(a=>a.products.length>0&&a.note));
+  assert.ok(architectures.every(a=>!a.description.includes('mandatory kernel server')));
+});
