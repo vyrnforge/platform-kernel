@@ -89,3 +89,8 @@ footer a{color:#a4d0ff}
 @media(max-width:640px){header{padding:12px 16px}.release-ribbon{text-align:center;line-height:1.55}.section{padding:54px 18px}.hero{padding:58px 18px 68px}.hero h1{font-size:clamp(42px,11vw,60px);letter-spacing:-2.5px}.hero .lead{font-size:16px}.proof{gap:9px}.proof span{font-size:10px}.hero-panel{padding:18px}.hero-products div{font-size:11px;padding:12px 4px}.hero-panel .kernel strong{font-size:17px}.three,.two,.catalog,.detail{grid-template-columns:1fr}.detail>div+div{border-left:0;border-top:1px solid #dbe4ef;padding:18px 0 0}.present-controls{gap:7px;padding:10px}.present-controls button{padding:8px 10px}}
 @media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}.primary,.secondary,.cap{transition:none}.primary:hover,.secondary:hover{transform:none}}
 @media print{.release-ribbon,.skip-link{display:none!important}.boundary-section,.hero{background:#fff!important;color:#18263b!important}.boundary-diagram{break-inside:avoid}.feature-card,.journey-detail{break-inside:avoid}}
+
+/* Keep installation/artifact code readable at zoom and tablet widths. */
+#start .two > article,#start .three > article{min-width:0;overflow-wrap:anywhere}
+#start pre{max-width:100%;overflow-x:auto}
+@media(max-width:900px){#start .two,#start .three{grid-template-columns:minmax(0,1fr)}}
