@@ -1,5 +1,5 @@
 /* A focused documentation site: four destinations, one primary location per concept. */
-:root{font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;color:#1b2e45;background:#f5f8fc;line-height:1.6;--ink:#182d47;--muted:#5a6c84;--line:#dce5ef;--blue:#275db8;--navy:#0c2038;--soft:#eff4fa}
+:root{font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;color:#1b2e45;background:#f5f8fc;line-height:1.6;--ink:#182d47;--muted:#5a6c84;--line:#dce5ef;--blue:#275db8;--navy:#0c2038;--soft:#eff4fa;--page-gutter:clamp(17px,2.4vw,56px)}
 *{box-sizing:border-box}
 html{scroll-behavior:smooth}
 body{margin:0}
@@ -15,7 +15,8 @@ h1,h2,h3,h4{color:var(--ink);line-height:1.16}
 h1{font-size:clamp(38px,4.7vw,64px);letter-spacing:-2.4px}
 h2{font-size:clamp(27px,3.1vw,40px);letter-spacing:-1.2px}
 h3{font-size:19px;letter-spacing:-.4px}
-.wrap{width:min(calc(100% - 64px),1180px);margin-inline:auto}
+/* Fluid page shell: full viewport width minus a small, responsive safety gutter. */
+.wrap{width:auto;max-width:none;margin-inline:var(--page-gutter)}
 .section{padding:72px 0}
 .eyebrow{font-size:11px;font-weight:850;letter-spacing:1.6px;color:#3264ad}
 .lead{font-size:17px;line-height:1.65;color:#50677e}
@@ -106,7 +107,7 @@ h3{font-size:19px;letter-spacing:-.4px}
 
 /* Reference: a readable reference article, not a second catalog-driven homepage. */
 .page-intro h1{font-size:clamp(31px,3.4vw,46px);letter-spacing:-1px}
-.reference-layout{display:grid;grid-template-columns:minmax(210px,240px) minmax(0,1fr);gap:35px;align-items:start}
+.reference-layout{display:grid;grid-template-columns:clamp(235px,18vw,330px) minmax(0,1fr);gap:clamp(23px,2vw,42px);align-items:start}
 .reference-aside,.docs-sidebar{position:sticky;top:96px;min-width:0;background:#fff;border:1px solid #dce5ef;border-radius:14px;padding:21px}
 .side-kicker{font-size:10px;letter-spacing:1.4px;font-weight:850;color:#7085a0}
 .reference-nav{display:grid;gap:4px;margin-top:13px}
@@ -154,7 +155,7 @@ h3{font-size:19px;letter-spacing:-.4px}
 
 @media(max-width:1050px){.header-inner{gap:12px}.header-end{gap:9px}.primary-nav a{padding:9px 8px}.home-hero-layout{gap:35px}}
 @media(max-width:850px){.header-inner{min-height:70px;flex-wrap:wrap;justify-content:space-between;padding-block:10px;gap:8px}.primary-nav{order:3;flex-basis:100%;justify-content:center;border-top:1px solid #e7edf4;padding-top:7px}.primary-nav a{padding:8px 12px}.home-hero-layout,.home-secondary-layout{grid-template-columns:1fr}.home-hero{padding:68px 0}.home-code{max-width:660px}.next-grid{gap:12px}.next-grid>a{padding:19px}.reference-layout{grid-template-columns:1fr;gap:18px}.reference-aside{position:static}.reference-nav{display:flex;flex-wrap:wrap;gap:7px}.reference-nav a{border:1px solid #e2e9f2}.reference-article{padding:30px}}
-@media(max-width:640px){.wrap{width:min(calc(100% - 34px),1180px)}.header-end .github-link{display:none}.brand-name{font-size:11px}.primary-nav{gap:2px}.primary-nav a{font-size:12px;padding:8px 9px}.section{padding:54px 0}.home-hero{padding:53px 0 58px}.home-hero h1{letter-spacing:-1.9px}.home-hero-copy>p{font-size:15px}.home-facts{gap:8px 13px}.home-code pre{font-size:11px;padding:19px 14px}.next-grid{grid-template-columns:1fr}.next-grid>a{padding:20px}.release-note a{margin-left:0}.reference-article{padding:23px 19px}.ownership-grid,.versions-grid{grid-template-columns:1fr}.capability-row{padding:18px}.capability-row dl{grid-template-columns:1fr;gap:3px}.capability-row dt:not(:first-child){margin-top:9px}.footer-inner{flex-direction:column;align-items:flex-start;padding-block:22px;gap:8px}}
+@media(max-width:640px){.header-end .github-link{display:none}.brand-name{font-size:11px}.primary-nav{gap:2px}.primary-nav a{font-size:12px;padding:8px 9px}.section{padding:54px 0}.home-hero{padding:53px 0 58px}.home-hero h1{letter-spacing:-1.9px}.home-hero-copy>p{font-size:15px}.home-facts{gap:8px 13px}.home-code pre{font-size:11px;padding:19px 14px}.next-grid{grid-template-columns:1fr}.next-grid>a{padding:20px}.release-note a{margin-left:0}.reference-article{padding:23px 19px}.ownership-grid,.versions-grid{grid-template-columns:1fr}.capability-row{padding:18px}.capability-row dl{grid-template-columns:1fr;gap:3px}.capability-row dt:not(:first-child){margin-top:9px}.footer-inner{flex-direction:column;align-items:flex-start;padding-block:22px;gap:8px}}
 @media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}.next-grid>a{transition:none}}
 @media print{.site-header,.site-footer,.docs-sidebar,.reference-aside{display:none!important}.content-surface{padding-bottom:0}.reference-layout,.docs-layout{display:block}.home-hero{background:#fff!important;color:#142843!important}.home-hero :where(h1,p){color:#142843!important}}
 
@@ -163,3 +164,7 @@ h3{font-size:19px;letter-spacing:-.4px}
 
 /* Secondary release-readiness link; never styled as a published installation CTA. */
 .reference-preview-doc{margin-top:14px;border-top:1px solid #dce5ef;padding-top:12px}.reference-preview-doc p{margin:5px 0 0;font-size:12px;color:#52677e;line-height:1.6}
+
+/* Preserve reading comfort while the overall reference panel and grids use the available width. */
+.reference-article>p,.reference-patterns details p,.page-intro>p{max-width:90ch}
+.reference-article .reference-caution{max-width:100ch}

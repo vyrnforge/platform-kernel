@@ -17,7 +17,7 @@
 .wb-toolbar-title small{font-size:11px;color:#9fbbd8;margin-top:3px}
 .wb-toolbar-right{display:flex;align-items:center;gap:10px;font-size:11px;color:#b0c4df}
 .wb-toolbar-version{border:1px solid #47607d;background:#203756;color:#d7ecff;border-radius:30px;padding:5px 10px;font-weight:700}
-.wb-layout{display:grid;grid-template-columns:minmax(250px,315px) minmax(0,1fr);min-width:0}
+.wb-layout{display:grid;grid-template-columns:clamp(285px,20vw,390px) minmax(0,1fr);min-width:0}
 .wb-config{padding:26px 20px;border-right:1px solid #dde6f1;background:#f7fafe;min-width:0}
 .wb-fieldset{margin:0 0 28px;padding:0;border:0;min-width:0}
 .wb-fieldset legend{display:block;width:100%;font-size:12px;color:#2c425f;font-weight:850;margin-bottom:13px;line-height:1.5}
@@ -123,3 +123,6 @@
 
 .wb-code-pane .tok-keyword{color:#9fc6ff}.wb-code-pane .tok-string{color:#bce8aa}.wb-code-pane .tok-comment{color:#91a6bc}.wb-code-pane .tok-tag{color:#a5ddf5}.wb-code-pane .tok-number{color:#f0c486}
 .wb-code-pane pre:focus-visible{outline:3px solid #e3aa34;outline-offset:-3px}
+
+/* At wide widths both the sequential trace and code workspace expand with the page. */
+.wb-decision-detail p,.wb-outcome-note,.wb-check-pane li{max-width:90ch}

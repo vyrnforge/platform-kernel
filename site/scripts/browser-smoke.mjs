@@ -164,6 +164,34 @@ try{
   assert.ok((await evaluate(q('.wb-outcome')+'.textContent')).includes('IN PROGRESS'),'concurrent retry is distinguished from replay');
   assert.equal(await evaluate('document.querySelector(".wb-check-pane a").getAttribute("href")'),'#/docs/jdbc','playground links to on-site JDBC docs');
 
+  // Full-width desktop regression: previous 1180px shell must not return at 1920/2560px.
+  // Check the real rendered production bundle across all four site destinations.
+  for(const width of [1440,1920,2560]){
+    await send('Emulation.setDeviceMetricsOverride',{width,height:1100,deviceScaleFactor:1,mobile:false});
+    for(const [hash,selector] of [
+      ['#/','.home-hero .wrap'],
+      ['#/docs/install','.docs-layout'],
+      ['#/docs/preview','.docs-layout'],
+      ['#/playground','.wb-frame'],
+      ['#/reference/architecture','.reference-layout']
+    ]){
+      await evaluate('location.hash='+JSON.stringify(hash));
+      await wait('!!document.querySelector('+JSON.stringify(selector)+')','wide route '+hash+' missing');
+      const measurement=await evaluate('(()=>{const wrap=document.querySelector(".wrap");const r=wrap.getBoundingClientRect();return {width:r.width,left:r.left,right:innerWidth-r.right,body:document.documentElement.scrollWidth}})()');
+      assert.ok(measurement.width>=width*.9,'Page shell constrained at '+width+' on '+hash+': '+JSON.stringify(measurement));
+      assert.ok(Math.abs(measurement.left-measurement.right)<=2,'Asymmetric desktop page gutters '+width+' '+hash);
+      assert.ok(measurement.body<=width+1,'Unexpected page overflow at '+width+' '+hash);
+      const panel=await evaluate('document.querySelector('+JSON.stringify(selector)+').getBoundingClientRect().width');
+      assert.ok(panel>=width*.89,'Page destination remains width-constrained '+hash+' at '+width);
+      if(hash.startsWith('#/docs/')){
+        const article=await evaluate('document.querySelector(".guide-article").getBoundingClientRect().width');
+        assert.ok(article>=width*.62,'Documentation article did not expand at '+width);
+      }
+    }
+  }
+  // Restore the baseline viewport before checking responsive breakpoints.
+  await send('Emulation.setDeviceMetricsOverride',{width:1440,height:1000,deviceScaleFactor:1,mobile:false});
+
   // Wide, zoom-equivalent and narrow reflow: page has no horizontal overflow; code scrolls in its own pane.
   for(const width of [720,640,390,320]){
     await send('Emulation.setDeviceMetricsOverride',{width,height:900,deviceScaleFactor:1,mobile:width===390});
@@ -189,7 +217,7 @@ try{
   await send('Emulation.setEmulatedMedia',{features:[{name:'prefers-reduced-motion',value:'reduce'}]});
   assert.equal(await evaluate('matchMedia("(prefers-reduced-motion: reduce)").matches'),true,'reduced-motion preference present');
   assert.deepEqual(errors,[],'browser JavaScript exceptions');
-  console.log('Browser smoke: four destinations, source-aware docs search, deep-linked decision flows, keyboard/code, and 720/640/390/320px reflow passed');
+  console.log('Browser smoke: four destinations, source-aware docs search, deep-linked decision flows, keyboard/code, and 1440/1920/2560 desktop plus 720/640/390/320px reflow passed');
 } finally {
   ws?.close();chrome.kill('SIGTERM');server.close();await sleep(200);await rm(profile,{recursive:true,force:true}).catch(()=>{});
 }
