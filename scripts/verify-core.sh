@@ -25,3 +25,4 @@ for p in files:
     json.loads(p.read_text())
 print(f'Contract JSON parse: {len(files)} files OK')
 PY
+python3 "$ROOT/scripts/check-portable-contract-invariants.py"
