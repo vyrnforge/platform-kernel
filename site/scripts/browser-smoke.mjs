@@ -60,8 +60,9 @@ try{
   // Keyboard users can select a guide with a native button and Enter.
   await evaluate('document.querySelector(".docs-nav-group:nth-child(2) .docs-topic").focus()');
   assert.equal(await evaluate('document.activeElement.classList.contains("docs-topic")'),true);
-  await send('Input.dispatchKeyEvent',{type:'keyDown',key:'Enter',code:'Enter',windowsVirtualKeyCode:13});
-  await send('Input.dispatchKeyEvent',{type:'keyUp',key:'Enter',code:'Enter',windowsVirtualKeyCode:13});
+  await send('Input.dispatchKeyEvent',{type:'keyDown',key:'Enter',code:'Enter',windowsVirtualKeyCode:13,nativeVirtualKeyCode:13,text:'\r',unmodifiedText:'\r'});
+  await send('Input.dispatchKeyEvent',{type:'char',key:'Enter',code:'Enter',windowsVirtualKeyCode:13,nativeVirtualKeyCode:13,text:'\r',unmodifiedText:'\r'});
+  await send('Input.dispatchKeyEvent',{type:'keyUp',key:'Enter',code:'Enter',windowsVirtualKeyCode:13,nativeVirtualKeyCode:13});
   await wait('document.querySelector("#docs-guide-title").textContent === "Resolve a trusted request"','Keyboard Enter must activate the guide');
   await click('.docs-code-choices button:nth-child(2)');
   assert.ok((await evaluate(q('.docs-code code')+'.textContent')).includes('TenantContext.tenant(tenantId)'),'tenant-scoped usage snippet visible');
