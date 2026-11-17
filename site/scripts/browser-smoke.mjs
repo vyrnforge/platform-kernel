@@ -62,7 +62,7 @@ try{
   assert.equal(await evaluate('document.activeElement.classList.contains("docs-topic")'),true);
   await send('Input.dispatchKeyEvent',{type:'keyDown',key:'Enter',code:'Enter',windowsVirtualKeyCode:13});
   await send('Input.dispatchKeyEvent',{type:'keyUp',key:'Enter',code:'Enter',windowsVirtualKeyCode:13});
-  assert.equal(await evaluate(q('#docs-guide-title')+'.textContent'),'Resolve a trusted request','guide selection changes article');
+  await wait('document.querySelector("#docs-guide-title").textContent === "Resolve a trusted request"','Keyboard Enter must activate the guide');
   await click('.docs-code-choices button:nth-child(2)');
   assert.ok((await evaluate(q('.docs-code code')+'.textContent')).includes('TenantContext.tenant(tenantId)'),'tenant-scoped usage snippet visible');
   await click('.docs-nav-group:first-child .docs-topic');
