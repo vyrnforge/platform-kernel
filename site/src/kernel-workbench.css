@@ -119,3 +119,6 @@
 @media(max-width:390px){.wb-trace-heading{align-items:start}.wb-track{gap:6px}.wb-trace-step{padding:10px 8px}.wb-scenario-options{grid-template-columns:1fr}.wb-intro h2{font-size:34px}}
 @media(prefers-reduced-motion:reduce){.wb-profile,.wb-scenario{transition:none}}
 @media print{.wb-config,.wb-trace-actions,.wb-code-tabs button.wb-copy{display:none!important}.wb-layout,.wb-export-grid{display:block}.wb-architecture{background:#172c47!important;print-color-adjust:exact}.wb-section{background:white!important}}
+
+/* The lab is a first-class slide when presentation mode is enabled. */
+.presenting[data-page="workbench"] #workbench{display:block}
