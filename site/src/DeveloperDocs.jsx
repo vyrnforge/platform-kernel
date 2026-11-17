@@ -39,8 +39,8 @@ export function DeveloperDocs({guideId='install'}){
       </aside>
       <article className="guide-article" aria-labelledby="guide-heading">
         <nav className="guide-breadcrumb" aria-label="Breadcrumb"><a href="#/docs/install">Documentation</a><span aria-hidden="true"> / </span><span>{guide.group}</span></nav>
-        <div className="guide-topline"><span>{guide.group}</span><span>v{version} · released APIs</span></div>
-        <h2 id="guide-heading">{guide.title}</h2>
+        <div className="guide-topline"><span>Practical integration</span><span>v{version} · released APIs</span></div>
+        <h2 id="guide-heading" tabIndex={-1}>{guide.title}</h2>
         <p className="guide-summary">{guide.summary}</p>
         <div className="guide-callout"><strong>When to use this</strong><p>{guide.when}</p><strong>What the Kernel provides</strong><p>{guide.provides}</p></div>
         <section className="guide-section"><h3>Before you start</h3><p>{guide.prerequisite}</p></section>

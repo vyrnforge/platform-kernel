@@ -28,7 +28,7 @@ v0.3.2 is published on Maven Central (default Maven repository); all three libra
 </dependencies>
 ```
 
-## Migration from 0.2.1 / 0.3.0 / 0.3.1
+## Migration from 0.2.1 / 0.3.0
 
 From 0.3.0, replace group ID `io.vyrnforge.platform` with `io.github.vyrnforge` and version 0.3.2 for all three dependencies; artifact IDs and Java packages are unchanged. Do not mix the old and new group IDs.
 

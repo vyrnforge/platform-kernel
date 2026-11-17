@@ -35,10 +35,9 @@ export function IntegrationWorkbench(){
     <div className="wrap">
       <div className="wb-intro">
         <div><span className="wb-kicker">SIMULATED LEARNING / RELEASED v{version}</span>
-          <h2 id="workbench-title">Trace a request. <em>Understand the boundary.</em></h2>
+          <h2 id="workbench-title" tabIndex={-1}>Trace a request. <em>Understand the boundary.</em></h2>
           <p className="lead">Select a scenario to understand where Kernel checks stop and application responsibilities begin. Copy released dependency or Java examples afterward.</p>
         </div>
-        
       </div>
       <div className="wb-frame">
         <div className="wb-toolbar">

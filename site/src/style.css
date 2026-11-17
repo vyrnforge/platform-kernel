@@ -105,6 +105,7 @@ h3{font-size:19px;letter-spacing:-.4px}
 .release-note a{margin-left:auto}
 
 /* Reference: a readable reference article, not a second catalog-driven homepage. */
+.page-intro h1{font-size:clamp(31px,3.4vw,46px);letter-spacing:-1px}
 .reference-layout{display:grid;grid-template-columns:minmax(210px,240px) minmax(0,1fr);gap:35px;align-items:start}
 .reference-aside,.docs-sidebar{position:sticky;top:96px;min-width:0;background:#fff;border:1px solid #dce5ef;border-radius:14px;padding:21px}
 .side-kicker{font-size:10px;letter-spacing:1.4px;font-weight:850;color:#7085a0}

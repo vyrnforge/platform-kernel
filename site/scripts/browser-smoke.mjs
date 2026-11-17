@@ -62,8 +62,11 @@ try{
   await wait('document.querySelector(".guide-article") && location.hash==="#/docs/install"','Documentation page did not render');
   assert.equal(await evaluate('document.querySelectorAll(".docs-guide-group a").length'),5,'five addressable developer guides');
   assert.ok((await evaluate(q('#guide-heading')+'.textContent')).includes('Install the released library'));
+  assert.equal(await evaluate('document.activeElement.id'),'guide-heading','docs navigation announces the active guide');
   await click('.guide-code-tabs button:nth-child(2)');
   assert.ok((await evaluate(q('.guide-code-shell code')+'.textContent')).includes('mavenCentral()'),'Gradle tab changes example');
+  await click('.guide-copy');
+  await wait('document.querySelector(".guide-copy-status").textContent.length>0','copy action must report success or a usable fallback');
   await click('.guide-pager a:last-child');
   await wait('location.hash==="#/docs/first" && document.querySelector("#guide-heading").textContent.includes("first Java")','next guide deep link failed');
   assert.ok((await evaluate(q('.guide-code-shell code')+'.textContent')).includes('UuidV7.generate'),'real first Java API visible');
@@ -95,6 +98,7 @@ try{
   // Reference is documentation, not another homepage showcase.
   await click('.primary-nav a[href="#/reference/architecture"]');
   await wait('location.hash==="#/reference/architecture" && !!document.querySelector(".ownership-grid")','architecture reference failed');
+  assert.equal(await evaluate('document.activeElement.id'),'reference-heading','reference route focuses its topic heading');
   assert.equal(await evaluate('document.querySelectorAll(".ownership-grid section").length'),4,'four separate ownership boundaries');
   assert.equal(await evaluate('document.querySelectorAll(".reference-patterns details").length'),4,'deployment notes are consolidated in reference');
   await click('.reference-patterns summary');
@@ -109,6 +113,7 @@ try{
   // One playground only, with published code output and negative scenarios.
   await click('.primary-nav a[href="#/playground"]');
   await wait('location.hash==="#/playground" && !!document.querySelector(".wb-frame")','playground failed');
+  assert.equal(await evaluate('document.activeElement.id'),'workbench-title','playground route focuses its visible heading');
   assert.equal(await evaluate('document.querySelectorAll(".wb-profile").length'),3,'supported modes present');
   await click('.wb-profile:nth-child(2)');
   await click('.wb-scenario:nth-child(2)');

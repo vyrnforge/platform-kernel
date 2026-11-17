@@ -62,8 +62,6 @@ A tenantless endpoint is not an unauthenticated endpoint and cannot access a ten
 
 ## 4. Run the example
 
-The example below is compiled against the published v0.3.2 JAR. The Java sample is complete; dependency snippets in the website are fragments to be embedded in an existing project.
-
 [The v0.3.2-compatible GeneralUsageExample.java](https://github.com/vyrnforge/platform-kernel/blob/c86eb33a46fae2843c75181c6b395cd0dc6710fe/verification/GeneralUsageExample.java) is a complete executable sample from the published release source, compiled and executed by the release verification against the packaged main JAR alone. **Use this pinned revision for the commands below:** the moving `main` example now includes a candidate-only tenantless factory that does not exist in v0.3.2. It demonstrates UUIDv7, normalized identity, tenantless profile access, tenant-scoped record access, and rejection of cross-tenant, invalid-context and unauthorized requests. Its fixed identities and lambda stores are **synthetic fixtures**, not production authentication or persistence.
 
 Save the example and obtain the main JAR using Maven (or [download it](https://repo.maven.apache.org/maven2/io/github/vyrnforge/platform-kernel/0.3.2/platform-kernel-0.3.2.jar)). From the directory containing the two files:

@@ -1,7 +1,7 @@
 /* Integration Workbench is a real client-side learning interaction, not a backend emulator. */
 .wb-section{background:#f3f6fa;padding-top:82px;padding-bottom:92px}
 .wb-intro{display:flex;justify-content:space-between;align-items:end;gap:28px;margin-bottom:34px}
-.wb-intro h2{max-width:820px;font-size:clamp(34px,4.3vw,58px);line-height:1.06;letter-spacing:-2.1px;margin-top:20px}
+.wb-intro h2{max-width:820px;font-size:clamp(31px,3.4vw,46px);line-height:1.06;letter-spacing:-2.1px;margin-top:20px}
 .wb-intro h2 em{color:#2d61c8;font-style:normal}
 .wb-intro .lead{font-size:16px;line-height:1.7;max-width:720px;margin:0;color:#516780}
 .wb-kicker{display:inline-flex;align-items:center;gap:10px;border:1px solid #cfddf1;color:#29548c;background:#fff;padding:8px 12px;border-radius:999px;font-size:10px;font-weight:850;letter-spacing:1.15px}

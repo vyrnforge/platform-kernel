@@ -74,7 +74,8 @@ function App(){
   useEffect(()=>{
     document.title=route.title+' · VyrnForge Platform Kernel';
     window.scrollTo({top:0,behavior:'instant'});
-    const title=document.getElementById('page-title');
+    const focusId=route.page==='docs'?'guide-heading':route.page==='reference'?'reference-heading':route.page==='playground'?'workbench-title':'page-title';
+    const title=document.getElementById(focusId);
     title?.focus({preventScroll:true});
   },[route.page,route.id,route.title]);
   return <>
