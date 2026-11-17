@@ -58,6 +58,8 @@ Generate opaque IDs and propagate the correlation context across related work. N
 
 A tenantless endpoint is not an unauthenticated endpoint and cannot access a tenant-owned resource. The kernel rejects an active tenant for tenantless policy. For tenant-scoped requests the current pipeline requires a module key and an enabled matching entitlement; choose your own application-defined key (e.g. records). Entitlement is application/module availability, not a commercial licensing system, and never replaces resource authorization. The registry is an optional in-process catalog; the pipeline checks the supplied entitlement port, not the registry.
 
+For an application that has **only authenticated tenantless operations**, use the additive `RequestContextPipeline.tenantless(identityAdapter, domainAuthorizationHook)` factory instead of supplying unused membership/entitlement providers. It still authenticates every invocation, performs domain authorization and rejects access to tenant-owned resources or active tenant contexts. Tenant-scoped policies cannot succeed through this factory; use the full constructor for tenant-owned operations. No production IAM verifier is supplied by this factory.
+
 ## 4. Run the example
 
 [GeneralUsageExample.java](../../verification/GeneralUsageExample.java) is a complete executable sample, compiled and executed by repository CI against the packaged main JAR alone. It demonstrates UUIDv7, normalized identity, tenantless profile access, tenant-scoped record access, and rejection of cross-tenant, invalid-context and unauthorized requests. Its fixed identities and lambda stores are **synthetic fixtures**, not production authentication or persistence.

@@ -10,11 +10,18 @@
 6. Breaking API/event/schema changes require explicit versioning and migration guidance.
 7. Do not add a database, broker, workflow engine, or service topology requirement without a concrete consumer and an ADR.
 
+## Java source hygiene
+
+Use the repository `.editorconfig`: UTF-8, LF, final newline, four-space Java indentation and no trailing whitespace. Prefer one statement per line, explicit names, minimal reflection and focused public contracts. Do not apply a repository-wide formatting rewrite to unrelated security/JDBC logic; separate semantic changes from mechanical cleanup.
+
+The standard-library-only `scripts/check-java-hygiene.py` verifies whitespace invariants in Java production, tests, references and verification fixtures. It intentionally does **not** enforce line length, identifier rules or a formatter-dependent layout across historical code. Use focused tests and negative tenant/replay cases for behavioral changes.
+
 ## Verification
 
 Use Java 21, Maven 3.9+ and Docker for PostgreSQL Testcontainers. The source/Javadoc profile matches the release pipeline. Node 22+ is needed only for [site development](site/README.md).
 
 ```bash
+python3 scripts/check-java-hygiene.py
 bash scripts/verify-core.sh
 python3 scripts/check-contract-compatibility.py
 mvn --batch-mode --no-transfer-progress --strict-checksums -Prelease-docs clean verify

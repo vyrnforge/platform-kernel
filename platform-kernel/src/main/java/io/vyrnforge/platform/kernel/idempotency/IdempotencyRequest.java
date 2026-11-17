@@ -26,19 +26,19 @@ public record IdempotencyRequest(
         if (!UuidV7.isCanonical(tenantId.toString())) {
             throw new IllegalArgumentException("tenantId must be UUIDv7");
         }
-        operation = requireText(operation, "operation");
+        operation = requireText(operation, "operation", 192);
         if (!OPERATION.matcher(operation).matches()) {
             throw new IllegalArgumentException("operation has invalid format");
         }
-        key = requireText(key, "key");
-        requestFingerprint = requireText(requestFingerprint, "requestFingerprint");
+        key = requireText(key, "key", 512);
+        requestFingerprint = requireText(requestFingerprint, "requestFingerprint", 512);
         Objects.requireNonNull(expiresAt, "expiresAt");
     }
 
-    private static String requireText(String value, String name) {
+    private static String requireText(String value, String name, int maxLength) {
         Objects.requireNonNull(value, name);
-        if (value.isBlank()) {
-            throw new IllegalArgumentException(name + " must not be blank");
+        if (value.isBlank() || value.codePointCount(0, value.length()) > maxLength) {
+            throw new IllegalArgumentException(name + " must not be blank or exceed " + maxLength + " characters");
         }
         return value;
     }
