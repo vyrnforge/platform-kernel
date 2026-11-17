@@ -75,6 +75,37 @@ export function DeveloperDocs({guideId='install'}){
           </div>
           <p className="request-diagnostics"><strong>Safe diagnostics:</strong> {guide.diagnostics}</p>
         </section>}
+
+        {guide.id==='jdbc'&&<section className="request-decisions" aria-labelledby="jdbc-decision-heading">
+          <h3 id="jdbc-decision-heading">What happens for each idempotency decision?</h3>
+          <p>These are the released JDBC adapter's <strong>decision types</strong>, not automatic HTTP responses. Your application must authenticate and authorize every attempt <strong>before</strong> calling <code>begin</code>. Only ACQUIRED executes a new mutation.</p>
+          <div className="request-failures-scroll" role="region" tabIndex={0} aria-label="Idempotency decisions table; scroll horizontally if needed">
+            <table className="request-failures">
+              <thead><tr><th scope="col">Decision</th><th scope="col">Effect / no new work</th><th scope="col">Owner and next step</th><th scope="col">Inspect</th></tr></thead>
+              <tbody>{guide.decisionStates.map(item=><tr key={item.id}>
+                <th scope="row"><strong>{item.type}</strong><span>Published v{version}</span></th>
+                <td>{item.effect}</td>
+                <td><strong>{item.owner}</strong><p>{item.next}</p><p>{item.recovery}</p></td>
+                <td><a href={'#/playground?mode=mutation&scenario='+item.id}>View simulated {item.type} →</a></td>
+              </tr>)}</tbody>
+            </table>
+          </div>
+          <details className="guide-troubleshooting"><summary>Recovery cases: rollback, lost response, duplicate delivery and migrations</summary>
+            <ul>{guide.recoveryPaths.map(item=><li key={item.case}><strong>{item.case}:</strong> {item.explanation} <span className="jdbc-evidence">{item.verify} · {item.owner}</span></li>)}</ul>
+          </details>
+          <p className="request-diagnostics"><strong>What to test next:</strong> <a href="#/docs/assure">Open consumer testkit and conformance checks</a>. No Playground or testkit result is evidence of an actual committed product transaction.</p>
+        </section>}
+        {guide.id==='assure'&&<section className="request-decisions" aria-labelledby="consumer-evidence-heading">
+          <h3 id="consumer-evidence-heading">Durable consumer conformance evidence</h3>
+          <p>These identifiers refer to the existing published conformance specification, not executed tests. For each applicable case, attach real product code, PostgreSQL/receiver logs, result and recovery evidence. Mark others <strong>not applicable with rationale</strong>.</p>
+          <div className="request-failures-scroll" role="region" tabIndex={0} aria-label="Durable consumer conformance checks; scroll horizontally if needed">
+            <table className="request-failures">
+              <thead><tr><th scope="col">Scenario</th><th scope="col">Consumer verification</th></tr></thead>
+              <tbody>{guide.conformanceCases.map(item=><tr key={item.id}><th scope="row"><strong>{item.id}</strong><span>{item.title}</span></th><td>{item.evidence}</td></tr>)}</tbody>
+            </table>
+          </div>
+          <p className="request-diagnostics"><strong>Review the flow:</strong> <a href="#/docs/jdbc">Return to the optional JDBC decision and recovery guide</a>. Product acceptance still requires independent conformance under issue #41.</p>
+        </section>}
         <section className="guide-section" aria-label="Published library example">
           <div className="guide-code-heading"><h3>Example</h3><span>{sample.kind}</span></div>
           <div className="guide-code-shell">

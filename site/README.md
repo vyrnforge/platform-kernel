@@ -67,3 +67,7 @@ See [QA onboarding task notes](qa/onboarding-first-program.md) for evidence, blo
 ## Published request integration boundary — Issue #79
 
 The existing Documentation → Resolve a trusted request guide contains a source-reviewed v0.3.2 four-port pipeline wiring excerpt, a tenantless-vs-scoped decision, and a failure/recovery matrix linked to the **single** simulated Playground. Authentication verification belongs to IAM/IdP or the application; Kernel supplies shared scope, membership and entitlement guards; the owning application supplies domain authorization and tenant-filtered SQL. HTTP failure mapping and safe correlation are distinguished from raw credential/token verification. Regression tests check 400/401/403/404 outcomes against Playground models and site navigation. See [QA task matrix](qa/request-identity-journey.md); real IAM/consumer acceptance remains separate under issue #41.
+
+## Durable mutation UX — Issue #80
+
+The existing [optional JDBC guide](#/docs/jdbc) and [consumer verification guide](#/docs/assure) now explain published v0.3.2 ACQUIRED/REPLAY/IN_PROGRESS/CONFLICT decisions, no-duplicate-SQL rules, rollback/uncertain commit, at-least-once outbox and DEAD reconciliation. The existing single Playground links to these on-site documents; it is a deterministic learning simulation, not a PostgreSQL or IAM execution engine. Durable verification lists the source-published CC-14–CC-22 and CC-27 IDs and still needs independent application evidence under issue #41.

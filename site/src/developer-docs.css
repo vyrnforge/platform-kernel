@@ -120,3 +120,8 @@
 .request-http{display:block;font-weight:800;color:#415d79;font-size:11px;margin-top:5px}
 .request-decisions .request-diagnostics{margin-top:13px}
 @media(max-width:780px){.request-scope-grid{grid-template-columns:1fr}.request-scope-grid>section{padding:14px}}
+
+/* UX-80 reuses the existing request guide table and native disclosure for JDBC and conformance. */
+.jdbc-evidence{display:block;margin-top:5px;font-size:11px;font-weight:750;color:#52677e}
+.request-decisions details.guide-troubleshooting{max-width:none;margin-top:18px}
+.request-decisions details.guide-troubleshooting li{line-height:1.75}
