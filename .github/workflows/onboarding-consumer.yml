@@ -1,0 +1,36 @@
+name: Published onboarding consumer
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'site/src/docs-data.mjs'
+      - 'site/scripts/verify-onboarding.mjs'
+      - '.github/workflows/onboarding-consumer.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  released-v032:
+    name: verify published first Java consumer
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Set up Node 22
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1
+        with:
+          node-version: '22'
+      - name: Set up Java 21
+        uses: actions/setup-java@77dd5b2ce225ea11469928ac317850245a74ae78 # v6.2.0
+        with:
+          distribution: temurin
+          java-version: '21'
+      - name: Set up Gradle 8.14.3
+        uses: gradle/actions/setup-gradle@748248ddd2a24f49513d8f472f81c3a07d4d50e1 # v4.4.4
+        with:
+          gradle-version: '8.14.3'
+      - name: Verify published Java 21 consumer from the website examples
+        run: node site/scripts/verify-onboarding.mjs
