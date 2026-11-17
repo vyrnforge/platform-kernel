@@ -49,4 +49,10 @@ Probe results contain only:
 - `UP` or `DOWN`;
 - a safe machine-readable code.
 
+### Probe execution and timeouts
+
+`HealthAggregator.check(type)` is **synchronous** and runs each registered `Supplier<ProbeResult>` on the calling thread. It sanitizes thrown runtime exceptions and null results to stable DOWN codes, but it cannot interrupt a blocking network call or impose a timeout on the supplier. Products must configure bounded database/network client operations, an appropriate endpoint-level deadline, and failure isolation in the host runtime. Avoid making liveness dependent on an unavailable remote system.
+
+An empty list of matching probes currently evaluates UP, **not evidence of external dependency readiness**. A product with required readiness dependencies must explicitly register the relevant checks and test down/timeout behavior in its deployment. Do not treat a healthy Kernel snapshot as a universal production readiness guarantee.
+
 No SLO, latency threshold, or dependency list is guessed by the kernel. Each product/deployable registers only the probes required for its actual runtime.

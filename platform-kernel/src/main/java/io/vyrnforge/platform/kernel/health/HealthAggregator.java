@@ -20,6 +20,11 @@ public final class HealthAggregator {
         ensureUniqueNamesPerType(this.probes);
     }
 
+    /**
+     * Checks matching probes synchronously on the invoking thread.
+     * Each product must bound dependency I/O and configure the hosting endpoint
+     * timeout. This method intentionally creates no worker threads or deadlines.
+     */
     public HealthSnapshot check(ProbeType type) {
         Objects.requireNonNull(type, "type");
 

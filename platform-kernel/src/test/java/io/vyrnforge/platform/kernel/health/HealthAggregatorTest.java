@@ -48,6 +48,15 @@ class HealthAggregatorTest {
     }
 
     @Test
+    void nullProbeResultFailsReadinessWithoutExposingInternals() {
+        var health = new HealthAggregator(CLOCK,
+                List.of(HealthProbe.readiness("unstable", () -> null)));
+        var snapshot = health.check(ProbeType.READINESS);
+        assertFalse(snapshot.healthy());
+        assertEquals("PROBE_NULL", snapshot.components().get("unstable").code());
+    }
+
+    @Test
     void noRegisteredProbeForTypeIsHealthy() {
         HealthAggregator health = new HealthAggregator(CLOCK, List.of());
 
