@@ -5,12 +5,27 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 
 import java.util.Map;
+import java.util.Objects;
 
 public final class JacksonRecordCodec {
     private final ObjectMapper mapper;
 
     public JacksonRecordCodec() {
-        this.mapper = new ObjectMapper().enable(SerializationFeature.ORDER_MAP_ENTRIES_BY_KEYS);
+        this(new ObjectMapper());
+    }
+
+    /**
+     * Optional application-configured codec. A defensive copy prevents later
+     * changes to the caller's mapper from silently changing persisted JSON.
+     * Jackson default typing is disabled before decoding stored JSON.
+     * Changing codec configuration for existing persisted intents requires
+     * compatibility review because fingerprints depend on canonical payloads.
+     */
+    public JacksonRecordCodec(ObjectMapper mapper) {
+        this.mapper = Objects.requireNonNull(mapper, "mapper")
+                .copy()
+                .deactivateDefaultTyping()
+                .enable(SerializationFeature.ORDER_MAP_ENTRIES_BY_KEYS);
     }
 
     public String encode(Object value) {
