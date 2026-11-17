@@ -109,13 +109,13 @@ h3{font-size:19px;letter-spacing:-.4px}
 .page-intro h1{font-size:clamp(31px,3.4vw,46px);letter-spacing:-1px}
 .reference-layout{display:grid;grid-template-columns:clamp(235px,18vw,330px) minmax(0,1fr);gap:clamp(23px,2vw,42px);align-items:start}
 .reference-aside,.docs-sidebar{position:sticky;top:96px;min-width:0;background:#fff;border:1px solid #dce5ef;border-radius:14px;padding:21px}
-.side-kicker{font-size:10px;letter-spacing:1.4px;font-weight:850;color:#7085a0}
+.side-kicker{font-size:10px;letter-spacing:1.4px;font-weight:850;color:#52677e}
 .reference-nav{display:grid;gap:4px;margin-top:13px}
 .reference-nav a{display:flex;justify-content:space-between;gap:12px;padding:10px;border-radius:8px;color:#4d6582;font-size:13px;font-weight:700}
 .reference-nav a[aria-current=page]{background:#eaf2ff;color:#1f5cb2}
 .reference-nav a:hover{background:#eff5fb;text-decoration:none}
 .reference-nav a>span{opacity:.6}
-.reference-aside-note{border-top:1px solid #e1e8f0;margin-top:20px;padding-top:17px;color:#647b92;font-size:12px;line-height:1.7}
+.reference-aside-note{border-top:1px solid #e1e8f0;margin-top:20px;padding-top:17px;color:#52677e;font-size:12px;line-height:1.7}
 .reference-main{min-width:0}
 .reference-article{background:#fff;border:1px solid #dce5ef;border-radius:15px;padding:36px 40px;min-width:0}
 .reference-article>h2{margin:10px 0 13px;font-size:clamp(28px,3vw,39px)}

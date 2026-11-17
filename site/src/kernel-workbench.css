@@ -26,7 +26,7 @@
 .wb-profile,.wb-scenario{border:1px solid #d7e1ed;background:#fff;color:#344760;text-align:left;display:flex;align-items:center;gap:10px;width:100%;border-radius:11px;padding:12px;min-width:0;transition:border-color .16s,background .16s,transform .16s}
 .wb-profile:hover,.wb-scenario:hover{border-color:#729bd2;background:#f4f8ff}
 .wb-profile.is-selected{border-color:#3d73d1;box-shadow:inset 3px 0 #3678e9,0 0 0 1px #bad0f6;background:#eef5ff}
-.wb-profile-number{color:#8aa2c0;font-size:11px;font-family:ui-monospace,Consolas,monospace;font-weight:800;align-self:flex-start;padding-top:3px}
+.wb-profile-number{color:#52677e;font-size:11px;font-family:ui-monospace,Consolas,monospace;font-weight:800;align-self:flex-start;padding-top:3px}
 .wb-profile>span:nth-child(2),.wb-scenario>span:nth-child(2){flex:1;min-width:0}
 .wb-profile strong,.wb-profile small,.wb-scenario strong,.wb-scenario small{display:block}
  .wb-profile strong,.wb-scenario strong{font-size:13px;line-height:1.45;color:#263c58}
@@ -51,7 +51,7 @@
 .wb-stage-heading,.wb-trace-heading,.wb-export-head{display:flex;justify-content:space-between;align-items:center;gap:15px;flex-wrap:wrap}
 .wb-overline{font-size:11px;letter-spacing:1.05px;font-weight:850;color:#4c6888}
 .wb-stage-heading h3{font-size:20px;margin:7px 0 0;color:#172d4b;letter-spacing:-.5px}
-.wb-stage-slash{font-size:12px;font-weight:600;color:#6e87a3;letter-spacing:0;white-space:normal}
+.wb-stage-slash{font-size:12px;font-weight:600;color:#52677e;letter-spacing:0;white-space:normal}
 .wb-mode-tag{padding:7px 10px;border-radius:6px;background:#edf4ff;border:1px solid #d5e4fa;color:#2a5da4;font-size:10px;font-weight:800}
 
 .wb-trace-heading{margin:29px 0 14px}
