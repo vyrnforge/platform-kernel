@@ -1,4 +1,4 @@
-import React,{useEffect,useMemo,useState} from 'react';
+import React,{useEffect,useMemo,useRef,useState} from 'react';
 import {source,version} from './data.mjs';
 import {developerGuides,searchDeveloperGuides} from './docs-data.mjs';
 import {tokenizeCode} from './code-tokens.mjs';
@@ -10,6 +10,7 @@ const groups=['Getting started','Integrate','Test & operate'];
 
 export function DeveloperDocs({guideId='install'}){
   const [query,setQuery]=useState('');
+  const searchInputRef=useRef(null);
   const [sampleIndex,setSampleIndex]=useState(0);
   const [copyStatus,setCopyStatus]=useState('');
   const isPreview=guideId==='preview';
@@ -30,7 +31,7 @@ export function DeveloperDocs({guideId='install'}){
     <div className="wrap docs-page-heading"><span className="eyebrow">DEVELOPER DOCUMENTATION / v{version} PUBLISHED · v0.4.0 PREVIEW</span><h1 id="page-title" tabIndex={-1}>Learn by building.</h1><p>Task-based guides for the real v{version} Java library. Each recipe states what the Kernel provides and what your application must implement.</p></div>
     <div className="wrap docs-layout">
       <aside className="docs-sidebar">
-        <div className="docs-sidebar-top"><label htmlFor="guide-search">Search documentation</label><input type="search" id="guide-search" placeholder="Find a guide…" value={query} onChange={e=>setQuery(e.target.value)}/></div>
+        <div className="docs-sidebar-top"><label htmlFor="guide-search">Search documentation</label><input type="search" id="guide-search" ref={searchInputRef} placeholder="Find a guide…" value={query} onChange={e=>setQuery(e.target.value)}/></div>
         <p className="docs-search-count" role="status">{visible.length+(previewVisible?1:0)} of {developerGuides.length+1} guides</p>
         <nav aria-label="Developer guide navigation" className="docs-guide-nav">
           {groups.map(group=>{
@@ -39,7 +40,7 @@ export function DeveloperDocs({guideId='install'}){
           })}
         </nav>
         {previewVisible&&<div className="docs-preview-entry"><span className="side-kicker">UPCOMING · NOT PUBLISHED</span><a href="#/docs/preview" aria-current={isPreview?'page':undefined}>v0.4.0 Developer Preview <span aria-hidden="true">→</span></a></div>}
-        {visible.length===0&&!previewVisible&&<p className="docs-search-empty">No matching guides. <button type="button" onClick={()=>setQuery('')}>Clear search</button></p>}
+        {visible.length===0&&!previewVisible&&<p className="docs-search-empty">No matching guides. <button type="button" onClick={()=>{searchInputRef.current?.focus();setQuery('')}}>Clear search</button></p>}
         <div className="docs-sidebar-note"><strong>Version boundary</strong><p>Core guides use published v{version}. The v0.4.0 preview is not released or installable yet.</p></div>
       </aside>
       {isPreview?<PreviewGuide/>:<article className="guide-article" aria-labelledby="guide-heading">
