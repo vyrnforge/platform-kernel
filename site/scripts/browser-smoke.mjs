@@ -92,8 +92,12 @@ try{
   await wait('document.querySelectorAll(".docs-guide-group a").length===1','search did not index troubleshooting content');
   await setSearch('unlikely-search-xyz');
   await wait('!!document.querySelector(".docs-search-empty")','search empty state not visible');
-  await click('.docs-search-empty button');
+  // Reset unmounts its own button: focus must return to the labeled search field.
+  await evaluate('document.querySelector(".docs-search-empty button").focus()');
+  await send('Input.dispatchKeyEvent',{type:'keyDown',key:'Enter',code:'Enter',windowsVirtualKeyCode:13,nativeVirtualKeyCode:13,text:'\r',unmodifiedText:'\r'});
+  await send('Input.dispatchKeyEvent',{type:'keyUp',key:'Enter',code:'Enter',windowsVirtualKeyCode:13,nativeVirtualKeyCode:13});
   await wait('document.querySelectorAll(".docs-guide-group a").length===5','clear search did not restore topics');
+  assert.equal(await evaluate('document.activeElement.id'),'guide-search','clearing search returns keyboard focus to search input');
 
   // Reference is documentation, not another homepage showcase.
   await click('.primary-nav a[href="#/reference/architecture"]');
@@ -103,6 +107,11 @@ try{
   assert.equal(await evaluate('document.querySelectorAll(".reference-patterns details").length'),4,'deployment notes are consolidated in reference');
   await click('.reference-patterns summary');
   assert.equal(await evaluate('document.querySelector(".reference-patterns details").open'),true,'topology reference expands');
+  // Native <summary> must also toggle with Space from the keyboard.
+  await evaluate('document.querySelector(".reference-patterns summary").focus()');
+  await send('Input.dispatchKeyEvent',{type:'keyDown',key:' ',code:'Space',windowsVirtualKeyCode:32,nativeVirtualKeyCode:32});
+  await send('Input.dispatchKeyEvent',{type:'keyUp',key:' ',code:'Space',windowsVirtualKeyCode:32,nativeVirtualKeyCode:32});
+  await wait('!document.querySelector(".reference-patterns details").open','keyboard Space did not close Reference details');
   await click('.reference-nav a[href="#/reference/capabilities"]');
   await wait('location.hash==="#/reference/capabilities"','capability reference failed');
   assert.equal(await evaluate('document.querySelectorAll(".capability-row").length'),capabilities.length,'all release capabilities accounted for');
@@ -163,6 +172,44 @@ try{
   await click('.wb-scenario:nth-child(3)');
   assert.ok((await evaluate(q('.wb-outcome')+'.textContent')).includes('IN PROGRESS'),'concurrent retry is distinguished from replay');
   assert.equal(await evaluate('document.querySelector(".wb-check-pane a").getAttribute("href")'),'#/docs/jdbc','playground links to on-site JDBC docs');
+
+  // Baseline semantic and small-text contrast checks. This is not an AT or WCAG certification.
+  const computedContrast=async selector=>{
+    const expr='(()=>{'+
+      'const el=document.querySelector('+JSON.stringify(selector)+');'+
+      'if(!el)throw Error("Contrast target not found");'+
+      'const fore=getComputedStyle(el).color;'+
+      'let node=el,bg="rgb(255, 255, 255)";'+
+      'while(node){const c=getComputedStyle(node).backgroundColor;'+
+      'if(c&&c!=="transparent"&&c!=="rgba(0, 0, 0, 0)"){bg=c;break;}node=node.parentElement;}'+
+      'const luminance=c=>{const v=c.match(/[\\d.]+/g).slice(0,3).map(Number);'+
+      'return v.map(x=>{let s=x/255;return s<=.04045?s/12.92:Math.pow((s+.055)/1.055,2.4);})'+
+      '.reduce((sum,x,i)=>sum+x*[.2126,.7152,.0722][i],0);};'+
+      'const a=luminance(fore),b=luminance(bg);'+
+      'return {ratio:(Math.max(a,b)+.05)/(Math.min(a,b)+.05),foreground:fore,background:bg};})()';
+    return evaluate(expr);
+  };
+  for(const [hash,selectors] of [
+    ['#/docs/request',['.guide-breadcrumb','.guide-excerpt-note','.docs-search-count']],
+    ['#/reference/architecture',['.side-kicker','.reference-aside-note']],
+    ['#/playground?mode=request&scope=scoped&scenario=success',['.wb-profile-number','.wb-stage-slash']]
+  ]){
+    await evaluate('location.hash='+JSON.stringify(hash));
+    await wait('!!document.querySelector('+JSON.stringify(selectors[0])+')','contrast target route '+hash);
+    for(const selector of selectors){
+      const c=await computedContrast(selector);
+      assert.ok(c.ratio>=4.5,'Normal small-text contrast below 4.5:1 '+hash+' '+selector+' '+JSON.stringify(c));
+    }
+  }
+  // Missing hash route provides a keyboard-reachable recovery path and heading focus.
+  await evaluate('location.hash="#/route-not-found"');
+  await wait('!!document.querySelector(".not-found")','missing-route view did not render');
+  assert.equal(await evaluate('document.activeElement.id'),'page-title','missing-route heading must receive focus');
+  await evaluate('document.querySelector(".not-found a").focus()');
+  await send('Input.dispatchKeyEvent',{type:'keyDown',key:'Enter',code:'Enter',windowsVirtualKeyCode:13,nativeVirtualKeyCode:13,text:'\r',unmodifiedText:'\r'});
+  await send('Input.dispatchKeyEvent',{type:'keyUp',key:'Enter',code:'Enter',windowsVirtualKeyCode:13,nativeVirtualKeyCode:13});
+  await wait('location.hash==="#/docs/install"','unknown-route recovery did not navigate');
+  assert.equal(await evaluate('document.activeElement.id'),'guide-heading','recovered guide heading should receive focus');
 
   // Full-width desktop regression: previous 1180px shell must not return at 1920/2560px.
   // Check the real rendered production bundle across all four site destinations.
