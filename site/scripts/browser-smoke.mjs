@@ -72,7 +72,6 @@ try{
   // At an effective 200%-zoom desktop content width (720 CSS px), the layout still reflows.
   await send('Emulation.setDeviceMetricsOverride',{width:720,height:1000,deviceScaleFactor:1,mobile:false});
   await sleep(200);
-  console.log('ZOOM METRICS',await evaluate('JSON.stringify({viewport:innerWidth,doc:document.documentElement.scrollWidth,body:document.body.scrollWidth,sections:Array.from(document.querySelectorAll("main > section")).map(el=>({id:el.id,sw:el.scrollWidth,cw:el.clientWidth})).filter(x=>x.sw>x.cw+1),canvas:document.querySelector(".fs-canvas")&&{scroll:document.querySelector(".fs-canvas").scrollWidth,client:document.querySelector(".fs-canvas").clientWidth}})'));
   assert.ok(await evaluate('document.documentElement.scrollWidth <= window.innerWidth+1'),'Guide layout overflows an effective 200%-zoom desktop width');
   assert.ok(await evaluate('document.querySelector(".docs-code pre").scrollWidth >= document.querySelector(".docs-code pre").clientWidth'),'code panel remains scrollable');
   await send('Emulation.setDeviceMetricsOverride',{width:1440,height:1000,deviceScaleFactor:1,mobile:false});
