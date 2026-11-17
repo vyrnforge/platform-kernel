@@ -10,7 +10,7 @@ Four separate destinations use hash routes, so deep links and browser Back/Forwa
 | --- | --- | --- |
 | Home | #/ | One dependency preview, a three-step start and an ownership summary. |
 | Documentation | #/docs/install, /first, /request, /jdbc, /assure | Task-oriented, source-pinned usage examples; full-text guide search, syntax-highlighted code tabs, run commands and verification. |
-| Playground | #/playground | One browser-only integration learning model: core, trusted API and optional JDBC. |
+| Playground | #/playground | One browser-only integration learning model with shareable selected flow URLs: core, trusted API and optional JDBC; exact decisions, first-stop failure and application ownership. |
 | Reference | #/reference/architecture, /capabilities, /releases | Ownership, deployment, full capability inventory and release evidence. |
 
 There is no secondary marketing catalog, Journey Selector, Flow Studio, duplicate integration hero, slideshow or inline documentation mega-section. Legacy fragments (#docs, #workbench, #start, #capabilities, #architecture) map to the matching new destination.
@@ -20,7 +20,7 @@ There is no secondary marketing catalog, Journey Selector, Flow Studio, duplicat
 - src/main.jsx — four destinations, shared header/footer and concise homepage.
 - src/routes.mjs — route parsing and legacy fragment mappings.
 - src/DeveloperDocs.jsx, src/developer-docs.css and src/docs-data.mjs — the five published-release guides.
-- src/IntegrationWorkbench.jsx, src/kernel-workbench.css and src/workbench-data.mjs — the single interactive learning model with Maven/Java starting points.
+- src/IntegrationWorkbench.jsx, src/kernel-workbench.css and src/workbench-data.mjs — the single source-aligned decision trace (verification, scope, membership, module, domain policy, retries/outbox), with deep-linkable scenarios, on-site next steps and Maven/Java starting points.
 - src/Reference.jsx — consolidated capability, architecture and release reference.
 - src/PreviewGuide.jsx and src/preview-data.mjs — the source-reviewed v0.4.0 candidate guide delivered as an in-site Documentation route, not an external GitHub Markdown manual.
 - src/data.mjs — release/source metadata and boundaries. Released source pinned to c86eb33a46fae2843c75181c6b395cd0dc6710fe.
@@ -45,3 +45,7 @@ Use Node.js 22+.
 The bundle uses local files and needs no external CDN/backend. GitHub Pages CI builds/tests the PR and runs Chromium smoke. Deploy only when a change is merged to main.
 
 Chromium smoke covers route/focus/keyboard navigation, code rendering, search, and narrow/zoom-equivalent responsive widths; it is not a full manual 200% browser-zoom, screen-reader or WCAG audit. The first Java example and request/JDBC signatures were source-reviewed against v0.3.2, not executed against Maven Central artifacts in the website pipeline. Keep site claims pinned to published Maven Central evidence rather than an unpublished candidate.
+
+## Trace usability and verification
+
+The one Playground is a deterministic **simulation**, not a running JVM, IAM verifier, JDBC transaction or authorization test. The trace separates a check that actually ran from a check intentionally not required (e.g. membership on tenantless) and one never reached after denial. Browser URLs preserve mode, scope and scenario, so guides can link to a relevant failure case. Negative paths for cross-tenant 404, missing membership, disabled module, denied domain policy, replay and in-progress retries match published v0.3.2 contract semantics. Ownership remains with product applications. Screen-reader testing and actual 200% browser zoom still require manual validation.

@@ -7,6 +7,15 @@ test('four top-level destinations and addressable guide/reference pages',()=>{
   assert.deepEqual(siteNavigation.map(x=>x.id),['home','docs','playground','reference']);
   assert.equal(resolveRoute('').page,'home');
   assert.equal(resolveRoute('#/playground').page,'playground');
+  assert.equal(resolveRoute('#/playground').mode,'core');
+  assert.deepEqual(
+    ['request','scoped','membership'],
+    [resolveRoute('#/playground?mode=request&scope=scoped&scenario=membership').mode,
+     resolveRoute('#/playground?mode=request&scope=scoped&scenario=membership').scope,
+     resolveRoute('#/playground?mode=request&scope=scoped&scenario=membership').scenario]
+  );
+  assert.equal(resolveRoute('#/playground?mode=request&scope=tenantless&scenario=membership').scenario,'success');
+  assert.equal(resolveRoute('#/playground?mode=unknown&scenario=invalid').mode,'core');
   assert.equal(resolveRoute('#/docs/preview').id,'preview');
   assert.equal(resolveRoute('#/docs/preview').page,'docs');
   for(const guide of developerGuides){

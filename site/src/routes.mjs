@@ -1,4 +1,5 @@
 import {developerGuides} from './docs-data.mjs';
+import {workbenchModes,scenariosFor} from './workbench-data.mjs';
 
 export const referenceTopics=[
   {id:'architecture',title:'Architecture & ownership'},
@@ -39,7 +40,16 @@ export function canonicalHash(hash=''){
 export function resolveRoute(hash=''){
   const normalized=canonicalHash(hash);
   if(normalized==='#/')return {page:'home',title:'Home',canonical:normalized};
-  if(normalized==='#/playground')return {page:'playground',title:'Playground',canonical:normalized};
+  if(normalized==='#/playground'||normalized.startsWith('#/playground?')){
+    const query=normalized.includes('?')?normalized.split('?').slice(1).join('?'):'';
+    const params=new URLSearchParams(query);
+    const requestedMode=params.get('mode');
+    const mode=workbenchModes.some(item=>item.id===requestedMode)?requestedMode:'core';
+    const scope=params.get('scope')==='tenantless'?'tenantless':'scoped';
+    const wantedScenario=params.get('scenario')||'success';
+    const scenario=scenariosFor(mode,scope).some(item=>item.id===wantedScenario)?wantedScenario:'success';
+    return {page:'playground',title:'Playground',mode,scope,scenario,canonical:normalized};
+  }
   if(normalized==='#/docs')return {page:'docs',id:'install',title:'Documentation',canonical:'#/docs/install'};
   if(normalized==='#/docs/preview')return {page:'docs',id:'preview',title:'v0.4.0 developer preview · NOT RELEASED',canonical:normalized};
   if(normalized.startsWith('#/docs/')){

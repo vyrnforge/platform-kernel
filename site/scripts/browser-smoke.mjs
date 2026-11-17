@@ -124,6 +124,23 @@ try{
   await wait('location.hash==="#/docs/install" && !!document.querySelector(".guide-article:not(.preview-article)")','published docs route restored');
   assert.ok((await evaluate(q('.guide-code-shell code')+'.textContent')).includes('0.3.2'),'published installation remains 0.3.2');
 
+  // Documentation links land on a selected, shareable learning scenario.
+  await evaluate('location.hash="#/docs/request"');
+  await wait('location.hash==="#/docs/request" && !!document.querySelector(".guide-try-link")','on-site flow link missing');
+  assert.equal(await evaluate('document.querySelector(".guide-try-link").getAttribute("href")'),'#/playground?mode=request&scope=scoped&scenario=success');
+  await click('.guide-try-link');
+  await wait('location.hash.includes("mode=request") && document.querySelectorAll(".wb-trace-step").length===6','request walkthrough deep link failed');
+  assert.ok((await evaluate(q('.wb-inspection')+'.innerText')).includes('What is checked?'),'decision inspector explains required checks');
+  assert.ok((await evaluate(q('.wb-inspection')+'.innerText')).includes('Who owns this?'),'decision inspector explains responsibility');
+  await click('.wb-scenario:nth-child(4)');
+  await wait('location.hash.includes("scenario=cross-tenant")','cross-tenant scenario URL missing');
+  assert.ok((await evaluate(q('.wb-outcome')+'.textContent')).includes('404'),'cross-tenant resource must be hidden');
+  assert.equal(await evaluate('document.querySelectorAll(".wb-track li[data-state=blocked]").length'),1,'first failing gate is shown');
+  await click('.wb-track li:nth-child(2) button');
+  assert.equal(await evaluate('document.querySelector(".wb-inspection-tag").textContent.includes("2 OF 6")'),true,'second gate inspection opened');
+  await click('.wb-trace-actions button:first-child');
+  assert.equal(await evaluate('document.querySelector(".wb-inspection-tag").textContent.includes("1 OF 6")'),true,'previous decision navigation works');
+
   // One playground only, with published code output and negative scenarios.
   await click('.primary-nav a[href="#/playground"]');
   await wait('location.hash==="#/playground" && !!document.querySelector(".wb-frame")','playground failed');
@@ -142,6 +159,10 @@ try{
   assert.ok((await evaluate(q('.wb-code-pane code')+'.textContent')).includes('<scope>test</scope>'),'testkit stays test-only');
   await click('.wb-scenario:nth-child(2)');
   assert.ok((await evaluate(q('.wb-outcome')+'.textContent')).includes('SAFE REPLAY'),'idempotent replay simulated');
+  assert.equal(await evaluate('document.querySelectorAll(".wb-track li[data-state=skipped]").length'),3,'replay skips domain SQL and new intents');
+  await click('.wb-scenario:nth-child(3)');
+  assert.ok((await evaluate(q('.wb-outcome')+'.textContent')).includes('IN PROGRESS'),'concurrent retry is distinguished from replay');
+  assert.equal(await evaluate('document.querySelector(".wb-check-pane a").getAttribute("href")'),'#/docs/jdbc','playground links to on-site JDBC docs');
 
   // Wide, zoom-equivalent and narrow reflow: page has no horizontal overflow; code scrolls in its own pane.
   for(const width of [720,640,390,320]){
@@ -168,7 +189,7 @@ try{
   await send('Emulation.setEmulatedMedia',{features:[{name:'prefers-reduced-motion',value:'reduce'}]});
   assert.equal(await evaluate('matchMedia("(prefers-reduced-motion: reduce)").matches'),true,'reduced-motion preference present');
   assert.deepEqual(errors,[],'browser JavaScript exceptions');
-  console.log('Browser smoke: four destinations, source-aware docs search, focus, keyboard/code, playground, and 720/640/390/320px reflow passed');
+  console.log('Browser smoke: four destinations, source-aware docs search, deep-linked decision flows, keyboard/code, and 720/640/390/320px reflow passed');
 } finally {
   ws?.close();chrome.kill('SIGTERM');server.close();await sleep(200);await rm(profile,{recursive:true,force:true}).catch(()=>{});
 }
