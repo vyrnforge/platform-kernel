@@ -48,7 +48,7 @@ The kernel consumes a trusted identity projection from your authentication middl
 - [Application adoption checklist](docs/integration/adoption-checklist.md)
 - [Identity boundary](docs/integration/identity-boundary.md)
 - [General-purpose quickstart and HTTP integration](docs/integration/quickstart.md)
-- [Reliability semantics](docs/contracts/reliability-semantics.md) and [JDBC rollout / recovery](docs/v2/production-hardening.md)
+- [Reliability semantics](docs/contracts/reliability-semantics.md), [safe JDBC mutation guide](docs/integration/jdbc-safe-mutation.md) and [JDBC rollout / recovery](docs/v2/production-hardening.md)
 - [Correlation and health](docs/observability/observability-health.md)
 - [Release and contributor operations](docs/releases/README.md)
 
