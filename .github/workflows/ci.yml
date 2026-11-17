@@ -39,6 +39,23 @@ jobs:
       - name: Dependency-free core smoke verification
         run: bash scripts/verify-core.sh
 
+      # This verifier is test-only; keep the interpreter and its entire
+      # resolved wheel closure reproducible rather than floating on runner updates.
+      - name: Set up Python 3.14.10 for schema conformance
+        uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6.3.0
+        with:
+          python-version: '3.14.10'
+
+      - name: Released JSON Schema draft 2020-12 behavioral shape vectors
+        shell: bash
+        run: |
+          python3 -m venv "$RUNNER_TEMP/schema-validation-venv"
+          "$RUNNER_TEMP/schema-validation-venv/bin/python" -c 'import sys; assert sys.version_info[:3] == (3, 14, 10), sys.version'
+          "$RUNNER_TEMP/schema-validation-venv/bin/python" -m pip install --no-input --disable-pip-version-check --only-binary=:all: --require-hashes -r scripts/requirements-schema-202012.lock
+          "$RUNNER_TEMP/schema-validation-venv/bin/python" -m pip check
+          "$RUNNER_TEMP/schema-validation-venv/bin/python" -m pip freeze
+          "$RUNNER_TEMP/schema-validation-venv/bin/python" scripts/test-json-schema-202012.py
+
       - name: Maven verification
         run: mvn --batch-mode --no-transfer-progress --strict-checksums -Prelease-docs clean verify
 
