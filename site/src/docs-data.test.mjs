@@ -2,6 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {documentationVersion, developerGuides, searchDeveloperGuides} from './docs-data.mjs';
 import {version, candidateVersion, capabilities, source} from './data.mjs';
+import {getWorkbenchTrace,scenariosFor} from './workbench-data.mjs';
 
 test('developer documentation targets the released distribution only', () => {
   assert.equal(documentationVersion, version);
@@ -62,4 +63,44 @@ test('first program provides a source-verified main class and reproducible run c
   assert.ok(first.samples.find(s=>s.label==='Java 21').kind.includes('Complete'));
   assert.ok(first.samples.find(s=>s.label==='Run').code.includes('platform-kernel-0.3.2.jar'));
   assert.ok(developerGuides.find(g=>g.id==='install').samples.every(s=>s.kind.includes('fragment')));
+});
+
+test('published request guide matches scoped and tenantless Kernel failure semantics',()=>{
+  const request=developerGuides.find(g=>g.id==='request');
+  assert.equal(request.endpointChoices.length,2);
+  assert.equal(request.failureCases.length,8);
+  const expected=[
+    ['unverified','scoped','AUTHENTICATION_FAILED','401',0],
+    ['scope-tenantless','tenantless','INVALID_CONTEXT','400',1],
+    ['scope-scoped','scoped','TENANT_REQUIRED','403',1],
+    ['cross-tenant','scoped','TENANT_CONTEXT_MISMATCH','404',1],
+    ['membership','scoped','TENANT_MEMBERSHIP_REQUIRED','403',2],
+    ['module','scoped','MODULE_DISABLED','403',3],
+    ['denied','scoped','DOMAIN_ACCESS_DENIED','403',4],
+    ['tenantless-denied','tenantless','DOMAIN_ACCESS_DENIED','403',4]
+  ];
+  for(const [id,scope,code,status,blockedStep] of expected){
+    const entry=request.failureCases.find(x=>x.id===id);
+    assert.ok(entry, id+' missing from request guide');
+    assert.equal(entry.failure,code);
+    assert.equal(entry.http,status);
+    assert.ok(scenariosFor('request',scope).some(x=>x.id===(entry.scenario||entry.id)));
+    const trace=getWorkbenchTrace('request',scope,entry.scenario||entry.id);
+    assert.equal(trace.steps.findIndex(s=>s.state==='blocked'),blockedStep,id);
+    assert.ok(trace.outcome.includes(status),id+' Playground status drift');
+    assert.ok(trace.steps.slice(blockedStep+1).every(s=>s.state==='pending'),id+' later gates must not run');
+  }
+  const tenantless=getWorkbenchTrace('request','tenantless','success');
+  assert.equal(tenantless.steps[2].state,'skipped');
+  assert.equal(tenantless.steps[3].state,'skipped');
+  assert.equal(tenantless.steps[4].state,'done');
+  const wiring=request.samples.find(s=>s.label==='Wiring');
+  assert.match(wiring.kind,/Integration excerpt/);
+  assert.match(wiring.code,/new RequestContextPipeline<>/);
+  for(const port of ['TenantMembershipPort','ModuleEntitlementPort','DomainAuthorizationHook']){
+    assert.ok(wiring.code.includes(port),port+' required');
+  }
+  assert.ok(searchDeveloperGuides('TENANT_CONTEXT_MISMATCH').some(x=>x.id==='request'));
+  assert.ok(searchDeveloperGuides('current module key').some(x=>x.id==='request'));
+  assert.doesNotMatch(wiring.code,/RequestContextPipeline\\.tenantless\(/);
 });

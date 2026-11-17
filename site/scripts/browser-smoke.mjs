@@ -137,6 +137,24 @@ try{
   await wait('location.hash==="#/docs/install" && !!document.querySelector(".guide-article:not(.preview-article)")','published docs route restored');
   assert.ok((await evaluate(q('.guide-code-shell code')+'.textContent')).includes('0.3.2'),'published installation remains 0.3.2');
 
+
+  // Request scope and failure reference live on-site, with deep links to the one Playground.
+  await evaluate('location.hash="#/docs/request"');
+  await wait('document.querySelectorAll(".request-scope-grid section").length===2','two request scopes should be visible');
+  assert.equal(await evaluate('document.querySelectorAll(".request-failures tbody tr").length'),8,'all failure states documented');
+  assert.ok((await evaluate(q('.request-diagnostics')+'.textContent')).includes('correlation_id'),'safe error correlation must be explicit');
+  await click('.guide-code-tabs button:nth-child(3)');
+  assert.ok((await evaluate(q('.guide-code-shell code')+'.textContent')).includes('new RequestContextPipeline<>'),'published constructor visible');
+  await evaluate('document.querySelector(".request-failures a[href*=\"scenario=membership\"]").focus()');
+  await send('Input.dispatchKeyEvent',{type:'keyDown',key:'Enter',code:'Enter',windowsVirtualKeyCode:13,nativeVirtualKeyCode:13,text:'\\r',unmodifiedText:'\\r'});
+  await send('Input.dispatchKeyEvent',{type:'keyUp',key:'Enter',code:'Enter',windowsVirtualKeyCode:13,nativeVirtualKeyCode:13});
+  await wait('location.hash.includes("scenario=membership")','failed scenario keyboard navigation');
+  assert.equal(await evaluate('document.activeElement.id'),'workbench-title','Playground heading gets focus');
+  assert.ok((await evaluate(q('.wb-outcome')+'.textContent')).includes('403'),'membership maps 403');
+  await evaluate('location.hash="#/docs/request"');
+  await wait('!!document.querySelector(".request-failures")','return to request docs should work');
+  // At mobile widths, error details scroll locally without whole-page overflow.
+
   // Documentation links land on a selected, shareable learning scenario.
   await evaluate('location.hash="#/docs/request"');
   await wait('location.hash==="#/docs/request" && !!document.querySelector(".guide-try-link")','on-site flow link missing');

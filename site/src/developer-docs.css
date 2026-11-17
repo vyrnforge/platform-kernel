@@ -94,3 +94,29 @@
 .guide-expected-output{border-left:3px solid #3e7cb5;background:#f1f7ff;padding:12px 16px;margin-top:14px;border-radius:0 7px 7px 0;max-width:90ch}
 .guide-expected-output strong{display:block;font-size:13px;color:#244b79}
 .guide-expected-output p{margin:5px 0 0;font-size:13px;line-height:1.7;color:#405e79}
+
+/* UX-79: the existing request guide gains an accessible scope decision and recovery reference. */
+.request-decisions{margin-top:29px;border-top:1px solid #dce5ef;padding-top:25px;min-width:0}
+.request-decisions h3{font-size:19px;letter-spacing:-.3px;color:#223e5e;margin:0 0 10px}
+.request-decisions>p{font-size:13px;color:#48617b;line-height:1.75;max-width:90ch}
+.request-scope-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;margin:17px 0}
+.request-scope-grid>section{min-width:0;padding:17px 18px;border:1px solid #d3e1f0;background:#f8fbff;border-radius:9px}
+.request-scope-grid h4{font-size:15px;margin:0 0 9px;color:#204c7d}
+.request-scope-grid p{font-size:12px;line-height:1.7;color:#46617d;overflow-wrap:anywhere;margin:6px 0}
+.request-scope-grid code{font-size:12px;overflow-wrap:anywhere}
+.request-scope-grid a,.request-failures a{display:inline-block;font-weight:750;font-size:12px;margin-top:10px}
+.request-failures-scroll{max-width:100%;overflow-x:auto;border:1px solid #d4e2f0;border-radius:8px}
+.request-failures-scroll:focus-visible{outline:3px solid #356eb8;outline-offset:2px}
+.request-failures{border-collapse:collapse;width:100%;min-width:760px;text-align:left;font-size:12px;line-height:1.6}
+.request-failures th,.request-failures td{border-bottom:1px solid #e0e8f2;padding:12px 14px;text-align:left;vertical-align:top;overflow-wrap:anywhere}
+.request-failures thead{background:#eff5fe}
+.request-failures thead th{font-size:12px;color:#254f7b}
+.request-failures tbody th{font-weight:600;color:#263f59}
+.request-failures tbody th strong,.request-failures tbody th span{display:block}
+.request-failures tbody th span{font-size:11px;color:#4d6480;margin-top:4px}
+.request-failures tbody td strong{font-weight:750;color:#234c75}
+.request-failures td p{font-size:12px;line-height:1.65;margin:5px 0 0;color:#49627c}
+.request-failures td code{font-size:11px;overflow-wrap:anywhere}
+.request-http{display:block;font-weight:800;color:#415d79;font-size:11px;margin-top:5px}
+.request-decisions .request-diagnostics{margin-top:13px}
+@media(max-width:780px){.request-scope-grid{grid-template-columns:1fr}.request-scope-grid>section{padding:14px}}

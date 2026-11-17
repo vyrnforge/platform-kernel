@@ -328,7 +328,9 @@ export function searchDeveloperGuides(query) {
   if(!needle)return developerGuides;
   return developerGuides.filter(guide=>[
     guide.title,guide.summary,guide.group,guide.when,guide.prerequisite,
-    guide.provides,guide.ownership,guide.verify,...guide.steps,...guide.mistakes,
+    guide.provides,guide.ownership,guide.verify,guide.diagnostics||'',...guide.steps,...guide.mistakes,
+    ...(guide.endpointChoices||[]).flatMap(item=>[item.name,item.when,item.policy,item.guards,item.ownership]),
+    ...(guide.failureCases||[]).flatMap(item=>[item.trigger,item.gate,item.failure,item.owner,item.recovery]),
     ...guide.samples.flatMap(sample=>[sample.label,sample.kind,sample.filename,sample.code])
   ].join(' ').toLocaleLowerCase().includes(needle));
 }
