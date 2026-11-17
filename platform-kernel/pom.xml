@@ -6,7 +6,7 @@
   <parent>
     <groupId>io.github.vyrnforge</groupId>
     <artifactId>platform-kernel-parent</artifactId>
-    <version>0.3.2</version>
+    <version>0.4.0</version>
   </parent>
   <artifactId>platform-kernel</artifactId>
   <name>Platform Kernel</name>

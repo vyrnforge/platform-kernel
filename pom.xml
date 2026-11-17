@@ -5,7 +5,7 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>io.github.vyrnforge</groupId>
   <artifactId>platform-kernel-parent</artifactId>
-  <version>0.3.2</version>
+  <version>0.4.0</version>
   <packaging>pom</packaging>
   <name>VyrnForge Platform Kernel</name>
   <description>Thin reusable enterprise platform kernel contracts and Java libraries.</description>

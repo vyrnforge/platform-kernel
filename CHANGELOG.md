@@ -1,5 +1,18 @@
 # Changelog
 
+## 0.4.0 — Foundation quality, compatibility and developer experience
+
+- Align `IdempotencyRequest` operation/key/fingerprint length limits to existing PostgreSQL V1 columns (192/512/512 Unicode code points), rejecting previously overlength inputs before persistence.
+- Apply the released v0.2 entitlement module-key grammar consistently to the product module registry and tenant-scoped endpoint policy; previously valid namespaced keys may now be accepted by the registry and invalid endpoint keys fail earlier.
+- Add authenticated tenantless pipeline composition with fail-closed tenant-scoped and tenant-owned-resource behavior. Keep trusted identity verification and product resource authorization mandatory.
+- Add an optional application-configured Jackson `ObjectMapper` constructor to the JDBC codec; preserve the original default, copy configuration defensively and keep stored-payload encoding distinct from public wire JSON serialization.
+- Clarify safe crash-atomic `begin` + `executeIdempotent` usage, host-owned Flyway migration coexistence, HTTP duplicate-header handling, synchronous health-probe timeout responsibility and Java source hygiene.
+- Extend negative tests, real PostgreSQL host-coexistence tests and the golden-path examples without introducing runtime services or mandatory product dependencies.
+- Preserve Java 21, the same three Maven artifacts and Java package names, the dependency-free core, immutable released v0.1/v0.2 JSON contracts and unchanged Flyway V1–V3. No product application is automatically upgraded.
+- Upgrade note: stricter invalid-input rejection can surface errors earlier; verify module-key assumptions, idempotency boundary inputs, historical JDBC replay/serialization compatibility, tenant authorization and host migration authority before adoption. See [release-readiness and acceptance gates](docs/releases/v0.4.0-readiness.md).
+- Release status: this entry is prepared on the release-candidate branch; publishing requires separate explicit Product Owner authorization.
+
+
 ## 0.3.2 — Integrity and consumer compatibility
 
 - Versioned structured intent fingerprints with persisted-content verification for historical duplicate replay; drain old intent writers before rollout.
