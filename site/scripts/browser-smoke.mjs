@@ -121,7 +121,7 @@ try{
   await click('.preview-samples:first-of-type .guide-copy');
   await wait('document.querySelector(".preview-samples:first-of-type .guide-copy-status").textContent.length>0','preview code-copy feedback');
   await evaluate('location.hash="#/docs/install"');
-  await wait('location.hash==="#/docs/install" && document.querySelector(".guide-article:not(.preview-article)")','published docs route restored');
+  await wait('location.hash==="#/docs/install" && !!document.querySelector(".guide-article:not(.preview-article)")','published docs route restored');
   assert.ok((await evaluate(q('.guide-code-shell code')+'.textContent')).includes('0.3.2'),'published installation remains 0.3.2');
 
   // One playground only, with published code output and negative scenarios.
