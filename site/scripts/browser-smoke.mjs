@@ -109,6 +109,8 @@ try{
   await click('.reference-nav a[href="#/reference/releases"]');
   await wait('location.hash==="#/reference/releases"','release reference failed');
   assert.ok((await evaluate(q('.reference-article')+'.innerText')).includes('NOT PUBLISHED'),'candidate not misrepresented as released');
+  assert.ok((await evaluate('document.querySelector(".reference-preview-doc a").getAttribute("href")')).includes('docs/releases/v0.4.0-developer-preview.md'),'candidate guide is linked from existing release reference');
+  assert.ok((await evaluate(q('.reference-article')+'.innerText')).includes('cannot be installed from Maven Central yet'),'preview stays explicitly unavailable');
 
   // One playground only, with published code output and negative scenarios.
   await click('.primary-nav a[href="#/playground"]');

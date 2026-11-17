@@ -160,3 +160,6 @@ h3{font-size:19px;letter-spacing:-.4px}
 
 /* Reflow is the responsive baseline, including narrow 200%-zoom equivalents. */
 @media(max-width:400px){.primary-nav{justify-content:flex-start}.primary-nav a{padding:8px 7px}.header-inner{gap:6px}.header-end{margin-left:auto}.version-chip{padding:6px 8px}.wb-section{overflow-wrap:anywhere}}
+
+/* Secondary release-readiness link; never styled as a published installation CTA. */
+.reference-preview-doc{margin-top:14px;border-top:1px solid #dce5ef;padding-top:12px}.reference-preview-doc p{margin:5px 0 0;font-size:12px;color:#52677e;line-height:1.6}

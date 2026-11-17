@@ -25,6 +25,8 @@ There is no secondary marketing catalog, Journey Selector, Flow Studio, duplicat
 - src/data.mjs — release/source metadata and boundaries. Released source pinned to c86eb33a46fae2843c75181c6b395cd0dc6710fe.
 - src/style.css and scripts/browser-smoke.mjs — responsive UI and Chromium end-to-end checks.
 
+**Pre-release documentation:** the existing Reference → Versions panel may link to the [v0.4.0 developer preview](../docs/releases/v0.4.0-developer-preview.md), marked NOT RELEASED. Pre-release guides are drafted and reviewed before publication; published installation defaults, code examples and source pins stay on v0.3.2. After verified publication, update them through a separate reviewed docs/site change.
+
 **Version discipline:** v0.4.0 candidate APIs, including RequestContextPipeline.tenantless(...) and the optional JacksonRecordCodec(applicationMapper) constructor, must not appear as published v0.3.2 examples. Integration excerpts require application-provided ports and wiring. The playground is NOT a live JVM, token verifier or database and does not prove production conformance. Testkit is test-scoped. Applications own business data, policy, transactions and deployment; IAM/IdP and File Storage remain external authorities.
 
 ## Local development
