@@ -1,56 +1,95 @@
 import React,{useEffect,useState} from 'react';
 import {createRoot} from 'react-dom/client';
-import {repo,source,capabilities,architectures,sections,version,releaseRun} from './data.mjs';
-import {FlowStudio} from './FlowStudio.jsx';
+import {repo,version,candidateVersion} from './data.mjs';
+import {developerGuides} from './docs-data.mjs';
+import {resolveRoute,siteNavigation} from './routes.mjs';
 import {DeveloperDocs} from './DeveloperDocs.jsx';
+import {Reference} from './Reference.jsx';
 import {IntegrationWorkbench} from './IntegrationWorkbench.jsx';
-import {getWorkbenchTrace,workbenchModes} from './workbench-data.mjs';
-import {ReleasePreview,JourneySelector,BoundaryMap} from './KernelShowcase.jsx';
 import './style.css';
-import './visual-refresh.css';
-const names=['Overview','Integration lab','Choose a path','Next release','Library','Capabilities','Ownership','Architecture','Use cases','Flow Studio','Readiness','Adoption','Get started'];
-function Section({id,kicker,title,lead,children,dark=false}){return <section id={id} className={dark?'section dark':'section'}><div className="wrap"><div className="eyebrow">{kicker}</div><h2>{title}</h2>{lead&&<p className="lead">{lead}</p>}{children}</div></section>}
-function Tabs({items,active,onChange,label}){return <div className="tabs" aria-label={label}>{items.map((x,i)=><button key={x} type="button" aria-pressed={active===i} className={active===i?'active':''} onClick={()=>onChange(i)}>{x}</button>)}</div>}
-function Link({path,children}){return <a href={path?(path.startsWith('docs/')?repo+'/blob/main/'+path:source(path)):repo} target="_blank" rel="noreferrer">{children} ↗</a>}
-function Architecture(){const [selected,setSelected]=useState(0);const a=architectures[selected];return <><Tabs label="Deployment model" items={architectures.map(a=>a.title)} active={selected} onChange={setSelected}/><div className="arch"><div className="arch-intro"><span className="eyebrow">{a.label}</span><h3>{a.title}</h3><p>{a.description}</p></div><div className="diagram"><div className="node edge">Enterprise API / gateway</div><div className="line"/><div className="product-row">{a.products.map(p=><div className="product-card" key={p.name}><strong>{p.name}</strong><div className="instances">{Array.from({length:p.instances},(_,i)=><div className="instance" key={i}>APP {i+1}<span>Kernel</span></div>)}</div><div className="db">{p.db}</div></div>)}</div><div className="line"/><div className="node infra">{a.external}</div></div><p className="note">{a.note}</p></div></>}
-function Catalog(){const categories=['All','Security','Foundation','Reliability','Operations'];const [cat,setCat]=useState(0);const [selected,setSelected]=useState(0);const visible=capabilities.filter(c=>!cat||c.category===categories[cat]);const c=visible[selected]||visible[0];return <><Tabs label="Filter capabilities" items={categories} active={cat} onChange={i=>{setCat(i);setSelected(0)}}/><div className="catalog">{visible.map((c,i)=><button key={c.title} type="button" aria-pressed={i===selected} className={'cap '+(i===selected?'chosen':'')} onClick={()=>setSelected(i)}><span className={'pill '+(c.status==='Implemented'?'green':c.status==='Contract only'?'gray':'amber')}>{c.status}</span><h3>{c.title}</h3><p>{c.summary}</p></button>)}</div><div className="detail"><div><span className="eyebrow">What ships</span><h3>{c.title}</h3><p>{c.ships}</p><Link path={c.path}>Inspect implementation</Link><p><Link path={c.usagePath}>Usage guide & examples</Link></p></div><div><span className="eyebrow">What your application supplies</span><p>{c.needs}</p></div></div></>}
-function HeroConsole(){
-  const [mode,setMode]=useState('request');
-  const model=getWorkbenchTrace(mode,'scoped','success');
-  const samples={
-    core:['// Java 21 · no services required','var id = UuidV7.generate();','var context = CorrelationContext.create();'],
-    request:['// Authenticated · tenant-scoped','EndpointPolicy.tenantModule(','    "records", "records.read")'],
-    mutation:['// Optional, product-owned JDBC','transactions.executeIdempotent(','    lease, codec, domainAction)']
-  };
-  return <div className="hero-console" aria-label="Interactive integration preview">
-    <div className="hero-console-top"><span className="eyebrow">WORKBENCH / PREVIEW</span><span className="hero-console-live"><i aria-hidden="true"/> LOCAL MODEL</span></div>
-    <div className="hero-console-modes" aria-label="Preview integration path">
-      {workbenchModes.map(x=><button type="button" key={x.id} aria-pressed={mode===x.id} className={mode===x.id?'active':''} onClick={()=>setMode(x.id)}>{x.title}</button>)}
-    </div>
-    <div className="hero-console-window"><div className="hero-console-file"><span aria-hidden="true">● ● ●</span><span>{mode==='mutation'?'ReliabilityExample.java':mode==='request'?'RequestContext.java':'FirstKernelProgram.java'}</span><span>JAVA 21</span></div><pre><code>{samples[mode].join('\n')}</code></pre></div>
-    <div className="hero-console-path" aria-hidden="true"><span>Your app</span><b>→</b><span>Kernel contracts</span><b>→</b><span>Your authority</span></div>
-    <div className="hero-console-result" aria-live="polite"><div><span>ILLUSTRATIVE RESULT</span><strong>{model.outcome}</strong></div><p>{model.detail}</p></div>
-    <a className="hero-console-link" href="#workbench">Configure the full integration <span aria-hidden="true">↗</span></a>
-    <p className="hero-console-foot">Browser simulation, not executing Java APIs · v{version} released</p>
-  </div>
-}
-function App(){const [present,setPresent]=useState(false);const [page,setPage]=useState(0);useEffect(()=>{if(!present)return;function key(e){if(e.key==='Escape'){setPresent(false);return;}if(e.target.closest('input,select,textarea'))return;if(e.key==='ArrowRight'){e.preventDefault();setPage(p=>Math.min(p+1,sections.length-1))}if(e.key==='ArrowLeft'){e.preventDefault();setPage(p=>Math.max(p-1,0))}}window.addEventListener('keydown',key);return()=>window.removeEventListener('keydown',key)},[present]);useEffect(()=>{document.body.classList.toggle('presenting',present);if(present){document.body.dataset.page=sections[page];window.scrollTo(0,0)}return()=>{document.body.classList.remove('presenting');delete document.body.dataset.page}},[present,page]);return <><a className="skip-link" href="#content">Skip to main content</a><header><a className="brand" href="#overview" onClick={()=>setPresent(false)}><span className="mark">V</span><span>VYRNFORGE<small>PLATFORM KERNEL</small></span></a><nav aria-label="Site sections"><a href="#workbench">Workbench</a><a href="#docs">Documentation</a><a href="#journeys">Start here</a><a href="#capabilities">Capabilities</a><a href="#boundaries">Architecture</a><a href="#demo">Flow Studio</a></nav><div className="nav-actions"><a className="docs-nav-link" href="#workbench">Try it</a><Link>GitHub</Link><button className="primary" onClick={()=>{setPage(0);setPresent(!present)}}>{present?'Exit presentation':'Present'}</button></div></header>
-<div className="release-ribbon" role="status"><strong>AVAILABLE NOW</strong> v{version} on Maven Central <span aria-hidden="true">·</span> <a href="#next">Explore the v0.4.0 candidate — not yet released ↗</a></div>
-<main id="content">
-<section id="overview" className="hero section dark"><div className="wrap hero-grid"><div><span className="pill green">KERNEL V2 · {version} RELEASED</span><h1>One foundation.<br/><em>Independent by design.</em></h1><p className="lead">The essential infrastructure for Java applications: trusted context, versioned contracts, safe retries and clear observability. Embed what you need. Keep your data, policies and deployment your own.</p><div className="actions"><a className="primary" href="#workbench" onClick={()=>present&&setPage(sections.indexOf("workbench"))}>Launch the interactive lab <span aria-hidden="true">↗</span></a><a className="secondary" href="#docs" onClick={()=>present&&setPresent(false)}>Browse developer docs</a></div><div className="proof"><span>Java 21+ · Maven Central</span><span>No shared runtime</span><span>Three focused artifacts</span></div></div><HeroConsole/></div></section>
-<IntegrationWorkbench/>
-<JourneySelector/>
-<DeveloperDocs/>
-<ReleasePreview/>
-<Section id="product" kicker="WHY IT EXISTS" title="Consistency without coupling your products." lead="Each application keeps ownership of its business. The Kernel supplies the stable technical contracts behind it."><div className="three"><article><span className="eyebrow">01</span><h3>Secure by default</h3><p>Use trusted identity and application-owned authorization. Choose explicit tenantless or tenant-scoped operations when needed.</p></article><article><span className="eyebrow">02</span><h3>Reliable by design</h3><p>Compose domain mutations with durable audit and event intents. Retry safely within documented limits.</p></article><article><span className="eyebrow">03</span><h3>Independent by architecture</h3><p>Products retain their own data, rules and deployment lifecycle. The kernel is not a mandatory shared server.</p></article></div></Section>
-<Section id="capabilities" kicker="CAPABILITY EXPLORER · RELEASED v0.3.2" title="Everything essential. Nothing unnecessary." lead="Explore the capabilities available in the published v0.3.2 library and see what your application remains responsible for. Candidate additions are shown separately above."><Catalog/></Section>
-<BoundaryMap/>
-<Section id="architecture" kicker="DEPLOYMENT OPTIONS" title="Start small. Scale by choice." lead="Illustrative patterns, not prescribed infrastructure. The Kernel remains embedded within each independently owned Java application." dark><Architecture/></Section>
 
-<Section id="usecases" kicker="PRACTICAL USE CASES" title="Use the foundation in your own domain." lead="Examples of how to combine existing released capabilities without importing another product’s business model."><div className="three"><article><span className="pill green">Core only</span><h3>API, CLI or worker</h3><p>Generate UUIDv7 IDs, propagate correlation and expose health checks. Use these independent primitives without a database or identity pipeline.</p><Link path="platform-kernel/src/main/java/io/vyrnforge/platform/kernel/ids/">Inspect IDs</Link></article><article><span className="pill green">Request context</span><h3>Authenticated application</h3><p>Use your own authentication provider and application policy. Choose explicitly tenantless requests or tenant-scoped membership and module checks.</p><Link path="docs/integration/identity-boundary.md">Identity contract</Link></article><article><span className="pill gray">Optional JDBC</span><h3>Durable business operations</h3><p>For example, create an order, record or reservation and persist event/audit intent with an idempotency result. Your application owns the business transaction and data.</p><Link path="docs/contracts/reliability-semantics.md">Reliability semantics</Link></article></div></Section>
-<Section id="demo" kicker="INTERACTIVE FLOW STUDIO" title="Explore how the pieces collaborate." lead="Step through a simulated request, retriable write, event delivery or observability trace. Illustrative behavior, not a live runtime or benchmark." dark><FlowStudio/></Section>
-<Section id="readiness" kicker="RELEASE & READINESS" title="Released foundation. Production integration is the next gate." lead="The published v0.3.2 baseline has release evidence. The v0.4.0 candidate is not yet published; neither claim implies production application acceptance."><div className="two"><article><span className="pill green">Released</span><h3>v{version}</h3><p>Kernel regression suite and a pinned historical File Storage candidate compatibility gate passed. Three physical JARs, preserved schemas and SQL migrations, dependency isolation and packaged consumer smoke verified. Signed Maven Central publication and anonymous consumer resolution verified. All v0.2.1 reliability and security controls are preserved.</p><a href={source('CHANGELOG.md')}>Release notes ↗</a><p><a href={repo+'/actions/runs/'+releaseRun}>Release workflow ↗</a></p></article><article><span className="pill amber">Integration requirements</span><h3>What your application supplies</h3><p>If you use the optional JDBC adapter, use executeIdempotent for retriable writes; legacy separate completion is not crash-atomic. Stop/drain old publishers before Flyway V3 and old intent writers before v0.3.2. Delivery remains at-least-once; deduplicate, reconcile DEAD events and validate load, tenant isolation and operations in production.</p><Link path="docs/v2/production-hardening.md">Upgrade & recovery guide</Link></article></div><div className="detail"><div><h3>Not included</h3><p>Identity server, file storage client, business-domain applications, workflow/BPM, generic notifications, connectors and commercial metering.</p></div><div><h3>Evidence boundary</h3><p>No production throughput benchmark, external penetration test or certification is claimed. Architecture diagrams are illustrative.</p><Link path="docs/contracts/reliability-semantics.md">Contract guarantees</Link></div></div></Section>
-<Section id="adoption" kicker="ADOPTION" title="Start small. Add only what you need." lead="A practical integration sequence for independent Java applications."><div className="three"><article><span className="eyebrow">1 / INSTALL</span><h3>Use the main library</h3><p>Install from Maven Central. Start with IDs, correlation, health or contracts, with no infrastructure required.</p></article><article><span className="eyebrow">2 / CONNECT</span><h3>Wire your own application</h3><p>When using request context, supply trusted identity and your own authorization. Use tenantless policy for non-tenant-owned operations; tenant-scoped endpoints require membership and an enabled module.</p></article><article><span className="eyebrow">3 / EVOLVE</span><h3>Add optional reliability</h3><p>Use JDBC for durable retries, audit and events when appropriate. Choose your own transport, data stores, telemetry and production SLOs.</p></article></div><p><a href="#docs">Open the interactive developer guides ↗</a> · <a href={repo+'/blob/main/docs/integration/quickstart.md'}>Read the full Java quickstart ↗</a></p></Section>
-<Section id="start" kicker="GET STARTED" title="Three JARs. One coherent foundation." lead="A single main library, one optional persistence adapter, and one test library. No umbrella or fat JAR." dark><div className="three">{[{id:'platform-kernel',label:'Main runtime',desc:'Core, HTTP, controls, observability and both JSON schema versions. No third-party runtime dependencies.'},{id:'platform-kernel-jdbc',label:'Optional adapter',desc:'PostgreSQL/Flyway, atomic idempotency, audit and fenced outbox. Maven resolves its external dependencies.'},{id:'platform-kernel-testkit',label:'Test scope',desc:'In-memory ports, identity fixtures and consumer test helpers. Keep out of production.'}].map(a=><article key={a.id}><span className="eyebrow">{a.label}</span><h3>{a.id}</h3><p>{a.desc}</p><a href={'https://repo.maven.apache.org/maven2/io/github/vyrnforge/'+a.id+'/'+version+'/'+a.id+'-'+version+'.jar'}>Download JAR ↗</a></article>)}</div><div className="two"><article><h3>Java 21 · Maven</h3><pre>{'io.github.vyrnforge:platform-kernel:'+version+'\n\n# Optional runtime\nio.github.vyrnforge:platform-kernel-jdbc:'+version+'\n\n# Test scope\nio.github.vyrnforge:platform-kernel-testkit:'+version}</pre><a href={repo+'/blob/main/docs/integration/quickstart.md'}>General Java quickstart ↗</a><p><Link path="docs/integration/three-jar-distribution.md">Maven setup & coordinate migration</Link></p></article><article><h3>Upgrade from v0.2.1 or v0.3.0</h3><p>Use the new io.github.vyrnforge Maven group; replace old split or v0.3.0 coordinates. Do not mix the old and new JARs. Maven Central requires no custom repository or credentials. Java imports, schema resources and Flyway V1–V3 remain unchanged. The parent POM is Maven metadata, not a fourth JAR.</p><a href={'https://central.sonatype.com/artifact/io.github.vyrnforge/platform-kernel/'+version}>Release & all downloads ↗</a><p><a href={'https://central.sonatype.com/artifact/io.github.vyrnforge/platform-kernel/'+version}>Maven Central ↗</a></p></article></div><div className="two"><article><h3>Install the main JAR</h3><pre>{'<dependency>\n  <groupId>io.github.vyrnforge</groupId>\n  <artifactId>platform-kernel</artifactId>\n  <version>'+version+'</version>\n</dependency>'}</pre><p>Use Maven Central; no custom repository or credentials. Gradle users can use the same coordinates.</p></article><article><h3>Start with independent primitives</h3><pre>{'import io.vyrnforge.platform.kernel.ids.UuidV7;\nimport io.vyrnforge.platform.kernel.context.CorrelationContext;\n\nvar id = UuidV7.generate();\nvar context = CorrelationContext.create();'}</pre><p>No identity provider, tenant setup, database or testkit required for these calls.</p><a href={source('verification/GeneralUsageExample.java')}>Runnable Java example ↗</a></article></div></Section>
-</main><footer>VyrnForge Platform Kernel · Released v{version} · <Link>Source repository</Link><span>v0.4.0 in review · No consumer adoption implied · Illustrative examples</span></footer>{present&&<div className="present-controls"><button onClick={()=>setPage(p=>Math.max(0,p-1))} disabled={page===0}>← Previous</button><span role="status" aria-live="polite">Slide {page+1} of {sections.length} · {names[page]}</span><button onClick={()=>setPage(p=>Math.min(sections.length-1,p+1))} disabled={page===sections.length-1}>Next →</button><button onClick={()=>setPresent(false)}>Exit</button></div>}</>}
+const install=developerGuides.find(x=>x.id==='install');
+
+function Header({page}){
+  return <header className="site-header">
+    <div className="header-inner wrap">
+      <a className="brand" href="#/" aria-label="VyrnForge Platform Kernel home"><span className="brand-mark">V</span><span className="brand-name">VYRNFORGE <small>PLATFORM KERNEL</small></span></a>
+      <nav aria-label="Primary navigation" className="primary-nav">
+        {siteNavigation.map(x=><a key={x.id} href={x.href} aria-current={page===x.id?'page':undefined}>{x.title}</a>)}
+      </nav>
+      <div className="header-end"><span className="version-chip"><i aria-hidden="true"/> v{version}</span><a className="github-link" href={repo} target="_blank" rel="noopener noreferrer">GitHub <span aria-hidden="true">↗</span></a></div>
+    </div>
+  </header>;
+}
+
+function Home(){
+  return <div className="home-page">
+    <section className="home-hero">
+      <div className="wrap home-hero-layout">
+        <div className="home-hero-copy">
+          <div className="eyebrow"><span className="eyebrow-dot" aria-hidden="true"/> JAVA 21+ / EMBEDDED LIBRARY / v{version}</div>
+          <h1 id="page-title" tabIndex={-1}>Build your product.<br/><em>Reuse the foundation.</em></h1>
+          <p>Platform Kernel gives independent Java applications a consistent technical foundation: identifiers, trusted context, API contracts, audit and event patterns, and optional durable retries.</p>
+          <p className="home-boundary-statement">Your application keeps its data, authorization and deployment. No mandatory Kernel server.</p>
+          <div className="home-actions"><a className="btn primary" href="#/docs/install">Start with the quickstart <span aria-hidden="true">→</span></a><a className="btn subtle" href="#/playground">Explore a scenario <span aria-hidden="true">↗</span></a></div>
+          <div className="home-facts"><span>Published on Maven Central</span><span>Three focused artifacts</span><span>Optional JDBC adapter</span></div>
+        </div>
+        <div className="home-code" aria-label="Maven installation preview">
+          <div className="home-code-heading"><span className="code-dots" aria-hidden="true">● ● ●</span><span>pom.xml</span><span>RELEASED v{version}</span></div>
+          <pre><code>{install.samples[0].code}</code></pre>
+          <div className="home-code-caption"><span>One dependency to get started.</span><a href="#/docs/first">See your first Java example <span aria-hidden="true">→</span></a></div>
+          <div className="home-code-under"><span>APPLICATION</span><span className="home-arrow" aria-hidden="true">→</span><span>EMBEDDED KERNEL</span><span className="home-arrow" aria-hidden="true">→</span><span>YOUR DOMAIN</span></div>
+        </div>
+      </div>
+    </section>
+    <section className="home-next section" aria-labelledby="next-heading"><div className="wrap">
+      <div className="section-heading"><span className="eyebrow">YOUR FIRST INTEGRATION</span><h2 id="next-heading">A clear path from zero to useful.</h2><p>Learn the released library in small steps. Add only the infrastructure your product needs.</p></div>
+      <div className="next-grid">
+        <a href="#/docs/install"><span className="step-index">01 / INSTALL</span><h3>Choose the dependency <span aria-hidden="true">↗</span></h3><p>Maven or Gradle, Java 21+, no server or custom repository.</p></a>
+        <a href="#/docs/first"><span className="step-index">02 / FIRST PROGRAM</span><h3>Use a real API <span aria-hidden="true">↗</span></h3><p>Generate UUIDv7 IDs and correlation context in a runnable class.</p></a>
+        <a href="#/docs/request"><span className="step-index">03 / INTEGRATE</span><h3>Wire your application <span aria-hidden="true">↗</span></h3><p>Use trusted identity and tenant guards. Keep domain authorization local.</p></a>
+      </div>
+    </div></section>
+    <section className="home-secondary section" aria-labelledby="where-heading"><div className="wrap home-secondary-layout">
+      <div><span className="eyebrow">ONE FOUNDATION / CLEAR OWNERSHIP</span><h2 id="where-heading">What belongs where?</h2><p>Kernel handles common mechanics. IAM or a trusted provider establishes identity. File Storage manages file bytes. Each business application remains the system of record for its domain.</p><a href="#/reference/architecture" className="inline-link">Explore architecture boundaries <span aria-hidden="true">→</span></a></div>
+      <div className="boundary-summary">
+        <div><strong>Your application</strong><span>Domain data · permission policy · transactions</span></div>
+        <div><strong>Platform Kernel</strong><span>Context · contracts · optional reliability</span></div>
+        <div><strong>External authorities</strong><span>Identity provider · File Storage · chosen transport</span></div>
+      </div>
+    </div></section>
+    <section className="home-release"><div className="wrap release-note"><span>Published: <strong>v{version}</strong></span><span>Under review: <strong>v{candidateVersion} (not released)</strong></span><a href="#/reference/releases">Versions and evidence <span aria-hidden="true">→</span></a></div></section>
+  </div>;
+}
+
+function NotFound(){return <div className="wrap not-found"><h1 id="page-title" tabIndex={-1}>Page not found.</h1><p>The requested guide or reference topic isn't available.</p><a className="btn primary" href="#/docs/install">Open documentation</a></div>}
+
+function App(){
+  const [route,setRoute]=useState(()=>resolveRoute(window.location.hash));
+  useEffect(()=>{
+    const onHash=()=>setRoute(resolveRoute(window.location.hash));
+    window.addEventListener('hashchange',onHash);
+    return()=>window.removeEventListener('hashchange',onHash);
+  },[]);
+  useEffect(()=>{
+    document.title=route.title+' · VyrnForge Platform Kernel';
+    window.scrollTo({top:0,behavior:'instant'});
+    if(route.page!=='home'){
+      const title=document.getElementById('page-title');
+      title?.focus({preventScroll:true});
+    }
+  },[route.page,route.id,route.title]);
+  return <>
+    <a className="skip-link" href="#main" onClick={e=>{e.preventDefault();document.getElementById("main")?.focus()}}>Skip to content</a>
+    <Header page={route.page}/>
+    <main id="main" tabIndex={-1}>
+      {route.page==='home'&&<Home/>}
+      {route.page==='docs'&&<DeveloperDocs guideId={route.id}/>}
+      {route.page==='playground'&&<><h1 className="visually-hidden" tabIndex={-1} id="page-title">Interactive integration playground</h1><IntegrationWorkbench/></>}
+      {route.page==='reference'&&<Reference topic={route.id}/>}
+      {route.page==='notfound'&&<NotFound/>}
+    </main>
+    <footer className="site-footer"><div className="wrap footer-inner"><span><strong>VyrnForge</strong> / Platform Kernel <span>· v{version} released</span></span><div><a href="#/docs/install">Documentation</a><a href="#/reference/releases">Releases</a><a href={repo} target="_blank" rel="noopener noreferrer">Source ↗</a></div></div></footer>
+  </>;
+}
 createRoot(document.getElementById('root')).render(<App/>);

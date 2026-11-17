@@ -1,111 +1,69 @@
-import React, {useState} from 'react';
-import {repo, source} from './data.mjs';
-import {documentationVersion, developerGuides} from './docs-data.mjs';
+import React,{useEffect,useMemo,useState} from 'react';
+import {repo,source,version} from './data.mjs';
+import {developerGuides} from './docs-data.mjs';
 import './developer-docs.css';
 
-const groups = ['Getting started', 'Integrate', 'Test & operate'];
-const related = [
-  {label:'HTTP edge integration',path:'docs/integration/http-edge-reference.md'},
-  {label:'Observability & health',path:'docs/observability/observability-health.md'},
-  {label:'Adoption checklist',path:'docs/integration/adoption-checklist.md'},
-  {label:'Reliability semantics',path:'docs/contracts/reliability-semantics.md'}
-];
+const groups=['Getting started','Integrate','Test & operate'];
 
-export function DeveloperDocs() {
-  const [query, setQuery] = useState('');
-  const [selectedId, setSelectedId] = useState('install');
-  const [exampleIndex, setExampleIndex] = useState(0);
-  const [copyStatus, setCopyStatus] = useState('');
-  const needle = query.trim().toLocaleLowerCase();
-  const visible = developerGuides.filter(g =>
-    !needle || [g.title, g.summary, g.group, g.when, ...g.steps]
-      .join(' ').toLocaleLowerCase().includes(needle));
-  const guide = visible.find(g => g.id === selectedId) || visible[0];
-  const example = guide?.samples[Math.min(exampleIndex, guide.samples.length - 1)];
-
-  function choose(id) {
-    setSelectedId(id);
-    setExampleIndex(0);
-    setCopyStatus('');
+export function DeveloperDocs({guideId='install'}){
+  const [query,setQuery]=useState('');
+  const [sampleIndex,setSampleIndex]=useState(0);
+  const [copyStatus,setCopyStatus]=useState('');
+  const guide=developerGuides.find(x=>x.id===guideId)||developerGuides[0];
+  const index=developerGuides.indexOf(guide);
+  const sample=guide.samples[Math.min(sampleIndex,guide.samples.length-1)];
+  const visible=useMemo(()=>{
+    const needle=query.trim().toLocaleLowerCase();
+    return developerGuides.filter(x=>!needle||[x.title,x.summary,x.group,x.when,...x.steps].join(' ').toLocaleLowerCase().includes(needle));
+  },[query]);
+  useEffect(()=>{setSampleIndex(0);setCopyStatus('')},[guideId]);
+  async function copySample(){
+    try{
+      if(!navigator.clipboard?.writeText)throw Error('Clipboard unavailable');
+      await navigator.clipboard.writeText(sample.code);
+      setCopyStatus('Code copied.');
+    }catch{setCopyStatus('Clipboard unavailable. Select the code block to copy manually.')}
   }
-
-  async function copyExample() {
-    if (!example) return;
-    try {
-      if (!navigator.clipboard?.writeText) throw Error('Clipboard not available');
-      await navigator.clipboard.writeText(example.code);
-      setCopyStatus('Copied to clipboard');
-    } catch {
-      setCopyStatus('Clipboard unavailable. Select the code to copy manually.');
-    }
-  }
-
-  return <section id="docs" className="section docs-section" aria-labelledby="docs-title">
-    <div className="wrap">
-      <div className="docs-heading">
-        <div>
-          <span className="eyebrow">DEVELOPER DOCUMENTATION · PUBLISHED v{documentationVersion}</span>
-          <h2 id="docs-title">From dependency to working integration.</h2>
-          <p className="lead">Install the library, run real Java APIs and follow task-based integration recipes. The interactive showcase explains the architecture; these guides show how to use it.</p>
+  return <div className="docs-page content-surface">
+    <div className="wrap docs-page-heading"><span className="eyebrow">DEVELOPER DOCUMENTATION / PUBLISHED v{version}</span><h1 id="page-title" tabIndex={-1}>Learn by building.</h1><p>Task-based guides for the real v{version} Java library. Each recipe states what the Kernel provides and what your application must implement.</p></div>
+    <div className="wrap docs-layout">
+      <aside className="docs-sidebar">
+        <div className="docs-sidebar-top"><label htmlFor="guide-search">Search documentation</label><input type="search" id="guide-search" placeholder="Find a guide…" value={query} onChange={e=>setQuery(e.target.value)}/></div>
+        <nav aria-label="Developer guide navigation" className="docs-guide-nav">
+          {groups.map(group=>{
+            const items=visible.filter(x=>x.group===group);
+            return items.length>0&&<div className="docs-guide-group" key={group}><h2>{group}</h2>{items.map(item=><a href={'#/docs/'+item.id} key={item.id} aria-current={guide.id===item.id?'page':undefined}>{item.title}<span aria-hidden="true">→</span></a>)}</div>;
+          })}
+        </nav>
+        {visible.length===0&&<p className="docs-search-empty">No matching guides. <button type="button" onClick={()=>setQuery('')}>Clear search</button></p>}
+        <div className="docs-sidebar-note"><strong>Version boundary</strong><p>Examples use published v{version}. The v0.4.0 candidate is not yet released.</p></div>
+      </aside>
+      <article className="guide-article" aria-labelledby="guide-heading">
+        <div className="guide-topline"><span>{guide.group}</span><span>v{version} · released APIs</span></div>
+        <h2 id="guide-heading">{guide.title}</h2>
+        <p className="guide-summary">{guide.summary}</p>
+        <div className="guide-callout"><strong>When to use this</strong><p>{guide.when}</p></div>
+        <section className="guide-section"><h3>Before you start</h3><p>{guide.prerequisite}</p></section>
+        <section className="guide-section"><h3>Steps</h3><ol>{guide.steps.map((step,i)=><li key={i}>{step}</li>)}</ol></section>
+        <section className="guide-section" aria-label="Published library example">
+          <div className="guide-code-heading"><h3>Example</h3><span>{sample.kind}</span></div>
+          <div className="guide-code-shell">
+            <div className="guide-code-toolbar"><div className="guide-code-tabs" role="group" aria-label="Choose example">{guide.samples.map((x,i)=><button key={x.label} type="button" aria-pressed={i===sampleIndex} onClick={()=>{setSampleIndex(i);setCopyStatus('')}}>{x.label}</button>)}</div><button type="button" className="guide-copy" onClick={copySample}>Copy code</button></div>
+            <pre aria-label={sample.label+' code sample'}><code>{sample.code}</code></pre><p role="status" className="guide-copy-status">{copyStatus}</p>
+          </div>
+          {sample.kind.includes('Integration excerpt')&&<p className="guide-excerpt-note">This excerpt is not a complete application: the identity verifier, adapters, ports, product SQL and authorization policies are supplied by your application.</p>}
+        </section>
+        <div className="guide-assurance">
+          <section><h3>Check your integration</h3><p>{guide.verify}</p></section>
+          <section><h3>Ownership boundary</h3><p>{guide.ownership}</p></section>
         </div>
-        <a className="docs-reference-link" href={repo+'/tree/main/docs/integration'} target="_blank" rel="noopener noreferrer">Browse all reference docs <span aria-hidden="true">↗</span></a>
-      </div>
-      <div className="docs-shell">
-        <aside className="docs-side" aria-label="Developer documentation navigation">
-          <label htmlFor="docs-search">Find a guide</label>
-          <input id="docs-search" type="search" value={query} placeholder="Search guides…" onChange={e=>{setQuery(e.target.value);setExampleIndex(0);setCopyStatus('')}} />
-          <nav aria-label="Developer guide topics" className="docs-topic-nav">
-            {groups.map(group => {
-              const items = visible.filter(g => g.group === group);
-              return items.length > 0 && <div className="docs-nav-group" key={group}>
-                <span className="docs-group-title">{group}</span>
-                {items.map(item => <button type="button" key={item.id}
-                  aria-pressed={guide?.id===item.id} aria-controls="docs-guide"
-                  className={'docs-topic'+(guide?.id===item.id?' selected':'')}
-                  onClick={()=>choose(item.id)}>{item.title}</button>)}
-              </div>;
-            })}
-          </nav>
-          {visible.length===0 && <div className="docs-no-matches">No guides match “{query}”. <button type="button" onClick={()=>setQuery('')}>Clear search</button></div>}
-          <div className="docs-version">Examples target <strong>published v{documentationVersion}</strong>. The separate v0.4.0 preview is not an installable release.</div>
-        </aside>
-        {guide ? <article className="docs-article" id="docs-guide" aria-labelledby="docs-guide-title">
-          <div className="docs-article-meta"><span>{guide.group}</span><span>v{documentationVersion} · Published APIs</span></div>
-          <h3 id="docs-guide-title">{guide.title}</h3>
-          <p className="docs-summary">{guide.summary}</p>
-          <p className="docs-live-label" aria-live="polite">Showing: {guide.title}</p>
-          <div className="docs-context">
-            <div><strong>Before you start</strong><p>{guide.prerequisite}</p></div>
-            <div><strong>When to use this</strong><p>{guide.when}</p></div>
-          </div>
-          <h4>Steps</h4>
-          <ol className="docs-steps">{guide.steps.map((step, i)=><li key={i}>{step}</li>)}</ol>
-          <div className="docs-code">
-            <div className="docs-code-head">
-              <div className="docs-code-choices" aria-label="Code sample">
-                {guide.samples.map((sample,i)=><button key={sample.label} type="button" aria-pressed={example?.label===sample.label} className={example?.label===sample.label?'selected':''} onClick={()=>{setExampleIndex(i);setCopyStatus('')}}>{sample.label}</button>)}
-              </div>
-              <button type="button" className="docs-copy" onClick={copyExample} aria-label={'Copy '+example.label+' example'}>Copy code</button>
-            </div>
-            <p className="docs-code-kind">{example.kind}</p>
-            <pre aria-label={example.label+' code example'}><code>{example.code}</code></pre>
-            <p className="docs-copy-status" role="status">{copyStatus}</p>
-          </div>
-          <div className="docs-bottom">
-            <div><h4>Check your integration</h4><p>{guide.verify}</p></div>
-            <div><h4>Ownership boundary</h4><p>{guide.ownership}</p></div>
-          </div>
-          <div className="docs-links">
-            <a href={repo+'/blob/main/'+guide.guide} target="_blank" rel="noopener noreferrer">Detailed integration guide <span aria-hidden="true">↗</span></a>
-            <a href={source(guide.source)} target="_blank" rel="noopener noreferrer">View v{documentationVersion} release source <span aria-hidden="true">↗</span></a>
-          </div>
-          <p className="docs-source-note">Integration guides on the main branch evolve and may mention candidate APIs. The example and release-source links here are scoped to v{documentationVersion}; snippets labeled “integration excerpt” require your application wiring.</p>
-        </article> : <div className="docs-empty" id="docs-guide" role="status">Try searching for installation, identity, retries or testing.</div>}
-      </div>
-      <div className="docs-related">
-        <strong>More reference topics</strong>
-        {related.map(item=><a key={item.path} href={repo+'/blob/main/'+item.path} target="_blank" rel="noopener noreferrer">{item.label} <span aria-hidden="true">↗</span></a>)}
-      </div>
+        <div className="guide-resource-links"><a href={repo+'/blob/main/'+guide.guide} target="_blank" rel="noopener noreferrer">Full integration guide ↗</a><a href={source(guide.source)} target="_blank" rel="noopener noreferrer">Published v{version} source ↗</a></div>
+        <p className="guide-note">Living documentation on main may mention candidate APIs. The example and release-source link on this page target the published v{version} baseline.</p>
+        <nav className="guide-pager" aria-label="Previous and next guides">
+          {index>0?<a href={'#/docs/'+developerGuides[index-1].id}><span>← Previous</span><strong>{developerGuides[index-1].title}</strong></a>:<span/>}
+          {index<developerGuides.length-1?<a href={'#/docs/'+developerGuides[index+1].id}><span>Next →</span><strong>{developerGuides[index+1].title}</strong></a>:<span/>}
+        </nav>
+      </article>
     </div>
-  </section>;
+  </div>;
 }
