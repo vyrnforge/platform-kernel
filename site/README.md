@@ -2,6 +2,15 @@
 
 A standalone React site combining task-based developer documentation, capability discovery and an interactive Flow Studio. Usage examples target the **published v0.3.2** library; the **v0.4.0 candidate is unpublished** and isolated in the preview. The Java modules and Maven release pipeline are independent of this site.
 
+## Interactive integration workbench
+
+The **#workbench** section sits directly beneath the hero. Visitors select one of three published-v0.3.2 adoption paths (core, protected API, optional JDBC reliability), choose request tenant scope or an illustrative success/failure/retry case, then inspect four decision stages and receive a corresponding Maven and Java starter recipe. A testkit toggle adds the third artifact strictly in test scope. All controls are accessible buttons, fieldsets and checkbox; the layout reflows and source examples stay internally scrollable.
+
+- `src/workbench-data.mjs` defines deterministic, browser-only illustrative traces and release-pinned Maven/Java recipes. It intentionally reuses `src/docs-data.mjs` snippets; **no live Kernel bytecode, token verification, product authorization, SQL or publishing runs in the page**.
+- `src/IntegrationWorkbench.jsx` owns the scenario selection, inspection state, code tabs and clipboard interaction. The current scenario's result is explanatory, not observed backend evidence.
+- `src/kernel-workbench.css` provides the responsive lab shell and staged architecture visual.
+- `src/workbench-data.test.mjs` verifies released artifact/version pinning, tenantless versus scoped denial, JDBC replay/conflict and excerpt boundaries. Browser smoke exercises the controls, output, presentation and mobile flow.
+
 ## Developer documentation experience
 
 The #docs section is the primary first-time developer route. Its searchable guide navigation offers installation (Maven/Gradle), standalone Java code, authenticated tenantless and tenant-scoped request excerpts, optional JDBC idempotent writes, and testkit/consumer conformance. Each guide states prerequisites, when to use it, exact code status (complete vs. excerpt), verification and which responsibilities belong to the application. Every capability explorer card also links to a detailed usage guide.
