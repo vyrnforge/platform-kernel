@@ -89,3 +89,8 @@
 .guide-article :is(.guide-summary,.guide-callout,.guide-section,.guide-troubleshooting,.guide-note,.guide-excerpt-note){max-width:90ch}
 .guide-assurance p{max-width:75ch}
 .preview-part>p,.preview-part>ol{max-width:90ch}
+
+/* Expected-result explanation belongs to the existing first-program guide, not a new page. */
+.guide-expected-output{border-left:3px solid #3e7cb5;background:#f1f7ff;padding:12px 16px;margin-top:14px;border-radius:0 7px 7px 0;max-width:90ch}
+.guide-expected-output strong{display:block;font-size:13px;color:#244b79}
+.guide-expected-output p{margin:5px 0 0;font-size:13px;line-height:1.7;color:#405e79}

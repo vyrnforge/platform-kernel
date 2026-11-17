@@ -54,6 +54,12 @@ test('first program provides a source-verified main class and reproducible run c
   assert.ok(first.samples.find(s=>s.label==='Run').code.includes('repo.maven.apache.org/maven2/io/github/vyrnforge/platform-kernel/0.3.2/'));
   assert.ok(first.samples.find(s=>s.label==='Run').code.includes('curl --fail --location'));
   assert.doesNotMatch(first.samples.find(s=>s.label==='Run').code,/maven-dependency-plugin/);
+  assert.equal(first.samples.length,3,'Java, Unix and Windows examples');
+  const windows=first.samples.find(s=>s.label==='Windows');
+  assert.ok(windows.code.includes('Invoke-WebRequest'),'PowerShell download command');
+  assert.ok(windows.code.includes("java -cp '.;."),'Windows classpath separator');
+  assert.ok(first.expectedOutput.includes('two lowercase canonical UUIDv7'));
+  assert.ok(first.samples.find(s=>s.label==='Java 21').kind.includes('Complete'));
   assert.ok(first.samples.find(s=>s.label==='Run').code.includes('platform-kernel-0.3.2.jar'));
   assert.ok(developerGuides.find(g=>g.id==='install').samples.every(s=>s.kind.includes('fragment')));
 });

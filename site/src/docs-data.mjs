@@ -8,13 +8,13 @@ export const developerGuides = [
     "group": "Getting started",
     "title": "Install the released library",
     "summary": "Add the smallest dependency, with no server or database required.",
-    "prerequisite": "Java 21+ and Maven or Gradle. Maven Central needs no custom repository credentials.",
+    "prerequisite": "A JDK 21 or newer (not only a JRE), plus an existing Maven or Gradle Java project. Maven Central needs no custom repository credentials.",
     "when": "Every new consumer starts here. Add JDBC or testkit only for a demonstrated requirement.",
     "steps": [
-      "Use Java 21 or newer (check `java -version` and your build tool's JDK).",
-      "Add the released platform-kernel dependency from Maven Central; these snippets belong in an existing Maven or Gradle Java project.",
-      "Keep Java imports under io.vyrnforge.platform.kernel, even though the Maven group is io.github.vyrnforge.",
-      "Add platform-kernel-jdbc only for durable PostgreSQL reliability; add platform-kernel-testkit only in the test scope."
+      "Confirm your JDK with `java -version` and `javac -version`; both must be 21+. Maven and Gradle might use a different JDK than your terminal.",
+      "For Maven, paste the dependency fragment inside an existing pom.xml <dependencies> element. For Gradle Kotlin DSL, put the repositories/dependencies blocks in the build.gradle.kts of an existing Java project.",
+      "Use io.github.vyrnforge for Maven/Gradle coordinates, but import Java packages from io.vyrnforge.platform.kernel.",
+      "Start with platform-kernel. Add optional platform-kernel-jdbc only for product-owned PostgreSQL reliability and platform-kernel-testkit only for tests."
     ],
     "samples": [
       {
@@ -32,15 +32,15 @@ export const developerGuides = [
         "filename": "build.gradle.kts"
       }
     ],
-    "verify": "Check the resolved coordinates with `mvn dependency:tree` or `./gradlew dependencies`. The selected runtime JAR must be io.github.vyrnforge:platform-kernel:0.3.2.",
+    "verify": "Check `mvn dependency:tree` or `./gradlew dependencies` in the consuming project and confirm io.github.vyrnforge:platform-kernel:0.3.2. Then run the standalone first Java program to verify real APIs. No hosted Kernel service is needed.",
     "ownership": "Your application controls its build and runtime. Kernel is an embedded Java library, not a hosted service.",
     "guide": "docs/integration/three-jar-distribution.md",
     "source": "pom.xml",
     "provides": "A dependency-light Java 21 core library with request context, IDs, cross-cutting contracts and basic utilities. No hosted Kernel server.",
     "mistakes": [
-      "An XML <dependency> fragment is not a complete pom.xml; insert it inside your project's <dependencies> element. Gradle Kotlin DSL snippets belong in build.gradle.kts.",
-      "Remove legacy split artifact IDs (platform-kernel-core, platform-kernel-http and others) and the old io.vyrnforge.platform group instead of mixing versions.",
-      "If compilation fails, verify JDK 21+, dependency resolution and the difference between Maven group ID and Java package name."
+      "An XML <dependency> fragment is not a complete pom.xml; put it inside <dependencies>. Gradle Kotlin DSL snippets belong in build.gradle.kts, with the Java plugin and JDK configured by your application.",
+      "If Maven Central resolution fails, check internet/DNS/proxy access and the exact io.github.vyrnforge:platform-kernel:0.3.2 coordinate. No private credentials or unpublished versions are needed.",
+      "Do not mix old split artifact IDs, obsolete Maven groups or Java packages; check both javac -version and your build-tool JDK."
     ]
   },
   {
@@ -48,13 +48,13 @@ export const developerGuides = [
     "group": "Getting started",
     "title": "Your first Java program",
     "summary": "Generate UUIDv7 identifiers and correlation context without an identity provider.",
-    "prerequisite": "The main v0.3.2 JAR from the installation guide.",
+    "prerequisite": "JDK 21+ with java and javac available, plus curl (macOS/Linux) or PowerShell (Windows), with access to Maven Central. No Maven or Gradle project is necessary for this standalone class.",
     "when": "A service, CLI or worker needs consistent identifiers or correlation before deeper integration.",
     "steps": [
-      "Create `FirstKernelProgram.java` in an empty working directory and paste the Java 21 example.",
-      "Select the Run tab to download the published JAR directly from Maven Central using curl, then compile and run the class.",
-      "Confirm that it prints two UUID values; each run creates new IDs.",
-      "Propagate correlation across your own HTTP, event or job boundaries as needed; the Kernel does not install middleware automatically."
+      "Create an empty folder, then save the complete Java 21 sample as FirstKernelProgram.java (matching its public class name).",
+      "Select Run (macOS/Linux) or Windows (PowerShell). The commands download the published 0.3.2 JAR from Maven Central, compile against Java 21 and execute the class.",
+      "Verify that exactly two lowercase UUIDv7 values appear on separate lines. Their third UUID block begins with 7; each run generates new values.",
+      "Use the Kernel's correlation ID in your own HTTP/event/job context. Kernel does not install middleware, identity verification or a server."
     ],
     "samples": [
       {
@@ -66,22 +66,30 @@ export const developerGuides = [
       },
       {
         "label": "Run",
-        "kind": "Commands after saving FirstKernelProgram.java (macOS / Linux, curl required)",
+        "kind": "Standalone macOS/Linux commands — complete",
         "language": "bash",
-        "filename": "terminal",
+        "filename": "Terminal (macOS/Linux)",
         "code": "curl --fail --location --silent --show-error \\\n  --output platform-kernel-0.3.2.jar \\\n  https://repo.maven.apache.org/maven2/io/github/vyrnforge/platform-kernel/0.3.2/platform-kernel-0.3.2.jar\njavac --release 21 -cp platform-kernel-0.3.2.jar FirstKernelProgram.java\njava -cp \".:platform-kernel-0.3.2.jar\" FirstKernelProgram"
+      },
+      {
+        "label": "Windows",
+        "kind": "Standalone Windows PowerShell commands — complete",
+        "language": "powershell",
+        "filename": "Windows PowerShell",
+        "code": "Invoke-WebRequest -Uri 'https://repo.maven.apache.org/maven2/io/github/vyrnforge/platform-kernel/0.3.2/platform-kernel-0.3.2.jar' -OutFile 'platform-kernel-0.3.2.jar'\njavac --release 21 -cp .\\platform-kernel-0.3.2.jar .\\FirstKernelProgram.java\njava -cp '.;.\\platform-kernel-0.3.2.jar' FirstKernelProgram"
       }
     ],
-    "verify": "The program should print two valid UUIDv7 values. On Windows, replace the `:` classpath separator with `;`; Maven Central and Java 21 must be accessible.",
+    "verify": "The output contains two UUIDv7 identifiers (format xxxxxxxx-xxxx-7xxx-xxxx-xxxxxxxxxxxx). On Windows PowerShell the classpath separator is `;`, not `:`. A successful first run uses only the published core JAR, with no other services.",
     "ownership": "Your application chooses when to create and propagate correlation context. Kernel does not implement your HTTP server or logger.",
     "guide": "docs/integration/quickstart.md",
     "source": "verification/GeneralUsageExample.java",
     "provides": "UuidV7.generate() and CorrelationContext.create() are public methods in the v0.3.2 source; no request pipeline is required for this standalone example.",
     "mistakes": [
-      "Save the Java tab as FirstKernelProgram.java; the class name and filename must match.",
-      "If `javac` is missing or compilation reports unsupported release, use a JDK rather than a JRE and confirm Java 21+.",
-      "The CLI classpath uses `:` on macOS/Linux and `;` on Windows. For a real project, let Maven or Gradle manage dependencies."
-    ]
+      "Save the Java tab as FirstKernelProgram.java; if you get ClassNotFoundException, run from the folder containing that file and the JAR and check the classpath separator.",
+      "If javac is missing or --release 21 is unsupported, install/select a JDK 21+ rather than only a Java runtime.",
+      "Use the Windows tab in PowerShell (Invoke-WebRequest and `;`) or the Unix Run tab in macOS/Linux (curl and `:`). If the download fails, diagnose access to Maven Central; do not substitute the unpublished 0.4.0 candidate."
+    ],
+    "expectedOutput": "Exactly two lowercase canonical UUIDv7 strings on separate lines. The first is a generated identifier; the second is correlation.correlationId(). Both change on each run."
   },
   {
     "id": "request",

@@ -57,6 +57,7 @@ export function DeveloperDocs({guideId='install'}){
             <div className="guide-code-toolbar"><div className="guide-code-tabs" role="group" aria-label="Choose example">{guide.samples.map((x,i)=><button key={x.label} type="button" aria-pressed={i===sampleIndex} onClick={()=>{setSampleIndex(i);setCopyStatus('')}}>{x.label}</button>)}</div><button type="button" className="guide-copy" onClick={copySample}>Copy code</button></div>
             <div className="guide-code-caption">{sample.filename} · {sample.language.toUpperCase()}</div><pre tabIndex={0} aria-label={sample.filename+' code sample, scroll horizontally if needed'}><code>{tokenizeCode(sample.code,sample.language).map((part,i)=>part.kind?<span key={i} className={'tok-'+part.kind}>{part.text}</span>:part.text)}</code></pre><p role="status" className="guide-copy-status">{copyStatus}</p>
           </div>
+          {guide.expectedOutput&&<div className="guide-expected-output" role="note"><strong>Expected result</strong><p>{guide.expectedOutput}</p></div>}
           {sample.kind.includes('Integration excerpt')&&<p className="guide-excerpt-note">This excerpt is not a complete application: the identity verifier, adapters, ports, product SQL and authorization policies are supplied by your application.</p>}
         </section>
         <details className="guide-troubleshooting"><summary>Common mistakes &amp; troubleshooting</summary><ul>{guide.mistakes.map((item,i)=><li key={i}>{item}</li>)}</ul></details>
