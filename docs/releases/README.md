@@ -14,6 +14,11 @@ Current maintainer entry point. See [Central publication](central-publication.md
 
 Dependabot covers Maven, GitHub Actions and site npm. The one-time signing bootstrap is retired. Historical run records may still appear in GitHub Actions; retain those for audit.
 
+## Developer documentation prepared before release
+
+- [v0.4.0 developer preview](v0.4.0-developer-preview.md) is prepared **before publication** and explicitly marked **NOT RELEASED**. It documents candidate-only APIs, dependency coordinates for future use, compatibility and migration tests. The site's default installation guidance stays pinned to published v0.3.2 until v0.4.0 is independently approved and publication is verified.
+- Keep pre-release developer documentation ready and reviewed *before* requesting release authorization. Publication and consumer adoption remain separate gates.
+
 ## Release checklist
 
 1. Update VERSION, all Maven module versions and changelog. Keep Java package names, released wire contracts and migration bytes compatible unless explicitly approved. Do not reuse a version.
