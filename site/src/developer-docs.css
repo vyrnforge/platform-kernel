@@ -2,7 +2,7 @@
 .docs-page-heading{padding-top:58px;padding-bottom:28px}
 .docs-page-heading h1{margin:9px 0 10px;font-size:clamp(31px,3.3vw,43px);letter-spacing:-1px}
 .docs-page-heading>p{font-size:15px;max-width:760px;line-height:1.7}
-.docs-layout{display:grid;grid-template-columns:minmax(210px,255px) minmax(0,1fr);gap:28px;align-items:start}
+.docs-layout{display:grid;grid-template-columns:clamp(235px,18vw,335px) minmax(0,1fr);gap:clamp(22px,2vw,40px);align-items:start}
 .docs-sidebar{padding:22px}
 .docs-sidebar-top label{display:block;font-size:12px;color:#2f4a69;font-weight:800;margin-bottom:8px}
 .docs-sidebar-top input{display:block;width:100%;min-width:0;border:1px solid #c1d0e2;border-radius:8px;background:#f9fbfe;color:#1d3651;padding:11px 12px;font-size:13px}
@@ -84,3 +84,8 @@
 .preview-faq details p{padding:0 16px 15px;margin:0;font-size:13px;line-height:1.75}
 .preview-handoff{background:#f7faff;padding:25px;border-radius:10px;border:1px solid #dce5ef}
 @media(max-width:640px){.preview-table{font-size:12px}.preview-part h3{font-size:19px}.preview-handoff{padding:19px}.preview-table-wrap{margin-inline:0}}
+
+/* Full-width documentation workspace; only long-form prose keeps a comfortable line length. */
+.guide-article :is(.guide-summary,.guide-callout,.guide-section,.guide-troubleshooting,.guide-note,.guide-excerpt-note){max-width:90ch}
+.guide-assurance p{max-width:75ch}
+.preview-part>p,.preview-part>ol{max-width:90ch}

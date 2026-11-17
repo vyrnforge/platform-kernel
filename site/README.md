@@ -2,6 +2,10 @@
 
 A focused React 19 / esbuild site for the **published Platform Kernel v0.3.2** Java 21 library. It is a documentation entry point, not another Kernel runtime or dashboard.
 
+## Fluid layout
+
+All four website destinations use the viewport width with responsive side gutters instead of a fixed 1180px container. Documentation and Reference articles, Playground inspector/code panels, and Home grids expand fluidly. Long-form prose retains a readable line measure; tables/code scroll within their own surfaces rather than forcing horizontal page overflow. Chromium regression checks the actual rendered shell at 1440/1920/2560px as well as narrow/mobile widths. No runtime, artifact or release changes are part of this layout.
+
 ## Information architecture
 
 Four separate destinations use hash routes, so deep links and browser Back/Forward work on GitHub Pages:
