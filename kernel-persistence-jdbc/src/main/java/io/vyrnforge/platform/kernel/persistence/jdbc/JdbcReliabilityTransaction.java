@@ -14,6 +14,10 @@ import java.sql.SQLException;
 import java.time.Clock;
 import java.util.Objects;
 
+/**
+ * Composes domain JDBC work and required event/audit intents in one owning transaction.
+ * For retriable mutations, prefer executeIdempotent over execute + a separate complete().
+ */
 public final class JdbcReliabilityTransaction {
     private final DataSource dataSource;
     private final JacksonRecordCodec codec;
@@ -34,6 +38,11 @@ public final class JdbcReliabilityTransaction {
         this.clock = Objects.requireNonNull(clock, "clock");
     }
 
+    /**
+     * Execute non-retriable domain work on the supplied connection.
+     * This method alone does not atomically commit an idempotency replay result.
+     * Work must not commit/rollback the connection or perform external network effects.
+     */
     public <T> T execute(Work<T> work) {
         Objects.requireNonNull(work, "work");
         try (Connection connection = dataSource.getConnection()) {
