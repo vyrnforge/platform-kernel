@@ -244,7 +244,7 @@ try{
   assert.ok((await evaluate(q('#wb-capability-detail-title')+'.textContent')).includes('Events & audit'),'capability selection changes detail');
   assert.ok((await evaluate(q('.wb-capability-detail-grid')+'.textContent')).includes('JdbcReliabilityTransaction'),'published API class shown');
   await click('.wb-capability-try');
-  await wait('location.hash.includes("mode=mutation") && location.hash.includes("scenario=success"),"capability trace must open related released pattern");
+  await wait('location.hash.includes("mode=mutation") && location.hash.includes("scenario=success")','capability trace must open related released pattern');
   assert.equal(await evaluate('document.activeElement.id'),'workbench-title','capability action focuses Playground heading');
   await click('.wb-capability-card:nth-child(8)');
   assert.ok((await evaluate(q('.wb-capability-detail')+'.textContent')).includes('contract only'),'file references must not imply executable behavior');
