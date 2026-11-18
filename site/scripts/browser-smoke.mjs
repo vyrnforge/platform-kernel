@@ -8,6 +8,7 @@ import { tmpdir } from 'node:os';
 import { resolve, join, extname } from 'node:path';
 import { version,capabilities } from '../src/data.mjs';
 import { developerGuides } from '../src/docs-data.mjs';
+import {resolveRoute} from '../src/routes.mjs';
 const sleep=ms=>new Promise(r=>setTimeout(r,ms));
 const dist=resolve('dist'),prefix='/platform-kernel/';
 const server=createServer(async(req,res)=>{try{
@@ -91,7 +92,7 @@ try{
   // React controlled search: use the native setter to simulate the browser input path.
   const setSearch=async text=>evaluate('(()=>{const el=document.querySelector("#guide-search");const setter=Object.getOwnPropertyDescriptor(HTMLInputElement.prototype,"value").set;setter.call(el,'+JSON.stringify(text)+');el.dispatchEvent(new Event("input",{bubbles:true}));return true})()');
   await setSearch('retriable');
-  await wait('document.querySelectorAll(".docs-guide-group a").length===1','guide search did not filter topics');
+  await wait('[...document.querySelectorAll(".docs-guide-group a")].some(a=>a.getAttribute("href")?.startsWith("#/docs/jdbc"))','search must find the relevant JDBC guide');
   await setSearch('classpath separator');
   await wait('document.querySelectorAll(".docs-guide-group a").length===1','search did not index troubleshooting content');
   await setSearch('unlikely-search-xyz');
@@ -102,6 +103,50 @@ try{
   await send('Input.dispatchKeyEvent',{type:'keyUp',key:'Enter',code:'Enter',windowsVirtualKeyCode:13,nativeVirtualKeyCode:13});
   await wait('document.querySelectorAll(".docs-guide-group a").length===5','clear search did not restore topics');
   assert.equal(await evaluate('document.activeElement.id'),'guide-search','clearing search returns keyboard focus to search input');
+
+
+  // One best matching passage per guide, not a second search or another page.
+  await setSearch('classpath separator');
+  await wait('document.querySelectorAll(".docs-guide-group a").length===1','classpath result missing');
+  assert.ok((await evaluate(q('.docs-result-content small')+'.textContent')).includes('Troubleshooting: '),'search result lacks context');
+  assert.ok((await evaluate(q('.docs-guide-group a')+'.getAttribute("href")')).includes('section=troubleshooting'),'search result does not deep link to the matching section');
+  await click('.docs-guide-group a');
+  await wait('location.hash.includes("section=troubleshooting") && document.activeElement?.id==="guide-troubleshooting-summary"','troubleshooting deep link did not restore focus');
+  assert.equal(await evaluate('document.querySelector(".guide-troubleshooting").open'),true,'linked troubleshooting details must be open');
+  assert.equal(await evaluate('document.querySelector("#guide-search").value'),'classpath separator','search text should be restorable');
+  await evaluate('history.back()');
+  await wait('location.hash==="#/docs/assure"','browser Back did not restore the originating assurance guide URL');
+  await wait('document.activeElement?.id==="guide-heading"','browser Back did not refocus guide heading; active='+await evaluate('document.activeElement?.id'));
+  await evaluate('history.forward()');
+  await wait('location.hash.includes("section=troubleshooting") && document.activeElement?.id==="guide-troubleshooting-summary"','Forward did not restore matching section');
+  assert.equal(await evaluate('document.querySelector("#guide-search").value'),'classpath separator','Forward must restore search query');
+
+  await setSearch('TENANT_CONTEXT_MISMATCH');
+  await wait('document.querySelectorAll(".docs-guide-group a").length===1','request failure search not found');
+  assert.ok((await evaluate(q('.docs-guide-group a')+'.getAttribute("href")')).includes('section=failures'),'request search should link to failure passage');
+  await click('.docs-guide-group a');
+  await wait('location.hash.includes("#/docs/request?section=failures") && document.activeElement?.id==="request-denials-heading"','failure search focus failed');
+  assert.equal(await evaluate('document.querySelector("#guide-search").value'),'TENANT_CONTEXT_MISMATCH');
+  assert.ok((await evaluate(q('.request-failures')+'.textContent')).includes('TENANT_CONTEXT_MISMATCH'),'failure reference content missing');
+
+  // Example-result deep link must activate matching code tab without claiming preview APIs.
+  await evaluate('location.hash="#/docs/first?section=example&sample=2&q=Invoke-WebRequest"');
+  await wait('document.activeElement?.id==="guide-example-heading" && document.querySelector(".guide-code-shell code")?.textContent.includes("Invoke-WebRequest")','Windows source-context deep link failed');
+  assert.equal(await evaluate('document.querySelector(".guide-code-tabs button:nth-child(3)").getAttribute("aria-pressed")'),'true');
+  await evaluate('location.hash="#/docs/first?section=unsupported&sample=99"');
+  await wait('document.activeElement?.id==="guide-heading" && !!document.querySelector(".guide-code-shell code")','invalid section fallback failed');
+  assert.equal(await evaluate('document.querySelector(".guide-code-tabs button:first-child").getAttribute("aria-pressed")'),'true','invalid sample index should use default published example');
+
+  // Internal documentation navigation should resolve to an actual site destination.
+  for(const hash of ['#/docs/install','#/docs/first','#/docs/request','#/docs/jdbc','#/docs/assure',
+      '#/docs/preview','#/reference/architecture','#/reference/capabilities','#/reference/releases','#/playground']){
+    await evaluate('location.hash='+JSON.stringify(hash));
+    await wait('!!document.querySelector(".site-header")','route missing '+hash);
+    const urls=await evaluate('[...document.querySelectorAll("a")].map(a=>a.getAttribute("href")).filter(h=>h&&h.startsWith("#/"))');
+    assert.ok(urls.every(href=>resolveRoute(href).page!=='notfound'),'broken internal docs link on '+hash+': '+urls.filter(href=>resolveRoute(href).page==='notfound').join(','));
+  }
+  await evaluate('location.hash="#/docs/install"');
+  await wait('document.activeElement?.id==="guide-heading"','restore docs before reference checks');
 
   // Reference is documentation, not another homepage showcase.
   await click('.primary-nav a[href="#/reference/architecture"]');

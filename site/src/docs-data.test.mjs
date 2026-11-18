@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {documentationVersion, developerGuides, searchDeveloperGuides} from './docs-data.mjs';
+import {documentationVersion, developerGuides, searchDeveloperGuides, searchDeveloperGuideMatches} from './docs-data.mjs';
 import {version, candidateVersion, capabilities, source} from './data.mjs';
 import {getWorkbenchTrace,scenariosFor} from './workbench-data.mjs';
 
@@ -131,4 +131,22 @@ test('published JDBC decisions and consumer conformance connect to one Playgroun
     ['CC-14','CC-15','CC-16','CC-17','CC-18','CC-19','CC-20','CC-21','CC-22','CC-27']);
   assert.ok(assure.samples.every(s=>s.code.includes('<scope>test</scope>')));
   assert.doesNotMatch(jdbc.samples.map(s=>s.code).join(' '),/0\.4\.0/);
+});
+
+
+test('contextual search lands in the actual matching guide passage and sample',()=>{
+  const match=(q,id)=>searchDeveloperGuideMatches(q).find(x=>x.guide.id===id);
+  assert.equal(match('classpath separator','first').section,'troubleshooting');
+  assert.ok(match('classpath separator','first').excerpt.toLowerCase().includes('classpath separator'));
+  assert.equal(match('TENANT_CONTEXT_MISMATCH','request').section,'failures');
+  assert.equal(match('IN_PROGRESS','jdbc').section,'decisions');
+  const windows=match('Invoke-WebRequest','first');
+  assert.equal(windows.section,'example');
+  assert.equal(windows.sampleIndex,2);
+  assert.ok(windows.label.includes('Windows'));
+  assert.equal(match('Audit integrity','assure').section,'conformance');
+  assert.equal(searchDeveloperGuideMatches('  ').length,developerGuides.length);
+  assert.deepEqual(searchDeveloperGuideMatches('unmatched-unique-needle'),[]);
+  assert.equal(searchDeveloperGuideMatches('  Classpath separator ').length,
+    searchDeveloperGuides('  Classpath separator ').length);
 });

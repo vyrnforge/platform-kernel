@@ -450,18 +450,41 @@ export const developerGuides = [
   }
 ];
 
-// Search the guidance developers actually need, not only the navigation labels.
-export function searchDeveloperGuides(query) {
-  const needle=query.trim().toLocaleLowerCase();
-  if(!needle)return developerGuides;
-  return developerGuides.filter(guide=>[
-    guide.title,guide.summary,guide.group,guide.when,guide.prerequisite,
-    guide.provides,guide.ownership,guide.verify,guide.diagnostics||'',...guide.steps,...guide.mistakes,
-    ...(guide.endpointChoices||[]).flatMap(item=>[item.name,item.when,item.policy,item.guards,item.ownership]),
-    ...(guide.failureCases||[]).flatMap(item=>[item.trigger,item.gate,item.failure,item.owner,item.recovery]),
-    ...(guide.decisionStates||[]).flatMap(item=>[item.type,item.effect,item.owner,item.next,item.recovery]),
-    ...(guide.recoveryPaths||[]).flatMap(item=>[item.case,item.explanation,item.verify,item.owner]),
-    ...(guide.conformanceCases||[]).flatMap(item=>[item.id,item.title,item.evidence]),
-    ...guide.samples.flatMap(sample=>[sample.label,sample.kind,sample.filename,sample.code])
-  ].join(' ').toLocaleLowerCase().includes(needle));
+// Search existing guide content with one best matching destination per guide.
+// Returned snippets and section IDs are derived from the same canonical site guide data.
+export function searchDeveloperGuideMatches(query){
+  const needle=String(query).trim().toLocaleLowerCase();
+  if(!needle)return developerGuides.map(guide=>({guide,section:'overview',label:'Guide',excerpt:'',sampleIndex:null}));
+  const excerpt=(text)=>{
+    const value=String(text).replace(/\s+/g,' ').trim();
+    const at=value.toLocaleLowerCase().indexOf(needle);
+    const from=Math.max(0,at-34),to=Math.min(value.length,at+needle.length+74);
+    return (from?'…':'')+value.slice(from,to)+(to<value.length?'…':'');
+  };
+  return developerGuides.flatMap(guide=>{
+    const sections=[
+      {section:'overview',label:'Overview',values:[guide.title,guide.summary,guide.group,guide.when,guide.provides]},
+      {section:'prerequisite',label:'Before you start',values:[guide.prerequisite]},
+      {section:'scope',label:'Request scope',values:(guide.endpointChoices||[]).flatMap(x=>[x.name,x.when,x.policy,x.guards,x.ownership])},
+      {section:'failures',label:'Failure and recovery',values:(guide.failureCases||[]).flatMap(x=>[x.trigger,x.gate,x.failure,x.recovery,x.owner])},
+      {section:'decisions',label:'Idempotency decisions',values:(guide.decisionStates||[]).flatMap(x=>[x.type,x.effect,x.owner,x.next,x.recovery])},
+      {section:'recovery',label:'Recovery cases',values:(guide.recoveryPaths||[]).flatMap(x=>[x.case,x.explanation,x.verify,x.owner])},
+      {section:'conformance',label:'Conformance evidence',values:(guide.conformanceCases||[]).flatMap(x=>[x.id,x.title,x.evidence])},
+      {section:'steps',label:'Steps',values:guide.steps},
+      ...guide.samples.map((sample,i)=>({section:'example',label:'Example: '+sample.label,values:[sample.label,sample.kind,sample.filename,sample.code],sampleIndex:i})),
+      {section:'troubleshooting',label:'Troubleshooting',values:guide.mistakes},
+      {section:'verification',label:'Verification',values:[guide.verify]},
+      {section:'ownership',label:'Ownership',values:[guide.ownership,guide.diagnostics||'']}
+    ];
+    for(const section of sections){
+      const found=section.values.find(value=>String(value??'').toLocaleLowerCase().includes(needle));
+      if(found!==undefined)return [{guide,section:section.section,label:section.label,excerpt:excerpt(found),sampleIndex:section.sampleIndex??null}];
+    }
+    return [];
+  });
+}
+
+// Backward-compatible guide filtering, shared with the contextual search UI.
+export function searchDeveloperGuides(query){
+  return searchDeveloperGuideMatches(query).map(result=>result.guide);
 }
