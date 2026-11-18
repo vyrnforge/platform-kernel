@@ -30,6 +30,7 @@ export function IntegrationWorkbench({mode='core',scope='scoped',scenario='succe
   // The URL is the source of truth for mode/scope/scenario. Local stage selection
   // does not modify history. Code-copy feedback is reset only by user actions.
   function navigate(nextMode,nextScope,nextScenario){
+    setCopyStatus('');
     window.location.hash='#/playground?mode='+nextMode+'&scope='+nextScope+'&scenario='+nextScenario;
   }
   function selectMode(next){

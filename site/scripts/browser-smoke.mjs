@@ -240,6 +240,51 @@ try{
   assert.ok((await evaluate(q('.wb-outcome')+'.textContent')).includes('IN PROGRESS'),'concurrent retry is distinguished from replay');
   assert.equal(await evaluate('document.querySelector(".wb-check-pane a").getAttribute("href")'),'#/docs/jdbc','playground links to on-site JDBC docs');
 
+  // UX #82: Keyboard, concise status announcements, recovery and Back/Forward
+  // on the original single Playground. No new scenarios or backend execution.
+  await evaluate('location.hash="#/playground?mode=request&scope=scoped&scenario=membership"');
+  await wait('location.hash.includes("scenario=membership") && !!document.querySelector(".wb-status-announcement")','request scenario did not load');
+  assert.equal(await evaluate('document.querySelector(".wb-inspection").hasAttribute("aria-live")'),false,'verbose inspector must not be a live region');
+  assert.equal(await evaluate('document.querySelector(".wb-outcome").hasAttribute("role")'),false,'outcome badge should not duplicate the single announcement');
+  assert.equal(await evaluate('document.querySelectorAll(".wb-status-announcement[role=status]").length'),1,'one consolidated scenario/stage announcement');
+  assert.ok((await evaluate(q('.wb-status-announcement')+'.textContent')).includes('Stopped here')===false,'first gate must initially be passed');
+  const statusBefore=await evaluate(q('.wb-status-announcement')+'.textContent');
+  assert.ok(statusBefore.includes('Decision 1 of 6'),'status summarizes selected decision');
+  await evaluate('document.querySelector(".wb-track li:nth-child(3) button").focus()');
+  await send('Input.dispatchKeyEvent',{type:'keyDown',key:'Enter',code:'Enter',windowsVirtualKeyCode:13,nativeVirtualKeyCode:13,text:'\r',unmodifiedText:'\r'});
+  await send('Input.dispatchKeyEvent',{type:'keyUp',key:'Enter',code:'Enter',windowsVirtualKeyCode:13,nativeVirtualKeyCode:13});
+  await wait('document.querySelector(".wb-inspection-tag")?.textContent.includes("3 OF 6")','keyboard stage activation failed');
+  assert.equal(await evaluate('document.activeElement.classList.contains("wb-trace-step")'),true,'stage navigation should keep focus on selected button');
+  assert.equal(await evaluate('document.querySelectorAll(".wb-trace-step[aria-current=step]").length'),1,'exactly one selected stage');
+  assert.ok((await evaluate(q('.wb-status-announcement')+'.textContent')).includes('Stopped here'),'stage announcement includes failure state');
+
+  // A new scenario resets the inspector synchronously but leaves focus on its control.
+  await evaluate('document.querySelector(".wb-scenario:nth-child(1)").focus()');
+  await send('Input.dispatchKeyEvent',{type:'keyDown',key:'Enter',code:'Enter',windowsVirtualKeyCode:13,nativeVirtualKeyCode:13,text:'\r',unmodifiedText:'\r'});
+  await send('Input.dispatchKeyEvent',{type:'keyUp',key:'Enter',code:'Enter',windowsVirtualKeyCode:13,nativeVirtualKeyCode:13});
+  await wait('location.hash.includes("scenario=success") && document.querySelector(".wb-inspection-tag")?.textContent.includes("1 OF 6")','scenario change should reset selected gate immediately');
+  assert.ok((await evaluate('document.activeElement.className')).includes('wb-scenario'),'scenario change should retain control focus');
+  assert.ok((await evaluate(q('.wb-status-announcement')+'.textContent')).includes('REQUEST ALLOWED'),'single status announces the updated result');
+  await evaluate('history.back()');
+  await wait('location.hash.includes("scenario=membership") && document.querySelector(".wb-inspection-tag")?.textContent.includes("1 OF 6")','Back should restore URL and first gate, not stale selected stage');
+  await evaluate('history.forward()');
+  await wait('location.hash.includes("scenario=success") && !!document.querySelector(".wb-inspection")','Forward scenario restoration failed');
+
+  // Unsupported tenantless membership must not silently impersonate a runnable case.
+  await evaluate('location.hash="#/playground?mode=request&scope=tenantless&scenario=membership"');
+  await wait('!!document.querySelector(".wb-route-recovery")','invalid scenario needs explicit recovery');
+  assert.ok((await evaluate(q('.wb-route-recovery')+'.textContent')).includes('Scenario unavailable'),'recovery reason missing');
+  assert.ok((await evaluate(q('.wb-status-announcement')+'.textContent')).includes('REQUEST ALLOWED'),'safe fallback should use a valid trace');
+  assert.ok(await evaluate('document.documentElement.scrollWidth<=window.innerWidth+1'),'recovery note must not cause whole-page overflow');
+  await evaluate('location.hash="#/playground?mode=mutation&scope=scoped&scenario=replay"');
+  await wait('document.querySelector(".wb-outcome")?.textContent.includes("SAFE REPLAY")','restore actual supported mutation scenario');
+  assert.equal(await evaluate('document.querySelector(".wb-route-recovery")===null'),true,'recovery note clears on valid link');
+  assert.equal(await evaluate('document.querySelector(".wb-code-pane pre").getAttribute("tabindex")'),'0','long code remains keyboard-scrollable');
+  await click('.wb-copy');
+  await wait('document.querySelector(".wb-copy-feedback").textContent.length>0','clipboard success/denial must be announced independently');
+  assert.ok((await evaluate(q('.wb-copy-feedback')+'.textContent')).match(/Copied|Clipboard unavailable/),'copy permission result has usable fallback');
+
+
   // The existing JDBC guide must explain every decision and support keyboard flow to the one Playground.
   await evaluate('location.hash="#/docs/jdbc"');
   await wait('document.querySelectorAll("#jdbc-decision-heading").length===1','JDBC decision guide absent');
