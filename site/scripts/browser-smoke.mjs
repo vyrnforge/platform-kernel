@@ -141,7 +141,7 @@ try{
       '#/docs/preview','#/reference/architecture','#/reference/capabilities','#/reference/releases','#/playground']){
     await evaluate('location.hash='+JSON.stringify(hash));
     await wait('!!document.querySelector(".site-header")','route missing '+hash);
-    const urls=await evaluate('[...document.querySelectorAll("a[href^=\\"#/\\"]")].map(a=>a.getAttribute("href"))');
+    const urls=await evaluate('[...document.querySelectorAll("a")].map(a=>a.getAttribute("href")).filter(h=>h&&h.startsWith("#/"))');
     assert.ok(urls.every(href=>resolveRoute(href).page!=='notfound'),'broken internal docs link on '+hash+': '+urls.filter(href=>resolveRoute(href).page==='notfound').join(','));
   }
   await evaluate('location.hash="#/docs/install"');
