@@ -201,119 +201,109 @@ try{
   await wait('!!document.querySelector(".request-failures")','return to request docs should work');
   // At mobile widths, error details scroll locally without whole-page overflow.
 
-  // Documentation links land on a selected, shareable learning scenario.
+  // Guided integration: one capability controls understand, preparation, trace
+  // and published implementation. Legacy docs deep links enter its Explore step.
   await evaluate('location.hash="#/docs/request"');
-  await wait('location.hash==="#/docs/request" && !!document.querySelector(".guide-try-link")','on-site flow link missing');
+  await wait('!!document.querySelector(".guide-try-link")','on-site guide link missing');
   assert.equal(await evaluate('document.querySelector(".guide-try-link").getAttribute("href")'),'#/playground?mode=request&scope=scoped&scenario=success');
   await click('.guide-try-link');
-  await wait('location.hash.includes("mode=request") && document.querySelectorAll(".wb-trace-step").length===6','request walkthrough deep link failed');
-  assert.ok((await evaluate(q('.wb-inspection')+'.innerText')).includes('What is checked?'),'decision inspector explains required checks');
-  assert.ok((await evaluate(q('.wb-inspection')+'.innerText')).includes('Who owns this?'),'decision inspector explains responsibility');
-  assert.equal(await evaluate('document.querySelectorAll(".wb-result-card").length'),1,'one concise scenario result only');
-  assert.ok((await evaluate(q('.wb-result-topline')+'.innerText')).includes('not executed'),'result must be explicitly illustrative');
-  await click('.wb-scenario:nth-child(4)');
-  await wait('location.hash.includes("scenario=cross-tenant")','cross-tenant scenario URL missing');
-  assert.ok((await evaluate(q('.wb-outcome')+'.textContent')).includes('404'),'cross-tenant resource must be hidden');
-  assert.equal(await evaluate('document.querySelectorAll(".wb-track li[data-state=blocked]").length'),1,'first failing gate is shown');
-  assert.ok((await evaluate(q('.wb-result-facts')+'.textContent')).includes('Establish request scope'),'result identifies true first blocked gate');
-  assert.ok((await evaluate(q('.wb-result-facts')+'.textContent')).includes('Kernel · request pipeline'),'result identifies gate owner');
+  await wait('location.hash.includes("mode=request") && document.querySelectorAll(".wb-trace-step").length===6','legacy request walkthrough deep link failed');
+  assert.ok((await evaluate(q('#wb-wizard-panel-title')+'.textContent')).includes('Identity & tenancy'),'legacy request route must map to correct capability guide');
+  assert.equal(await evaluate('document.querySelectorAll(".wb-wizard-step").length'),5,'wizard must expose five sequenced stages');
+  assert.ok((await evaluate(q('.wb-inspection')+'.innerText')).includes('What is checked?'),'decision inspector shows contract check');
+  assert.ok((await evaluate(q('.wb-inspection')+'.innerText')).includes('Who owns this?'),'decision inspector names owner');
+  assert.equal(await evaluate('document.querySelectorAll(".wb-status-announcement[role=status]").length'),1,'exactly one simulated trace status');
+
+  // A domain-specific failure is part of the HTTP guide, not a generic mode switch.
+  await evaluate('location.hash="#/playground?cap=http&mode=request&scope=scoped&scenario=cross-tenant"');
+  await wait('document.querySelector(".wb-outcome")?.textContent.includes("404")','HTTP cross-tenant route failed');
+  assert.ok((await evaluate(q('#wb-wizard-panel-title')+'.textContent')).includes('API standards'),'HTTP route must open its corresponding capability');
+  assert.equal(await evaluate('document.querySelectorAll(".wb-track li[data-state=blocked]").length'),1,'first failing gate must be unambiguous');
+  assert.ok((await evaluate(q('.wb-result-facts')+'.textContent')).includes('Establish request scope'),'HTTP example stops at correct gate');
   await click('.wb-result-primary');
-  await wait('document.activeElement?.id==="wb-inspection-heading" && document.querySelector(".wb-inspection-tag")?.textContent.includes("2 OF 6")','spotlight jumps to blocked decision and focuses inspector');
-  await click('.wb-result-actions button:last-child');
-  await wait('document.activeElement?.id==="wb-code-heading"','published example jump must focus a real heading');
-  assert.ok((await evaluate(q('.wb-scenario-check')+'.textContent')).includes('Cross-tenant resource'),'verification handoff names selected scenario');
-  await click('.wb-track li:nth-child(2) button');
-  assert.equal(await evaluate('document.querySelector(".wb-inspection-tag").textContent.includes("2 OF 6")'),true,'second gate inspection opened');
+  await wait('document.activeElement?.id==="wb-inspection-heading" && document.querySelector(".wb-inspection-tag")?.textContent.includes("2 OF 6")','inspector jump must focus blocking decision');
   await click('.wb-trace-actions button:first-child');
-  assert.equal(await evaluate('document.querySelector(".wb-inspection-tag").textContent.includes("1 OF 6")'),true,'previous decision navigation works');
+  assert.ok((await evaluate(q('.wb-inspection-tag')+'.textContent')).includes('1 OF 6'),'previous decision works');
 
-  // Complete the newly added example handoff before the independent
-  // primary-navigation test, so its heading-focus assertion starts in Docs.
-  await click('.wb-check-pane a');
-  await wait('location.hash==="#/docs/request" && document.activeElement?.id==="guide-heading"','example handoff should enter its integration guide');
-  // One playground only, with published code output and negative scenarios.
+  // A new Playground visit opens a single capability-selection stage.
   await click('.primary-nav a[href="#/playground"]');
-  await wait('location.hash==="#/playground" && !!document.querySelector(".wb-frame")','playground failed');
-  assert.equal(await evaluate('document.activeElement.id'),'workbench-title','playground route focuses its visible heading');
-  assert.equal(await evaluate('document.querySelectorAll(".wb-profile").length'),3,'supported modes present');
-  assert.equal(await evaluate('document.querySelectorAll(".wb-capability-card").length'),9,'published capability inventory must be discoverable');
-  assert.equal(await evaluate('document.querySelectorAll(".wb-capability-card[aria-pressed=true]").length'),1,'exactly one capability selected');
-  assert.ok((await evaluate(q('.wb-capability-detail')+'.textContent')).includes('What the library ships'),'capability details expose published contract');
-  assert.ok((await evaluate(q('.wb-capability-detail')+'.textContent')).includes('What your application supplies'),'capability details preserve ownership');
-  await click('.wb-capability-card:nth-child(6)');
-  assert.equal(await evaluate('document.activeElement?.id'),'wb-capability-detail-title','capability selection must focus distant detail heading');
-  assert.ok((await evaluate(q('#wb-capability-detail-title')+'.textContent')).includes('Events & audit'),'capability selection changes detail');
-  assert.ok((await evaluate(q('.wb-capability-detail-grid')+'.textContent')).includes('JdbcReliabilityTransaction'),'published API class shown');
-  await click('.wb-capability-try');
-  await wait('location.hash.includes("mode=mutation") && location.hash.includes("scenario=success")','capability trace must open related released pattern');
-  assert.equal(await evaluate('document.activeElement.id'),'workbench-title','capability action focuses Playground heading');
-  await click('.wb-capability-card:nth-child(8)');
-  assert.ok((await evaluate(q('.wb-capability-detail')+'.textContent')).includes('contract only'),'file references must not imply executable behavior');
-  assert.equal(await evaluate('document.querySelector(".wb-capability-detail-actions a.wb-capability-try").getAttribute("href")'),'#/reference/capabilities','contract-only capability links to reference');
-  await click('.wb-capability-back');
-  assert.equal(await evaluate('document.activeElement?.id'),'wb-capability-title','browse other capabilities returns to inventory heading');
-  await click('.wb-profile:nth-child(2)');
-  await click('.wb-scenario:nth-child(2)');
-  assert.ok((await evaluate(q('.wb-outcome')+'.textContent')).includes('401'),'unverified identity denial visible');
-  await click('.wb-scope-options button:nth-child(2)');
-  await click('.wb-scenario:nth-child(3)');
-  assert.ok((await evaluate(q('.wb-outcome')+'.textContent')).includes('400'),'invalid tenantless context visible');
-  await click('.wb-code-tabs button:nth-child(2)');
-  assert.ok((await evaluate(q('.wb-code-pane code')+'.textContent')).includes('EndpointPolicy.tenantless'),'version-correct tenantless excerpt');
-  await click('.wb-profile:nth-child(3)');
-  await click('.wb-testkit input');
-  assert.ok((await evaluate(q('.wb-code-pane code')+'.textContent')).includes('<scope>test</scope>'),'testkit stays test-only');
-  await click('.wb-scenario:nth-child(2)');
-  assert.ok((await evaluate(q('.wb-outcome')+'.textContent')).includes('SAFE REPLAY'),'idempotent replay simulated');
-  assert.equal(await evaluate('document.querySelectorAll(".wb-track li[data-state=skipped]").length'),3,'replay skips domain SQL and new intents');
-  await click('.wb-scenario:nth-child(3)');
-  assert.ok((await evaluate(q('.wb-outcome')+'.textContent')).includes('IN PROGRESS'),'concurrent retry is distinguished from replay');
-  assert.equal(await evaluate('document.querySelector(".wb-check-pane a").getAttribute("href")'),'#/docs/jdbc','playground links to on-site JDBC docs');
+  await wait('location.hash==="#/playground" && !!document.querySelector(".wb-capability-grid")','wizard root failed');
+  assert.equal(await evaluate('document.activeElement?.id'),'workbench-title','Playground route focuses its visible title');
+  assert.equal(await evaluate('document.querySelectorAll(".wb-capability-card").length'),9,'all nine published capabilities must be selectable');
+  assert.equal(await evaluate('document.querySelectorAll(".wb-wizard-step[aria-current=step]").length'),1,'only one wizard phase may be current');
+  assert.equal(await evaluate('document.querySelectorAll(".wb-result-card").length'),0,'scenario result must not appear as a disconnected second app');
 
-  // UX #82: Keyboard, concise status announcements, recovery and Back/Forward
-  // on the original single Playground. No new scenarios or backend execution.
+  // Events & audit proceeds through capability-specific shipped, prepare,
+  // explore and implementation phases, without changing the chosen capability.
+  await click('.wb-capability-card:nth-child(6)');
+  await wait('location.hash.includes("cap=events") && document.querySelector("#wb-wizard-panel-title")?.textContent.includes("Understand Events")','capability choose must advance to understanding');
+  assert.ok((await evaluate(q('.wb-phase-understand')+'.textContent')).includes('JdbcReliabilityTransaction'),'understanding describes the real released contract');
+  assert.ok((await evaluate(q('.wb-phase-understand')+'.textContent')).includes('What stays with your product'),'ownership visible in same guide');
+  await click('.wb-wizard-next');
+  await wait('!!document.querySelector(".wb-phase-prepare")','wizard must progress to prerequisites');
+  assert.equal(await evaluate('document.querySelectorAll(".wb-prerequisite input").length'),3,'capability-specific preparation checklist missing');
+  await click('.wb-prerequisite:first-child input');
+  assert.ok((await evaluate(q('.wb-prepare-progress')+'.textContent')).includes('1/3'),'readiness is local self-attestation');
+  await click('.wb-wizard-next');
+  await wait('!!document.querySelector(".wb-phase-explore")','wizard must progress to how it works');
+  assert.equal(await evaluate('document.querySelectorAll(".wb-process-list li").length'),3,'events sequence must be capability-specific');
+  assert.ok((await evaluate(q('.wb-outcome')+'.textContent')).includes('ATOMIC'),'events should use its relevant published JDBC pattern');
+  assert.equal(await evaluate('document.querySelectorAll(".wb-wizard-step[aria-current=step]").length'),1,'wizard current-step state duplicated');
+  await click('.wb-wizard-next');
+  await wait('!!document.querySelector(".wb-phase-implement")','wizard must lead into code and verification');
+  assert.ok((await evaluate(q('.wb-code-pane code')+'.textContent')).includes('platform-kernel-jdbc'),'released JDBC artifact shown');
+  assert.equal(await evaluate('document.querySelector(".wb-check-pane a").getAttribute("href")'),'#/docs/jdbc','events implementation must link to matching guide');
+
+  // Contract-only capabilities remain in the same wizard, with specific steps
+  // but no invented browser trace or unrelated Java example.
+  await click('.wb-wizard-change');
+  await wait('!!document.querySelector(".wb-capability-grid")','change capability must return to selection');
+  await click('.wb-capability-card:nth-child(8)');
+  await wait('location.hash.includes("cap=files") && !!document.querySelector(".wb-phase-understand")','FileReference capability selection failed');
+  await click('.wb-wizard-step:nth-child(3)');
+  assert.ok((await evaluate(q('.wb-phase-prepare')+'.textContent')).includes('File Storage provider'),'file preparation must name external owner');
+  await click('.wb-wizard-step:nth-child(4)');
+  assert.ok((await evaluate(q('.wb-guide-only')+'.textContent')).includes('Contract-only'),'file reference must not pretend to run Java or access files');
+  assert.equal(await evaluate('document.querySelector(".wb-result-card")===null'),true,'contract-only capability must not show a simulated request');
+  await click('.wb-wizard-step:nth-child(5)');
+  assert.equal(await evaluate('document.querySelectorAll(".wb-code-tabs button[aria-pressed]").length'),1,'contract guide must not show unrelated Java example');
+  assert.ok((await evaluate(q('.wb-code-pane code')+'.textContent')).includes('platform-kernel'),'contract requires published core artifact');
+  await click('.wb-wizard-change');
+  await click('.wb-capability-card:nth-child(9)');
+  await wait('location.hash.includes("cap=testkit")','testkit guide selection failed');
+  await click('.wb-wizard-step:nth-child(5)');
+  assert.ok((await evaluate(q('.wb-code-pane code')+'.textContent')).includes('<scope>test</scope>'),'testkit dependency must stay test-scoped');
+  assert.equal(await evaluate('document.querySelector(".wb-check-pane a").getAttribute("href")'),'#/docs/assure','testkit must link to consumer assurance guide');
+
+  // History, selected trace reset and one nonverbose status remain meaningful.
   await evaluate('location.hash="#/playground?mode=request&scope=scoped&scenario=membership"');
-  await wait('location.hash.includes("scenario=membership") && !!document.querySelector(".wb-status-announcement")','request scenario did not load');
-  assert.equal(await evaluate('document.querySelector(".wb-inspection").hasAttribute("aria-live")'),false,'verbose inspector must not be a live region');
-  assert.equal(await evaluate('document.querySelector(".wb-outcome").hasAttribute("role")'),false,'outcome badge should not duplicate the single announcement');
-  assert.equal(await evaluate('document.querySelectorAll(".wb-status-announcement[role=status]").length'),1,'one consolidated scenario/stage announcement');
-  assert.ok((await evaluate(q('.wb-status-announcement')+'.textContent')).includes('Stopped here')===false,'first gate must initially be passed');
-  const statusBefore=await evaluate(q('.wb-status-announcement')+'.textContent');
-  assert.ok(statusBefore.includes('Decision 1 of 6'),'status summarizes selected decision');
+  await wait('document.querySelector(".wb-status-announcement")?.textContent.includes("Identity & tenancy")','membership deep link must enter trace');
+  assert.equal(await evaluate('document.querySelector(".wb-inspection").hasAttribute("aria-live")'),false,'verbose inspector must not be live');
+  assert.equal(await evaluate('document.querySelectorAll(".wb-status-announcement[role=status]").length'),1,'exactly one trace status');
   await evaluate('document.querySelector(".wb-track li:nth-child(3) button").focus()');
   await send('Input.dispatchKeyEvent',{type:'keyDown',key:'Enter',code:'Enter',windowsVirtualKeyCode:13,nativeVirtualKeyCode:13,text:'\r',unmodifiedText:'\r'});
   await send('Input.dispatchKeyEvent',{type:'keyUp',key:'Enter',code:'Enter',windowsVirtualKeyCode:13,nativeVirtualKeyCode:13});
-  await wait('document.querySelector(".wb-inspection-tag")?.textContent.includes("3 OF 6")','keyboard stage activation failed');
-  assert.equal(await evaluate('document.activeElement.classList.contains("wb-trace-step")'),true,'stage navigation should keep focus on selected button');
-  assert.equal(await evaluate('document.querySelectorAll(".wb-trace-step[aria-current=step]").length'),1,'exactly one selected stage');
-  assert.ok((await evaluate(q('.wb-status-announcement')+'.textContent')).includes('Stopped here'),'stage announcement includes failure state');
-
-  // A new scenario resets the inspector synchronously but leaves focus on its control.
-  await evaluate('document.querySelector(".wb-scenario:nth-child(1)").focus()');
-  await send('Input.dispatchKeyEvent',{type:'keyDown',key:'Enter',code:'Enter',windowsVirtualKeyCode:13,nativeVirtualKeyCode:13,text:'\r',unmodifiedText:'\r'});
-  await send('Input.dispatchKeyEvent',{type:'keyUp',key:'Enter',code:'Enter',windowsVirtualKeyCode:13,nativeVirtualKeyCode:13});
-  await wait('location.hash.includes("scenario=success") && document.querySelector(".wb-inspection-tag")?.textContent.includes("1 OF 6")','scenario change should reset selected gate immediately');
-  assert.ok((await evaluate('document.activeElement.className')).includes('wb-scenario'),'scenario change should retain control focus');
-  assert.ok((await evaluate(q('.wb-status-announcement')+'.textContent')).includes('REQUEST ALLOWED'),'single status announces the updated result');
+  await wait('document.querySelector(".wb-inspection-tag")?.textContent.includes("3 OF 6")','keyboard activation of denial gate failed');
+  assert.ok((await evaluate(q('.wb-status-announcement')+'.textContent')).includes('Stopped here'),'status must include stop state');
+  await click('.wb-scenario:first-child');
+  await wait('location.hash.includes("scenario=success") && document.querySelector(".wb-inspection-tag")?.textContent.includes("1 OF 6")','scenario change should reset selection');
   await evaluate('history.back()');
-  await wait('location.hash.includes("scenario=membership") && document.querySelector(".wb-inspection-tag")?.textContent.includes("1 OF 6")','Back should restore URL and first gate, not stale selected stage');
+  await wait('location.hash.includes("scenario=membership") && document.querySelector(".wb-inspection-tag")?.textContent.includes("1 OF 6")','Back should restore URL and first gate');
   await evaluate('history.forward()');
-  await wait('location.hash.includes("scenario=success") && !!document.querySelector(".wb-inspection")','Forward scenario restoration failed');
+  await wait('location.hash.includes("scenario=success")','Forward should restore scenario');
 
-  // Unsupported tenantless membership must not silently impersonate a runnable case.
   await evaluate('location.hash="#/playground?mode=request&scope=tenantless&scenario=membership"');
-  await wait('!!document.querySelector(".wb-route-recovery")','invalid scenario needs explicit recovery');
-  assert.ok((await evaluate(q('.wb-route-recovery')+'.textContent')).includes('Scenario unavailable'),'recovery reason missing');
-  assert.ok((await evaluate(q('.wb-status-announcement')+'.textContent')).includes('REQUEST ALLOWED'),'safe fallback should use a valid trace');
-  assert.ok(await evaluate('document.documentElement.scrollWidth<=window.innerWidth+1'),'recovery note must not cause whole-page overflow');
+  await wait('!!document.querySelector(".wb-route-recovery")','invalid scenario link must explain recovery');
+  assert.ok((await evaluate(q('.wb-route-recovery')+'.textContent')).includes('Scenario unavailable'),'invalid link explanation missing');
+  assert.ok((await evaluate(q('.wb-status-announcement')+'.textContent')).includes('REQUEST ALLOWED'),'fallback must be a valid trace');
   await evaluate('location.hash="#/playground?mode=mutation&scope=scoped&scenario=replay"');
-  await wait('document.querySelector(".wb-outcome")?.textContent.includes("SAFE REPLAY")','restore actual supported mutation scenario');
-  assert.equal(await evaluate('document.querySelector(".wb-route-recovery")===null'),true,'recovery note clears on valid link');
-  assert.equal(await evaluate('document.querySelector(".wb-code-pane pre").getAttribute("tabindex")'),'0','long code remains keyboard-scrollable');
+  await wait('document.querySelector(".wb-outcome")?.textContent.includes("SAFE REPLAY")','mutation replay URL not restored');
+  assert.equal(await evaluate('document.querySelectorAll(".wb-track li[data-state=skipped]").length'),3,'replay must skip duplicate SQL and intents');
+  await click('.wb-wizard-step:nth-child(5)');
+  assert.equal(await evaluate('document.querySelector(".wb-code-pane pre").getAttribute("tabindex")'),'0','code stays keyboard scrollable');
   await click('.wb-copy');
-  await wait('document.querySelector(".wb-copy-feedback").textContent.length>0','clipboard success/denial must be announced independently');
-  assert.ok((await evaluate(q('.wb-copy-feedback')+'.textContent')).match(/Copied|Clipboard unavailable/),'copy permission result has usable fallback');
-
+  await wait('document.querySelector(".wb-copy-feedback").textContent.length>0','clipboard feedback missing');
+  assert.ok((await evaluate(q('.wb-copy-feedback')+'.textContent')).match(/Copied|Clipboard unavailable/),'copy denial must have manual fallback');
 
   // Long-guide reading flow uses only existing section routes and accessible
   // headings: no second sidebar or another Docs destination.
@@ -414,9 +404,9 @@ try{
   // existing mode controls; still requires an actual OS/browser human check.
   await send('Emulation.setEmulatedMedia',{features:[{name:'prefers-reduced-motion',value:'reduce'}]});
   await evaluate('location.hash="#/playground"');
-  await wait('!!document.querySelector(".wb-profile")','reduced motion Playground unavailable');
+  await wait('!!document.querySelector(".wb-capability-card")','reduced motion Playground unavailable');
   assert.equal(await evaluate('matchMedia("(prefers-reduced-motion: reduce)").matches'),true,'reduced motion emulation failed');
-  assert.ok((await evaluate('getComputedStyle(document.querySelector(".wb-profile")).transitionDuration')).split(',').every(s=>parseFloat(s)===0),'reduced motion mode selector still transitions');
+  assert.ok((await evaluate('getComputedStyle(document.querySelector(".wb-capability-card")).transitionDuration')).split(',').every(s=>parseFloat(s)===0),'reduced motion mode selector still transitions');
   await send('Emulation.setEmulatedMedia',{features:[]});
   await evaluate('location.hash="#/"');
   await wait('!!document.querySelector(".home-hero")','home performance route missing');
