@@ -228,7 +228,7 @@ try{
   // A new Playground visit opens a single capability-selection stage.
   await click('.primary-nav a[href="#/playground"]');
   await wait('location.hash==="#/playground" && !!document.querySelector(".wb-capability-grid")','wizard root failed');
-  assert.equal(await evaluate('document.activeElement?.id'),'workbench-title','Playground route focuses its visible title');
+  assert.equal(await evaluate('document.activeElement?.id'),'wb-wizard-panel-title','Playground return focuses its Choose capability step heading');
   assert.equal(await evaluate('document.querySelectorAll(".wb-capability-card").length'),9,'all nine published capabilities must be selectable');
   assert.equal(await evaluate('document.querySelectorAll(".wb-wizard-step[aria-current=step]").length'),1,'only one wizard phase may be current');
   assert.equal(await evaluate('document.querySelectorAll(".wb-result-card").length'),0,'scenario result must not appear as a disconnected second app');
