@@ -65,9 +65,11 @@ function Home(){
 function NotFound(){return <div className="wrap not-found"><h1 id="page-title" tabIndex={-1}>Page not found.</h1><p>The requested guide or reference topic isn't available.</p><a className="btn primary" href="#/docs/install">Open documentation</a></div>}
 
 function App(){
-  const [route,setRoute]=useState(()=>resolveRoute(window.location.hash));
+  // Every browser history visit has a distinct identity, even if it revisits
+  // the same scenario URL; local stage selection must not leak across visits.
+  const [route,setRoute]=useState(()=>({...resolveRoute(window.location.hash),visitId:0}));
   useEffect(()=>{
-    const onHash=()=>setRoute(resolveRoute(window.location.hash));
+    const onHash=()=>setRoute(previous=>({...resolveRoute(window.location.hash),visitId:previous.visitId+1}));
     window.addEventListener('hashchange',onHash);
     return()=>window.removeEventListener('hashchange',onHash);
   },[]);
@@ -96,7 +98,7 @@ function App(){
     <main id="main" tabIndex={-1}>
       {route.page==='home'&&<Home/>}
       {route.page==='docs'&&<DeveloperDocs guideId={route.id} section={route.section} selectedSampleIndex={route.sampleIndex} searchQuery={route.searchQuery}/>}
-      {route.page==='playground'&&<><h1 className="visually-hidden" tabIndex={-1} id="page-title">Interactive integration playground</h1><IntegrationWorkbench mode={route.mode} scope={route.scope} scenario={route.scenario} recovery={route.recovery}/></>}
+      {route.page==='playground'&&<><h1 className="visually-hidden" tabIndex={-1} id="page-title">Interactive integration playground</h1><IntegrationWorkbench mode={route.mode} scope={route.scope} scenario={route.scenario} recovery={route.recovery} visitId={route.visitId}/></>}
       {route.page==='reference'&&<Reference topic={route.id}/>}
       {route.page==='notfound'&&<NotFound/>}
     </main>

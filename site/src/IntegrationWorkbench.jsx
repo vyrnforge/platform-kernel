@@ -6,7 +6,7 @@ import './kernel-workbench.css';
 
 const stepLabels={done:'Passed',blocked:'Stopped here',skipped:'Not required',pending:'Not reached'};
 
-export function IntegrationWorkbench({mode='core',scope='scoped',scenario='success',recovery=null}){
+export function IntegrationWorkbench({mode='core',scope='scoped',scenario='success',recovery=null,visitId=0}){
   const [selection,setSelection]=useState({key:'',step:0});
   const [testkit,setTestkit]=useState(false);
   const [codeTab,setCodeTab]=useState('maven');
@@ -14,9 +14,9 @@ export function IntegrationWorkbench({mode='core',scope='scoped',scenario='succe
   const trace=getWorkbenchTrace(mode,scope,scenario);
   const recipe=getWorkbenchRecipe(mode,scope,testkit);
   const scenarios=scenariosFor(mode,scope);
-  // A route change selects its first gate synchronously, avoiding stale inspector
-  // announcements before effects run. Stage navigation is local to one route.
-  const routeKey=[mode,scope,scenario].join('|');
+  // Each history visit selects its first gate synchronously, including Back to a
+  // previously visited URL. Stage choice stays local, not in the shared URL.
+  const routeKey=visitId;
   const stepIndex=selection.key===routeKey?Math.min(selection.step,trace.steps.length-1):0;
   const selectStep=next=>setSelection({key:routeKey,step:Math.max(0,Math.min(next,trace.steps.length-1))});
   const current=trace.steps[stepIndex];
