@@ -168,3 +168,16 @@ h3{font-size:19px;letter-spacing:-.4px}
 /* Preserve reading comfort while the overall reference panel and grids use the available width. */
 .reference-article>p,.reference-patterns details p,.page-intro>p{max-width:90ch}
 .reference-article .reference-caution{max-width:100ch}
+
+/* Page UX: the three existing Reference topics become a single locally
+   scrollable mobile rail; duplicated cross-navigation stays in the header. */
+@media(max-width:640px){
+  .reference-aside{padding:14px}
+  .reference-nav{
+    display:flex;flex-wrap:nowrap;overflow-x:auto;overflow-y:hidden;
+    overscroll-behavior-x:contain;gap:8px;scroll-snap-type:x proximity;
+    padding:3px 2px 10px;margin-top:8px;scrollbar-width:thin
+  }
+  .reference-nav a{flex:0 0 auto;white-space:nowrap;scroll-snap-align:start}
+  .reference-aside-note{display:none}
+}
