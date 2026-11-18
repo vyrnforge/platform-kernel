@@ -440,7 +440,8 @@ try{
     ['#/',['.brand-name small']],
     ['#/docs/request',['.guide-breadcrumb','.guide-excerpt-note','.docs-search-count']],
     ['#/reference/architecture',['.side-kicker','.reference-aside-note']],
-    ['#/playground?mode=request&scope=scoped&scenario=success',['.wb-profile-number','.wb-stage-slash','.wb-trace-state','.wb-decision-detail p','.wb-code-kind']]
+    ['#/playground',['.wb-capability-card-top','.wb-capability-card-state']],
+    ['#/playground?mode=request&scope=scoped&scenario=success',['.wb-process-list small','.wb-trace-state','.wb-decision-detail p']]
   ]){
     await evaluate('location.hash='+JSON.stringify(hash));
     await wait('!!document.querySelector('+JSON.stringify(selectors[0])+')','contrast target route '+hash);
@@ -449,6 +450,12 @@ try{
       assert.ok(c.ratio>=4.5,'Normal small-text contrast below 4.5:1 '+hash+' '+selector+' '+JSON.stringify(c));
     }
   }
+  await evaluate('location.hash="#/playground?mode=request&scope=scoped&scenario=success"');
+  await wait('!!document.querySelector(".wb-wizard-step")','code contrast wizard route missing');
+  await click('.wb-wizard-step:nth-child(5)');
+  const codeContrast=await computedContrast('.wb-code-kind');
+  assert.ok(codeContrast.ratio>=4.5,'Published code note contrast below 4.5:1: '+JSON.stringify(codeContrast));
+
   // Missing hash route provides a keyboard-reachable recovery path and heading focus.
   await evaluate('location.hash="#/route-not-found"');
   await wait('!!document.querySelector(".not-found")','missing-route view did not render');
