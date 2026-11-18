@@ -162,3 +162,14 @@
   .docs-preview-entry{margin-top:12px;padding-top:12px;gap:4px}
   .docs-preview-entry a{padding:9px 11px}
 }
+
+/* Long-guide reading path: navigate existing article sections without adding
+   another page, sticky sidebar or duplicating the documentation guide rail. */
+.guide-reading-path{display:flex;align-items:center;gap:13px;margin:16px 0 19px;padding:11px 0;border-top:1px solid #dce6f1;border-bottom:1px solid #dce6f1;min-width:0}
+.guide-reading-path-title{white-space:nowrap;color:#445d79;font-size:11px;font-weight:800;letter-spacing:.2px}
+.guide-reading-path-links{display:flex;flex:1;min-width:0;gap:6px;overflow-x:auto;overscroll-behavior-x:contain;scrollbar-width:thin;padding:4px 2px}
+.guide-reading-path-links a{flex:none;white-space:nowrap;font-size:12px;font-weight:650;color:#305b8b;padding:6px 8px;border-radius:6px}
+.guide-reading-path-links a:hover{background:#edf4fc;text-decoration:none}
+.guide-reading-path-links a[aria-current="location"]{background:#e8f1fe;color:#1f5cb2;box-shadow:inset 0 -2px #3177d2}
+.guide-reading-path-links a:focus-visible{outline:3px solid #356eb8;outline-offset:2px}
+@media(max-width:640px){.guide-reading-path{display:block;padding:9px 0;margin:13px 0 15px}.guide-reading-path-title{display:block;margin-bottom:4px}.guide-reading-path-links{margin-inline:-2px}}
