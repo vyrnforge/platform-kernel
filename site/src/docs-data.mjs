@@ -250,15 +250,16 @@ export const developerGuides = [
     "id": "jdbc",
     "group": "Integrate",
     "title": "Make a retriable write durable",
-    "summary": "Persist domain changes, required event/audit intents and replay result atomically.",
-    "prerequisite": "The optional platform-kernel-jdbc:0.3.2 artifact, product-owned PostgreSQL transaction and applicable Flyway migrations. Authenticate and authorize every attempt before idempotency acquisition.",
-    "when": "A tenant-scoped mutation may be retried and must survive a lost response without duplicating its authoritative write.",
+    "summary": "Choose optional JDBC for durable retriable writes; understand each acquire result, atomic boundaries, delivery and recovery.",
+    "prerequisite": "Java 21+, published platform-kernel-jdbc:0.3.2 only when a tenant-scoped durable mutation needs it, product-owned PostgreSQL DataSource and applicable packaged V1–V3 Flyway migrations. Application authorization is required on every attempt, including REPLAY.",
+    "when": "A tenant-scoped write may be retried after timeout/lost response and must atomically commit product data, required audit/event intents and a replayable safe result. Skip JDBC for plain identifiers, correlation or read-only integration.",
     "steps": [
-      "Add platform-kernel-jdbc:0.3.2, configure an application-owned DataSource, and apply the adapter's packaged Flyway V1–V3 migrations to that database.",
-      "Authenticate, check active tenant, module entitlement and domain authorization on every attempt, including retries.",
-      "Acquire with JdbcIdempotencyPort.begin using a caller/target/payload-aware fingerprint; only ACQUIRED executes the business SQL.",
-      "Execute product SQL and required event/audit intents through executeIdempotent on its supplied Connection. Never commit or call external services inside the callback.",
-      "On REPLAY return a still-authorized safe result; handle IN_PROGRESS and CONFLICT explicitly. Operate the outbox and reconcile uncertain/DEAD events separately."
+      "Decide whether the operation actually needs durable idempotency: use core alone for ordinary utility/request-context work; add optional platform-kernel-jdbc only for product-owned PostgreSQL retriable mutations.",
+      "Apply the packaged V1–V3 schema through the product's own controlled Flyway history/migration process. Do not run parallel writers or mixed publisher versions while planning V3/upgrade/rollback.",
+      "Verify credential, tenant, membership, module and resource authorization on EVERY attempt before begin(request). Include effective actor, target and payload semantics in the fingerprint, bound to tenant, operation, key and expiry.",
+      "Call JdbcIdempotencyPort.begin(request) and handle the returned ACQUIRED, REPLAY, IN_PROGRESS or CONFLICT decision. ONLY ACQUIRED may execute product SQL; REPLAY may return only a currently authorized safe result.",
+      "Use JdbcReliabilityTransaction.executeIdempotent for ACQUIRED: domain SQL on its supplied Connection, required event/audit intents through supplied ports, and replay result in one commit. Never open a second connection, manually commit/rollback, or call external services inside the callback.",
+      "Operate outbox dispatch separately with bounded retries and at-least-once receivers. Product consumers deduplicate by event ID; operators reconcile stale/lost claims, exhausted DEAD events, uncertain commits, backups and migrations."
     ],
     "samples": [
       {
@@ -276,15 +277,90 @@ export const developerGuides = [
         "filename": "MutationHandler.java (excerpt)"
       }
     ],
-    "verify": "Prove rollback, lost-response replay, conflict, expiry, concurrent retry and tenant isolation against real application SQL; an illustrative recipe does not prove production integration.",
-    "ownership": "Your product owns SQL, connection, authorization, audit evidence and event consumers. The outbox is at-least-once compatible, not exactly-once.",
+    "verify": "Use published consumer conformance CC-14–CC-22 and CC-27 with actual product SQL, an application-owned PostgreSQL database and audit/outbox behavior. Test first commit, replay, concurrent retry, conflicting fingerprint, expiry/revocation, rollback, crash/lost response, deduplication, stale/DEAD claims, restore and migration compatibility. Simulated Playground results do not certify the consumer.",
+    "ownership": "Your product owns current authorization, data and SQL, single JDBC Connection, DataSource, Flyway history, reliable event publisher transport, deduplication, audit evidence and operational recovery. Kernel provides optional lease/transaction/intent/outbox mechanics; not a broker or managed database.",
     "guide": "docs/integration/jdbc-safe-mutation.md",
     "source": "kernel-persistence-jdbc/",
-    "provides": "Optional PostgreSQL/Flyway adapter for lease-backed idempotency, atomic writes with intents, append-oriented audit and a claim-fenced outbox. Delivery remains at-least-once-compatible.",
+    "provides": "Published v0.3.2 optional PostgreSQL/JDBC lease-backed idempotency, executeIdempotent atomic application SQL plus audit/event intents and result, claim-fenced outbox rows. No automatic worker, migration runner, exactly-once transport or product policy.",
     "mistakes": [
-      "Running business SQL on a second connection breaks the atomicity guarantee. Work must use the supplied Connection.",
-      "A lost response can be replayed only while the key is retained; expiry allows re-execution. Reauthorize before returning replayed data.",
-      "The library does not start an outbox worker, broker or migration runner automatically. Monitor exhausted/DEAD claims and deduplicate at the consumer."
+      "Never use a second Connection, connection.commit()/rollback(), external network request or independent execute + complete pair inside the durable retriable mutation. Only executeIdempotent on the supplied connection provides the documented atomic path.",
+      "Do not replay an old result without re-checking current caller authorization; never persist/replay signed URLs, secrets or expired access material. Retention expiry allows re-execution under the product's policy.",
+      "IN_PROGRESS does not mean REPLAY: another lease is active. Return safe retry guidance rather than starting a second write. CONFLICT is different effective request semantics; HTTP 409 is only an illustrative application mapping.",
+      "Rollback/connection loss can leave an IN_PROGRESS lease until abort/expiry. Do not blindly abort after an uncertain commit; reconcile against authoritative product data first.",
+      "Outbox is at-least-once, not exactly-once; stale worker claim completions are fenced, but a DEAD event might already have been sent. Reconcile receiver evidence before re-drive.",
+      "Application-owned Flyway migration history controls V1–V3. Drain old publishers and audit/intent writers before incompatible upgrades and plan restore/rollback; never assume the library runs migrations."
+    ],
+    "decisionStates": [
+      {
+        "id": "success",
+        "type": "ACQUIRED",
+        "effect": "One product-owned JDBC transaction may execute domain SQL, required audit/event intents and serialized safe result.",
+        "owner": "Product handler + optional JDBC transaction",
+        "next": "Return only after commit; dispatch outbox later.",
+        "recovery": "Do not call other services or commit in the callback."
+      },
+      {
+        "id": "replay",
+        "type": "REPLAY",
+        "effect": "No new domain SQL or event/audit intent. Return stored result only after fresh authorization.",
+        "owner": "Product request handler",
+        "next": "Existing outbox delivery or reconciliation may still be pending.",
+        "recovery": "Recheck caller and target permissions and avoid time-limited secrets or signed URLs."
+      },
+      {
+        "id": "in-progress",
+        "type": "IN_PROGRESS",
+        "effect": "No new domain SQL or intent; an active matching lease is still processing.",
+        "owner": "Product API/retry policy",
+        "next": "Give bounded safe retry guidance; do not start another mutation.",
+        "recovery": "If lease is stale, reconcile operation and expiry before recovery."
+      },
+      {
+        "id": "conflict",
+        "type": "CONFLICT",
+        "effect": "No new domain SQL or intent; same key has a different effective fingerprint.",
+        "owner": "Product API/validation",
+        "next": "Reject key reuse; illustrative HTTP 409 is application-owned.",
+        "recovery": "Check effective actor/target/payload, do not mutate under the conflicting key."
+      }
+    ],
+    "recoveryPaths": [
+      {
+        "case": "Rollback or thrown callback",
+        "explanation": "The product mutation and required intents roll back together. An acquired lease may remain IN_PROGRESS until abort or expiry.",
+        "verify": "CC-17 / CC-18",
+        "owner": "Product SQL and retry operator"
+      },
+      {
+        "case": "Lost response or uncertain commit",
+        "explanation": "Reauthorize the caller, inspect committed state and lease/result; distinguish safe REPLAY from still IN_PROGRESS before aborting or retrying.",
+        "verify": "CC-14 / CC-16 / CC-18",
+        "owner": "Product API and incident operator"
+      },
+      {
+        "case": "Duplicate event or lost outbox claim",
+        "explanation": "Receivers deduplicate event IDs. A stale publisher cannot finish an expired claim, but delivery might already have happened.",
+        "verify": "CC-19 / CC-20",
+        "owner": "Transport receiver / outbox operator"
+      },
+      {
+        "case": "Exhausted DEAD event",
+        "explanation": "Investigate transport and receiver evidence before re-drive: DEAD does not prove the remote target never received the event.",
+        "verify": "CC-20 / CC-22",
+        "owner": "Product operations"
+      },
+      {
+        "case": "Missing required audit/event intent",
+        "explanation": "Required intent and business data must commit together or neither. Audit integrity and permissions are validated against the actual product DB.",
+        "verify": "CC-17 / CC-21",
+        "owner": "Product data / security"
+      },
+      {
+        "case": "Migration or backup restoration",
+        "explanation": "Use product-owned Flyway history, writer drain, backup/restore and recovery-point reconciliation; no automatic Kernel migration execution.",
+        "verify": "CC-22 / CC-27",
+        "owner": "Product DB owner"
+      }
     ]
   },
   {
@@ -295,10 +371,10 @@ export const developerGuides = [
     "prerequisite": "A pinned application source revision and an explicit list of operations that consume the Kernel.",
     "when": "Before adopting a Kernel version or declaring an integration production-ready.",
     "steps": [
-      "Keep platform-kernel-testkit:0.3.2 in Maven test scope; never ship fixtures as production authentication, policy or persistence.",
-      "Run `mvn test` (or your project's Gradle test task) with actual application wiring for success, denied identity, tenant mismatch, missing membership, disabled modules and resource access denial.",
-      "If using JDBC, test against your product SQL and PostgreSQL: transaction rollback, replay, conflicting fingerprints, concurrent retries and lost-response recovery.",
-      "Record exact Maven coordinates, application revision, conformance evidence, rollback approach, operational owner and any unresolved exceptions."
+      "Keep platform-kernel-testkit:0.3.2 strictly in Maven test scope. Its in-memory helpers are fixtures, not production identity verification, business-policy authority or PostgreSQL evidence.",
+      "Run your application unit and integration tests for verified identity, tenantless/scoped requests, membership, module entitlement and domain authorization against real product wiring.",
+      "Where the operation is durable, use application-owned PostgreSQL and SQL for conformance CC-14–CC-22 (first write, replay, in-flight retries, conflict, rollback, lost response, claim fencing, audit/event integrity, restore). Apply CC-27 for JDBC V3 migrations/upgrade.",
+      "Record selected published artifact digests and exact application revision, scenario results and failed cases, authorization replay, outbox dedup and failure recovery, operational owner and independent rollback approval. Do not treat a simulated trace or Kernel CI as product acceptance."
     ],
     "samples": [
       {
@@ -309,7 +385,7 @@ export const developerGuides = [
         "filename": "pom.xml"
       }
     ],
-    "verify": "Run the consumer conformance checklist with actual product fixtures. Kernel CI and simulated demos are not proof of a consumer's production readiness.",
+    "verify": "For durable operations, record actual product-specific evidence for CC-14 through CC-22 and CC-27, including real tenant isolation, rollback/uncertain commit, safe replay, duplicate delivery, DEAD, restore and migration/rollback. Nonapplicable scenarios need rationale; do not claim conformance from the simulated Playground or testkit alone.",
     "ownership": "The consuming application owns its authorization, database, SLOs, rollback plan, upgrade choice and independent acceptance.",
     "guide": "docs/integration/consumer-conformance.md",
     "source": "kernel-testkit/",
@@ -318,6 +394,58 @@ export const developerGuides = [
       "A green Kernel repository pipeline or Playground simulation does not prove your application integration is secure.",
       "Test the same tenant/resource authorization paths in production wiring, not only with permissive test fixtures.",
       "Keep event delivery, backups, transaction recovery, observability and rollback in the application runbook."
+    ],
+    "conformanceCases": [
+      {
+        "id": "CC-14",
+        "title": "Acquire, in-flight retry, replay",
+        "evidence": "One committed effect; distinct ACQUIRED / IN_PROGRESS / REPLAY within retention."
+      },
+      {
+        "id": "CC-15",
+        "title": "Conflicting fingerprint and expiry",
+        "evidence": "CONFLICT for mismatched request; expiry/reacquisition documented."
+      },
+      {
+        "id": "CC-16",
+        "title": "Authorization on replay",
+        "evidence": "Revoked/changed permissions fail; no expired signed URLs or secrets replayed."
+      },
+      {
+        "id": "CC-17",
+        "title": "Atomic domain + required intents",
+        "evidence": "Product SQL, events/audit and safe result commit together or roll back together."
+      },
+      {
+        "id": "CC-18",
+        "title": "Concurrent/lost response recovery",
+        "evidence": "Real PostgreSQL lease/crash/fault tests; no duplicate domain effect."
+      },
+      {
+        "id": "CC-19",
+        "title": "At-least-once receiver",
+        "evidence": "Duplicate delivery safely deduplicated by consumer."
+      },
+      {
+        "id": "CC-20",
+        "title": "Fenced outbox / DEAD",
+        "evidence": "Stale claim cannot mutate; exhausted DEAD reconciled, delivery uncertainty acknowledged."
+      },
+      {
+        "id": "CC-21",
+        "title": "Audit integrity",
+        "evidence": "Actual product role and audit append-only protection."
+      },
+      {
+        "id": "CC-22",
+        "title": "Restore consistency",
+        "evidence": "Restore and reconciliation for committed data, intents and delivery."
+      },
+      {
+        "id": "CC-27",
+        "title": "Migration and rollback",
+        "evidence": "Product Flyway V1–V3 ownership, drain and safe rollback plan."
+      }
     ]
   }
 ];
@@ -331,6 +459,9 @@ export function searchDeveloperGuides(query) {
     guide.provides,guide.ownership,guide.verify,guide.diagnostics||'',...guide.steps,...guide.mistakes,
     ...(guide.endpointChoices||[]).flatMap(item=>[item.name,item.when,item.policy,item.guards,item.ownership]),
     ...(guide.failureCases||[]).flatMap(item=>[item.trigger,item.gate,item.failure,item.owner,item.recovery]),
+    ...(guide.decisionStates||[]).flatMap(item=>[item.type,item.effect,item.owner,item.next,item.recovery]),
+    ...(guide.recoveryPaths||[]).flatMap(item=>[item.case,item.explanation,item.verify,item.owner]),
+    ...(guide.conformanceCases||[]).flatMap(item=>[item.id,item.title,item.evidence]),
     ...guide.samples.flatMap(sample=>[sample.label,sample.kind,sample.filename,sample.code])
   ].join(' ').toLocaleLowerCase().includes(needle));
 }

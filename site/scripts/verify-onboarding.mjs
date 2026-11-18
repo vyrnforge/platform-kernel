@@ -69,6 +69,37 @@ try {
   run('javac',['--release','21','-cp',filename,'RequestWiringCompileProof.java'],root);
   console.log('Published v'+version+' four-port request-wiring excerpt: COMPILED against anonymous Central JAR');
 
+  // The optional JDBC artifact and existing illustrative Java recipe must also
+  // compile against the RELEASED Central distribution, not local JDBC source.
+  const jdbcGuide=developerGuides.find(x=>x.id==='jdbc');
+  const jdbcSample=jdbcGuide?.samples.find(x=>x.label==='Java recipe');
+  assert.ok(jdbcSample?.kind.includes('Integration excerpt'),'JDBC recipe must remain marked illustrative');
+  const jdbcArtifact='platform-kernel-jdbc-'+version+'.jar';
+  const jdbcUrl='https://repo.maven.apache.org/maven2/io/github/vyrnforge/platform-kernel-jdbc/'+version+'/'+jdbcArtifact;
+  const jdbcBytes=Buffer.from(await (await centralGet(jdbcUrl)).arrayBuffer());
+  assert.ok(jdbcBytes.length>10000,'optional JDBC JAR unexpectedly small');
+  const jdbcSha1=createHash('sha1').update(jdbcBytes).digest('hex');
+  const jdbcAdvertised=(await (await centralGet(jdbcUrl+'.sha1')).text()).trim().match(/^[a-fA-F0-9]{40}/)?.[0]?.toLowerCase();
+  assert.equal(jdbcSha1,jdbcAdvertised,'published optional JDBC checksum mismatch');
+  await writeFile(join(root,jdbcArtifact),jdbcBytes);
+  const jdbcWrapper=[
+    'import io.vyrnforge.platform.kernel.idempotency.IdempotencyPort;',
+    'import io.vyrnforge.platform.kernel.idempotency.IdempotencyRequest;',
+    'import io.vyrnforge.platform.kernel.persistence.jdbc.IdempotencyResultCodec;',
+    'import io.vyrnforge.platform.kernel.persistence.jdbc.JdbcReliabilityTransaction;',
+    'public final class JdbcRecipeCompileProof {',
+    '  public static void compose(IdempotencyPort<String> idempotencyPort,',
+    '      IdempotencyRequest request, JdbcReliabilityTransaction transactions, String safeResult) {',
+    jdbcSample.code,
+    '  }',
+    '}'
+  ].join('\n');
+  await writeFile(join(root,'JdbcRecipeCompileProof.java'),jdbcWrapper);
+  run('javac',['--release','21','-cp',filename+':'+jdbcArtifact,'JdbcRecipeCompileProof.java'],root);
+  console.log('Published v'+version+' optional JDBC recipe: COMPILED against anonymous Central JAR; SHA-1 verified; size='+jdbcBytes.length);
+
+
+
 
 
   // Build minimal, anonymous consumer projects from the site's own dependency fragments.

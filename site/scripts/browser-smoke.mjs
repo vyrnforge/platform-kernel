@@ -195,6 +195,26 @@ try{
   assert.ok((await evaluate(q('.wb-outcome')+'.textContent')).includes('IN PROGRESS'),'concurrent retry is distinguished from replay');
   assert.equal(await evaluate('document.querySelector(".wb-check-pane a").getAttribute("href")'),'#/docs/jdbc','playground links to on-site JDBC docs');
 
+  // The existing JDBC guide must explain every decision and support keyboard flow to the one Playground.
+  await evaluate('location.hash="#/docs/jdbc"');
+  await wait('document.querySelectorAll("#jdbc-decision-heading").length===1','JDBC decision guide absent');
+  assert.equal(await evaluate('document.querySelectorAll("#jdbc-decision-heading ~ .request-failures-scroll tbody tr").length'),4,'all four JDBC outcomes must be shown');
+  assert.ok((await evaluate(q('.request-diagnostics')+'.textContent')).includes('consumer testkit'),'on-site verification path must be available');
+  await evaluate('document.querySelector("details.guide-troubleshooting summary").focus()');
+  await send('Input.dispatchKeyEvent',{type:'keyDown',key:' ',code:'Space',windowsVirtualKeyCode:32,nativeVirtualKeyCode:32});
+  await send('Input.dispatchKeyEvent',{type:'keyUp',key:' ',code:'Space',windowsVirtualKeyCode:32,nativeVirtualKeyCode:32});
+  assert.equal(await evaluate('document.querySelector("details.guide-troubleshooting").open'),true,'native JDBC recovery disclosure not keyboard operable');
+  await click('.request-failures a[href*="scenario=in-progress"]');
+  await wait('location.hash.includes("scenario=in-progress")','in-progress scenario deep link failed');
+  assert.ok((await evaluate(q('.wb-outcome')+'.textContent')).includes('IN PROGRESS'),'concurrent retry must not read as REPLAY');
+  assert.equal(await evaluate('document.querySelectorAll(".wb-track li[data-state=blocked]").length'),1,'in-progress must stop at acquire');
+  await click('.wb-check-pane a');
+  await wait('location.hash==="#/docs/jdbc" && !!document.querySelector("#jdbc-decision-heading")','return to JDBC guide failed');
+  await click('.request-diagnostics a[href="#/docs/assure"]');
+  await wait('location.hash==="#/docs/assure" && !!document.querySelector("#consumer-evidence-heading")','consumer conformance handoff failed');
+  assert.equal(await evaluate('document.querySelectorAll("#consumer-evidence-heading ~ .request-failures-scroll tbody tr").length'),10,'published conformance IDs must be listed');
+  assert.ok((await evaluate(q('.guide-code-shell code')+'.textContent')).includes('<scope>test</scope>'),'testkit must remain test scope');
+
   // Baseline semantic and small-text contrast checks. This is not an AT or WCAG certification.
   const computedContrast=async selector=>{
     const expr='(()=>{'+

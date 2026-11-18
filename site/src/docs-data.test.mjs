@@ -104,3 +104,31 @@ test('published request guide matches scoped and tenantless Kernel failure seman
   assert.ok(searchDeveloperGuides('current module key').some(x=>x.id==='request'));
   assert.doesNotMatch(wiring.code,/RequestContextPipeline\\.tenantless\(/);
 });
+
+
+test('published JDBC decisions and consumer conformance connect to one Playground',()=>{
+  const jdbc=developerGuides.find(g=>g.id==='jdbc');
+  const assure=developerGuides.find(g=>g.id==='assure');
+  assert.deepEqual(jdbc.decisionStates.map(x=>x.type),['ACQUIRED','REPLAY','IN_PROGRESS','CONFLICT']);
+  assert.deepEqual(jdbc.decisionStates.map(x=>x.id),['success','replay','in-progress','conflict']);
+  assert.equal(jdbc.recoveryPaths.length,6);
+  for(const state of jdbc.decisionStates){
+    const trace=getWorkbenchTrace('mutation','scoped',state.id);
+    assert.ok(trace.outcome, state.type);
+    assert.ok(state.effect&&state.owner&&state.next&&state.recovery);
+  }
+  for(const id of ['replay','in-progress','conflict']){
+    const outcome=jdbc.decisionStates.find(x=>x.id===id);
+    assert.match(outcome.effect,/No new domain SQL or (?:event\/audit )?intent/i);
+  }
+  assert.match(jdbc.decisionStates.find(x=>x.id==='conflict').next,/illustrative HTTP 409 is application-owned/);
+  assert.match(jdbc.steps.join(' '),/executeIdempotent/);
+  assert.match(jdbc.steps.join(' '),/EVERY attempt/);
+  assert.match(jdbc.mistakes.join(' '),/do not blindly abort/i);
+  assert.ok(searchDeveloperGuides('DEAD').some(x=>x.id==='jdbc'));
+  assert.ok(searchDeveloperGuides('CC-27').some(x=>x.id==='assure'));
+  assert.deepEqual(assure.conformanceCases.map(x=>x.id),
+    ['CC-14','CC-15','CC-16','CC-17','CC-18','CC-19','CC-20','CC-21','CC-22','CC-27']);
+  assert.ok(assure.samples.every(s=>s.code.includes('<scope>test</scope>')));
+  assert.doesNotMatch(jdbc.samples.map(s=>s.code).join(' '),/0\.4\.0/);
+});
