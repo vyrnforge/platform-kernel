@@ -279,6 +279,30 @@ try{
   assert.ok((await evaluate(q('.wb-code-pane code')+'.textContent')).includes('<scope>test</scope>'),'testkit dependency must stay test-scoped');
   assert.equal(await evaluate('document.querySelector(".wb-check-pane a").getAttribute("href")'),'#/docs/assure','testkit must link to consumer assurance guide');
 
+  // Core first-run is a complete tested Java 21 program, with actual released
+  // Unix/Windows run instructions reused directly from the on-site first guide.
+  await click('.wb-wizard-change');
+  await wait('!!document.querySelector(".wb-capability-grid")','return to capability picker for first run');
+  await click('.wb-capability-card:nth-child(3)');
+  await wait('location.hash.includes("cap=ids")','IDs first-run capability unavailable');
+  await click('.wb-wizard-step:nth-child(5)');
+  await wait('!!document.querySelector(".wb-first-run")','runnable first-program instructions missing');
+  assert.equal(await evaluate('document.querySelectorAll(".wb-code-tabs [role=group] button").length'),4,'core first-run must offer Maven, complete Java, Unix and Windows');
+  assert.ok((await evaluate(q('.wb-first-run')+'.textContent')).includes('FirstKernelProgram.java'),'first-run file name missing');
+  const firstPublished=developerGuides.find(x=>x.id==='first').samples;
+  await click('.wb-code-tabs [role=group] button:nth-child(2)');
+  assert.equal(await evaluate(q('.wb-code-pane code')+'.textContent'),firstPublished.find(x=>x.label==='Java 21').code,'wizard must use exact canonical complete Java sample');
+  assert.ok((await evaluate(q('.wb-code-kind')+'.textContent')).includes('Complete runnable Java'),'complete program must be labeled');
+  await click('.wb-code-tabs [role=group] button:nth-child(3)');
+  assert.equal(await evaluate(q('.wb-code-pane code')+'.textContent'),firstPublished.find(x=>x.label==='Run').code,'Unix commands must be canonical site instructions');
+  await click('.wb-code-tabs [role=group] button:nth-child(4)');
+  assert.equal(await evaluate(q('.wb-code-pane code')+'.textContent'),firstPublished.find(x=>x.label==='Windows').code,'Windows instructions must be canonical site instructions');
+  assert.ok((await evaluate(q('.wb-code-pane code')+'.textContent')).includes("java -cp '.;."),'Windows classpath must use semicolon');
+  await click('.wb-copy');
+  await wait('document.querySelector(".wb-copy-feedback")?.textContent.length>0','first-run copy needs accessible result or fallback');
+  assert.ok((await evaluate(q('.wb-copy-feedback')+'.textContent')).match(/Copied|Clipboard unavailable/),'first-run copy failure needs usable fallback');
+  assert.ok((await evaluate(q('.wb-first-run a')+'.getAttribute("href")'))==='#/docs/first','runnable first-program guide link missing');
+
   // History, selected trace reset and one nonverbose status remain meaningful.
   await evaluate('location.hash="#/playground?mode=request&scope=scoped&scenario=membership"');
   await wait('document.querySelector(".wb-status-announcement")?.textContent.includes("Identity & tenancy")','membership deep link must enter trace');
