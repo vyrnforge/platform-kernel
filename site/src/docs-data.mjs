@@ -465,12 +465,12 @@ export function searchDeveloperGuideMatches(query){
     const sections=[
       {section:'overview',label:'Overview',values:[guide.title,guide.summary,guide.group,guide.when,guide.provides]},
       {section:'prerequisite',label:'Before you start',values:[guide.prerequisite]},
-      {section:'steps',label:'Steps',values:guide.steps},
       {section:'scope',label:'Request scope',values:(guide.endpointChoices||[]).flatMap(x=>[x.name,x.when,x.policy,x.guards,x.ownership])},
       {section:'failures',label:'Failure and recovery',values:(guide.failureCases||[]).flatMap(x=>[x.trigger,x.gate,x.failure,x.recovery,x.owner])},
       {section:'decisions',label:'Idempotency decisions',values:(guide.decisionStates||[]).flatMap(x=>[x.type,x.effect,x.owner,x.next,x.recovery])},
       {section:'recovery',label:'Recovery cases',values:(guide.recoveryPaths||[]).flatMap(x=>[x.case,x.explanation,x.verify,x.owner])},
       {section:'conformance',label:'Conformance evidence',values:(guide.conformanceCases||[]).flatMap(x=>[x.id,x.title,x.evidence])},
+      {section:'steps',label:'Steps',values:guide.steps},
       ...guide.samples.map((sample,i)=>({section:'example',label:'Example: '+sample.label,values:[sample.label,sample.kind,sample.filename,sample.code],sampleIndex:i})),
       {section:'troubleshooting',label:'Troubleshooting',values:guide.mistakes},
       {section:'verification',label:'Verification',values:[guide.verify]},
