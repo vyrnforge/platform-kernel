@@ -74,16 +74,28 @@ function App(){
   useEffect(()=>{
     document.title=route.title+' · VyrnForge Platform Kernel';
     window.scrollTo({top:0,behavior:'instant'});
-    const focusId=route.page==='docs'?'guide-heading':route.page==='reference'?'reference-heading':route.page==='playground'?'workbench-title':'page-title';
-    const title=document.getElementById(focusId);
-    title?.focus({preventScroll:true});
-  },[route.page,route.id,route.title]);
+    const guideTargets={
+      prerequisite:'guide-prerequisite-heading',steps:'guide-steps-heading',
+      scope:'request-choices-heading',failures:'request-denials-heading',
+      decisions:'jdbc-decision-heading',recovery:'jdbc-recovery-heading',
+      conformance:'consumer-evidence-heading',example:'guide-example-heading',
+      troubleshooting:'guide-troubleshooting-summary',
+      verification:'guide-verification-heading',ownership:'guide-ownership-heading'
+    };
+    const focusId=route.page==='docs'?(guideTargets[route.section]||'guide-heading'):
+      route.page==='reference'?'reference-heading':route.page==='playground'?'workbench-title':'page-title';
+    const target=document.getElementById(focusId)||document.getElementById('guide-heading');
+    if(route.page==='docs'&&route.section&&route.section!=='overview'){
+      target?.scrollIntoView({block:'start',behavior:'instant'});
+    }
+    target?.focus({preventScroll:true});
+  },[route.page,route.id,route.title,route.section]);
   return <>
     <a className="skip-link" href="#main" onClick={e=>{e.preventDefault();document.getElementById("main")?.focus()}}>Skip to content</a>
     <Header page={route.page}/>
     <main id="main" tabIndex={-1}>
       {route.page==='home'&&<Home/>}
-      {route.page==='docs'&&<DeveloperDocs guideId={route.id}/>}
+      {route.page==='docs'&&<DeveloperDocs guideId={route.id} section={route.section} selectedSampleIndex={route.sampleIndex} searchQuery={route.searchQuery}/>}
       {route.page==='playground'&&<><h1 className="visually-hidden" tabIndex={-1} id="page-title">Interactive integration playground</h1><IntegrationWorkbench mode={route.mode} scope={route.scope} scenario={route.scenario}/></>}
       {route.page==='reference'&&<Reference topic={route.id}/>}
       {route.page==='notfound'&&<NotFound/>}

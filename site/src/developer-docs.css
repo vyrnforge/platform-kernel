@@ -9,10 +9,10 @@
 .docs-guide-nav{display:grid;gap:18px;margin-top:11px}
 .docs-guide-group h2{font-size:10px;line-height:1.5;letter-spacing:1.2px;text-transform:uppercase;color:#52677e;margin:0 0 9px}
 .docs-guide-group a{display:flex;justify-content:space-between;gap:10px;align-items:center;margin-bottom:2px;padding:10px 11px;color:#46627f;border-radius:8px;font-size:14px;font-weight:650}
-.docs-guide-group a span{opacity:0}
+.docs-guide-group a>.docs-nav-arrow{opacity:0}
 .docs-guide-group a:hover{background:#f1f6fd;text-decoration:none}
 .docs-guide-group a[aria-current="page"]{background:#e7f0ff;color:#205cb3;font-weight:800;box-shadow:inset 3px 0 #3177d2}
-.docs-guide-group a[aria-current="page"] span{opacity:1}
+.docs-guide-group a[aria-current="page"]>.docs-nav-arrow{opacity:1}
 .docs-sidebar-note{border-top:1px solid #e2e9f2;padding-top:16px;margin-top:24px;color:#52677e}
 .docs-sidebar-note strong{font-size:12px;color:#466587}
 .docs-sidebar-note p{font-size:12px;line-height:1.7;margin:4px 0 0}
@@ -125,3 +125,12 @@
 .jdbc-evidence{display:block;margin-top:5px;font-size:11px;font-weight:750;color:#52677e}
 .request-decisions details.guide-troubleshooting{max-width:none;margin-top:18px}
 .request-decisions details.guide-troubleshooting li{line-height:1.75}
+
+/* Contextual search reuses the guide sidebar, with one result per matching guide. */
+.docs-result-content{display:grid;min-width:0;gap:4px;flex:1}
+.docs-result-content strong{font:inherit;overflow-wrap:anywhere}
+.docs-result-content small{font-size:12px;font-weight:500;line-height:1.55;color:#48627e;overflow-wrap:anywhere}
+.docs-guide-group a:focus-visible{outline:3px solid #356eb8;outline-offset:2px}
+.guide-article :is(h2,h3,summary)[id]{scroll-margin-top:110px}
+.guide-article :is(h2,h3,summary)[id]:focus{outline:3px solid #356eb8;outline-offset:5px;border-radius:3px}
+@media(max-width:640px){.docs-result-content small{font-size:11px}.guide-article :is(h2,h3,summary)[id]{scroll-margin-top:130px}}
