@@ -348,3 +348,12 @@
 }
 @media(max-width:390px){.wb-wizard-step-label strong{font-size:9px}.wb-wizard-step{padding-inline:1px}}
 @media(prefers-reduced-motion:reduce){.wb-wizard-step,.wb-prerequisite{transition:none}}
+
+/* PR #99: Single-column wizard intro. The older multi-column .wb-intro flex
+   layout expects a grouped heading, but the new wizard renders inline children.
+   Stack kicker, heading and lead vertically at every breakpoint. */
+.wb-intro.wb-wizard-intro{display:flex;flex-direction:column;align-items:flex-start;justify-content:flex-start;gap:0;max-width:980px}
+.wb-wizard-intro .wb-kicker{display:inline-flex;max-width:100%;overflow-wrap:anywhere}
+.wb-wizard-intro h2{width:100%;max-width:900px;margin:17px 0 12px;overflow-wrap:normal}
+.wb-wizard-intro .lead{width:100%;max-width:790px;margin:0}
+@media(max-width:610px){.wb-wizard-intro h2{font-size:clamp(29px,8vw,34px);line-height:1.12;letter-spacing:-1.3px;margin:13px 0 10px}.wb-wizard-intro .lead{font-size:14px;line-height:1.6}}
