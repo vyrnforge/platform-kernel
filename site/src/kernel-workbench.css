@@ -357,3 +357,16 @@
 .wb-wizard-intro h2{width:100%;max-width:900px;margin:17px 0 12px;overflow-wrap:normal}
 .wb-wizard-intro .lead{width:100%;max-width:790px;margin:0}
 @media(max-width:610px){.wb-wizard-intro h2{font-size:clamp(29px,8vw,34px);line-height:1.12;letter-spacing:-1.3px;margin:13px 0 10px}.wb-wizard-intro .lead{font-size:14px;line-height:1.6}}
+
+/* Published Java 21 quickstart in the existing Implement step, not a new page. */
+.wb-first-run{background:linear-gradient(135deg,#f1f7ff,#fff);border:1px solid #cbdff5;border-radius:13px;padding:18px 20px;margin:12px 0 19px;min-width:0}
+.wb-first-run h4{font-size:18px;line-height:1.32;letter-spacing:-.3px;color:#173c67;margin:8px 0 12px}
+.wb-first-run ol{margin:0 0 13px;padding-left:21px;display:grid;gap:7px}
+.wb-first-run li,.wb-first-run p{color:#3f5a78;font-size:12px;line-height:1.7;overflow-wrap:anywhere}
+.wb-first-run p{margin:0 0 10px}
+.wb-first-run code{padding:1px 4px;border-radius:4px;background:#e4eefc;color:#194c87;font-size:11px}
+.wb-first-run a{font-size:12px;font-weight:800;color:#245fa8;display:inline-block;margin-top:2px}
+.wb-phase-implement .wb-code-tabs{flex-wrap:wrap}
+.wb-phase-implement .wb-code-tabs>div{min-width:0;flex:1 1 210px}
+.wb-phase-implement .wb-code-tabs>button.wb-copy{flex:none}
+@media(max-width:610px){.wb-first-run{padding:14px 13px}.wb-first-run h4{font-size:17px}.wb-phase-implement .wb-code-tabs{padding:9px;gap:7px}.wb-phase-implement .wb-code-tabs>div{gap:3px}.wb-phase-implement .wb-code-tabs button{padding:8px 6px;font-size:10px}}
