@@ -2,7 +2,7 @@
 
 **Modular products. Unified platform.** A thin, framework-neutral Java 21 library for adding identity context, access-control plumbing, reliability contracts and observability to **any Java application**. No VyrnForge application, IAM product, shared server, database or broker is required to use the main library.
 
-[Product website / Flow Studio](https://vyrnforge.github.io/platform-kernel/) · [Releases](https://github.com/vyrnforge/platform-kernel/releases) · [Documentation](docs/README.md) · [Apache-2.0](LICENSE)
+[Developer documentation website](https://vyrnforge.github.io/platform-kernel/) · [Releases](https://github.com/vyrnforge/platform-kernel/releases) · [Integration guides](https://vyrnforge.github.io/platform-kernel/#/docs/install) · [Apache-2.0](LICENSE)
 
 ## Get started
 
@@ -14,7 +14,7 @@ Requires Java 21. Maven Central is the canonical distribution for the organizati
 | `platform-kernel-jdbc` | Optional PostgreSQL/Flyway adapter: atomic mutation + event/audit + idempotency, fenced outbox, migrations. |
 | `platform-kernel-testkit` | Test-scope in-memory ports and fixtures. |
 
-See [Maven dependencies and migration](docs/integration/three-jar-distribution.md) for exact coordinates. The parent POM and source/Javadoc archives are metadata/documentation, not extra runtime libraries. Internal reference tests are examples, not runtime dependencies.
+See the [published Maven and Gradle installation guide](https://vyrnforge.github.io/platform-kernel/#/docs/install) for exact dependency scopes and coordinates. The parent POM and source/Javadoc archives are metadata/documentation, not extra runtime libraries. Internal reference tests are examples, not runtime dependencies.
 
 ```xml
 <dependency>
@@ -31,7 +31,7 @@ See [Maven dependencies and migration](docs/integration/three-jar-distribution.m
 - **Multi-tenant application:** resolve a tenant-scoped endpoint with your own membership and module-entitlement ports, then enforce your resource policy. Module keys are application-defined; no predefined product catalog or commercial licensing system is required.
 - **Durable database-backed operations:** optionally add the JDBC adapter for PostgreSQL/Flyway. Use your own business tables and transport. The testkit is optional and test-scoped.
 
-Start with the [general-purpose Java quickstart](docs/integration/quickstart.md), including a runnable example using only the main JAR.
+Start with the [first runnable Java program](https://vyrnforge.github.io/platform-kernel/#/docs/first), including a verified example using only the published main JAR.
 
 ## How it works
 
@@ -43,14 +43,11 @@ Example tenant-scoped HTTP request -> trusted identity -> tenant context
 
 The kernel consumes a trusted identity projection from your authentication middleware; the product owns resource authorization and data. For durable retriable writes, use `JdbcReliabilityTransaction.executeIdempotent`: domain mutation, required event/audit intents and replay result commit together. The outbox is at-least-once compatible, not exactly-once. Products supply the event transport, telemetry backend and production stores.
 
-## Integration guides
+## Developer guides — on the website
 
-- [Application adoption checklist](docs/integration/adoption-checklist.md)
-- [Identity boundary](docs/integration/identity-boundary.md)
-- [General-purpose quickstart and HTTP integration](docs/integration/quickstart.md)
-- [Reliability semantics](docs/contracts/reliability-semantics.md), [safe JDBC mutation guide](docs/integration/jdbc-safe-mutation.md) and [JDBC rollout / recovery](docs/v2/production-hardening.md)
-- [Correlation and health](docs/observability/observability-health.md)
-- [Release and contributor operations](docs/releases/README.md)
+The [developer documentation](https://vyrnforge.github.io/platform-kernel/#/docs/install) is the primary location for adoption guides, runnable examples and troubleshooting. Use [installation](https://vyrnforge.github.io/platform-kernel/#/docs/install), [first Java program](https://vyrnforge.github.io/platform-kernel/#/docs/first), [trusted requests and tenancy](https://vyrnforge.github.io/platform-kernel/#/docs/request), [optional JDBC reliability](https://vyrnforge.github.io/platform-kernel/#/docs/jdbc) and [consumer verification](https://vyrnforge.github.io/platform-kernel/#/docs/assure). The [Reference](https://vyrnforge.github.io/platform-kernel/#/reference/architecture) explains boundaries and versions; the [single Playground](https://vyrnforge.github.io/platform-kernel/#/playground) is an illustrative simulation, not a live JVM.
+
+The repository's `docs/` tree holds maintainer contracts, change history and operational specifications. These are supporting source/evidence references, not a competing developer guide website. See [contract semantics](docs/contracts/reliability-semantics.md) and [release operations](docs/releases/README.md) when deeper implementation or maintenance context is needed.
 
 `FileReference` is an opaque reference contract; no file storage service/client is required or shipped. No workflow engine, IAM implementation, broker, shared business database or mandatory service topology is included. Authentication verification, business data, authorization policies and operational acceptance remain application responsibilities.
 

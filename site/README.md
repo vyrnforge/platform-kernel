@@ -48,7 +48,7 @@ Use Node.js 22+.
 
 The bundle uses local files and needs no external CDN/backend. GitHub Pages CI builds/tests the PR and runs Chromium smoke. Deploy only when a change is merged to main.
 
-Chromium smoke covers route/focus/keyboard navigation, code rendering, search, and narrow/zoom-equivalent responsive widths; it is not a full manual 200% browser-zoom, screen-reader or WCAG audit. The first Java example and request/JDBC signatures were source-reviewed against v0.3.2, not executed against Maven Central artifacts in the website pipeline. Keep site claims pinned to published Maven Central evidence rather than an unpublished candidate.
+Chromium smoke covers route/focus/keyboard navigation, code rendering, contextual guide search and narrow/zoom-equivalent responsive widths; it is not a full manual 200% browser-zoom, screen-reader or WCAG audit. The separate change-scoped published-onboarding workflow downloads v0.3.2 artifacts and compiles/runs the first Java program plus source-excerpt checks against Maven Central (not a real product integration). Keep site claims pinned to published Maven Central evidence rather than an unpublished candidate.
 
 ## Trace usability and verification
 
@@ -71,3 +71,9 @@ The existing Documentation → Resolve a trusted request guide contains a source
 ## Durable mutation UX — Issue #80
 
 The existing [optional JDBC guide](#/docs/jdbc) and [consumer verification guide](#/docs/assure) now explain published v0.3.2 ACQUIRED/REPLAY/IN_PROGRESS/CONFLICT decisions, no-duplicate-SQL rules, rollback/uncertain commit, at-least-once outbox and DEAD reconciliation. The existing single Playground links to these on-site documents; it is a deterministic learning simulation, not a PostgreSQL or IAM execution engine. Durable verification lists the source-published CC-14–CC-22 and CC-27 IDs and still needs independent application evidence under issue #41.
+
+## Documentation findability and release labels — Issue #81
+
+Site documentation remains the canonical interactive guide surface. Sidebar search returns **one best matching section per guide** with contextual text and an optional sample index, using validated hash routes `#/docs/<guide>?section=<section>&q=<query>&sample=<index>`. Deep links focus the target section and preserve search context in browser Back/Forward; troubleshooting/recovery disclosures open when linked. The four destinations and one Playground remain unchanged. The no-JavaScript HTML fallback links to the static project README only, not a separately maintained developer guide catalog.
+
+`site/package.json` is `private: true` and deliberately uses a **0.0.0 unpublishable-site placeholder version**, independent of the current *published Java library v0.3.2* and unpublished *v0.4.0 candidate*. `site/src/data.mjs` remains the single source of runtime/documentation release labels. Changing a release label requires an independently approved and verified publication, source/API review, and a separate documentation cutover; changing the private npm package version alone is never a Java release.
