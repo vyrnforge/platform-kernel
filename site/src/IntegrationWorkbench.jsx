@@ -66,6 +66,12 @@ export function IntegrationWorkbench({mode='core',scope='scoped',scenario='succe
   }
   function selectScope(next){navigate(mode,next,'success')}
   function selectScenario(next){navigate(mode,scope,next)}
+  function chooseCapability(title){
+    setSelectedCapability(title);
+    // Details follow the full nine-card grid. Transfer focus to their existing
+    // heading so users, especially at narrow widths, see the chosen contract.
+    jumpTo('wb-capability-detail-title');
+  }
   function exploreCapability(){
     if(related.reference)return;
     if(related.testkit)setTestkit(true);
@@ -107,7 +113,7 @@ export function IntegrationWorkbench({mode='core',scope='scoped',scenario='succe
       <section className="wb-capability-atlas" aria-labelledby="wb-capability-title">
         <div className="wb-capability-intro">
           <div><span className="wb-capability-kicker">PUBLISHED LIBRARY · v{version}</span>
-            <h3 id="wb-capability-title">What Platform Kernel actually ships.</h3>
+            <h3 id="wb-capability-title" tabIndex={-1}>What Platform Kernel actually ships.</h3>
             <p>{capabilities.length} capability areas across identity, contracts, reliability and operations. Select a capability to see the concrete library contract and what your product must supply.</p>
           </div>
           <a href="#/reference/capabilities">Complete capability reference <span aria-hidden="true">↗</span></a>
@@ -115,7 +121,7 @@ export function IntegrationWorkbench({mode='core',scope='scoped',scenario='succe
         <div className="wb-capability-grid" aria-label="Published Kernel capability areas">
           {capabilities.map((item,index)=><button type="button" className={'wb-capability-card'+(selectedCapability===item.title?' is-selected':'')}
             aria-pressed={selectedCapability===item.title} aria-controls="wb-capability-detail"
-            key={item.title} onClick={()=>setSelectedCapability(item.title)}>
+            key={item.title} onClick={()=>chooseCapability(item.title)}>
             <span className="wb-capability-card-top"><span>{String(index+1).padStart(2,'0')} / {item.category}</span><span aria-hidden="true">↗</span></span>
             <strong>{item.title}</strong>
             <small>{item.summary}</small>
@@ -124,7 +130,7 @@ export function IntegrationWorkbench({mode='core',scope='scoped',scenario='succe
         </div>
         <section className="wb-capability-detail" id="wb-capability-detail" aria-labelledby="wb-capability-detail-title">
           <div className="wb-capability-detail-heading">
-            <div><span className="wb-overline">SELECTED CAPABILITY · v{version}</span><h4 id="wb-capability-detail-title">{capability.title}</h4></div>
+            <div><span className="wb-overline">SELECTED CAPABILITY · v{version}</span><h4 id="wb-capability-detail-title" tabIndex={-1}>{capability.title}</h4></div>
             <span className="wb-capability-detail-state">{capability.status}</span>
           </div>
           <div className="wb-capability-detail-grid">
@@ -136,6 +142,7 @@ export function IntegrationWorkbench({mode='core',scope='scoped',scenario='succe
             {related.reference?<a className="wb-capability-try" href="#/reference/capabilities">Read the published contract <span aria-hidden="true">→</span></a>:
               <button type="button" className="wb-capability-try" onClick={exploreCapability}>{related.label} <span aria-hidden="true">→</span></button>}
             <a href="#/docs/install">Start with installation</a>
+            <button type="button" className="wb-capability-back" onClick={()=>jumpTo("wb-capability-title")}>Browse other capabilities ↑</button>
           </div>
         </section>
       </section>
