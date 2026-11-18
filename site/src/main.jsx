@@ -31,7 +31,7 @@ function Home(){
           <h1 id="page-title" tabIndex={-1}>Build your product.<br/><em>Reuse the foundation.</em></h1>
           <p>Platform Kernel gives independent Java applications a consistent technical foundation: identifiers, trusted context, API contracts, audit and event patterns, and optional durable retries.</p>
           <p className="home-boundary-statement">Your application keeps its data, authorization and deployment. No mandatory Kernel server.</p>
-          <div className="home-actions"><a className="btn primary" href="#/docs/install">Start with the quickstart <span aria-hidden="true">→</span></a><a className="btn subtle" href="#/playground">Explore a scenario <span aria-hidden="true">↗</span></a></div>
+          <div className="home-actions"><a className="btn primary" href="#/docs/install">Start with the quickstart <span aria-hidden="true">→</span></a><a className="btn subtle" href="#/playground">Follow integration wizard <span aria-hidden="true">↗</span></a></div>
           <div className="home-facts"><span>Published on Maven Central</span><span>Three focused artifacts</span><span>Optional JDBC adapter</span></div>
         </div>
         <div className="home-code" aria-label="Maven installation preview">
