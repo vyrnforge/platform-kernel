@@ -14,6 +14,9 @@ concurrency:
   cancel-in-progress: true
 jobs:
   build:
+    outputs:
+      js_sha256: ${{ steps.digests.outputs.js_sha256 }}
+      css_sha256: ${{ steps.digests.outputs.css_sha256 }}
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
@@ -33,7 +36,17 @@ jobs:
         run: |
           npm test
           npm run build
-      - name: Browser smoke test (Chrome)
+      - name: Link, version and bundle quality gates
+        working-directory: site
+        run: node scripts/site-quality.mjs
+      - name: Compute exact build asset provenance
+        id: digests
+        shell: bash
+        run: |
+          set -euo pipefail
+          echo "js_sha256=$(sha256sum site/dist/app.js | cut -d' ' -f1)" >> "$GITHUB_OUTPUT"
+          echo "css_sha256=$(sha256sum site/dist/app.css | cut -d' ' -f1)" >> "$GITHUB_OUTPUT"
+      - name: Browser smoke and semantic QA (Chrome)
         working-directory: site
         run: node scripts/browser-smoke.mjs
       - name: Upload Pages artifact
@@ -47,12 +60,29 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     permissions:
+      contents: read
       pages: write
       id-token: write
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
+      # The deploy job runs on a fresh runner; the verification script does not
+      # exist here unless we check out the same commit that produced the build.
+      - name: Checkout verification script
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+      - name: Set up Node 22 for public verification
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1
+        with:
+          node-version: '22'
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@368f82528645a54fb793d4d04e342629a3f51346
+      - name: Verify public Pages asset provenance after deploy
+        env:
+          PUBLIC_PAGES_URL: ${{ steps.deployment.outputs.page_url }}
+          BUILT_JS_SHA256: ${{ needs.build.outputs.js_sha256 }}
+          BUILT_CSS_SHA256: ${{ needs.build.outputs.css_sha256 }}
+        run: node site/scripts/verify-deployment.mjs "$PUBLIC_PAGES_URL" "$BUILT_JS_SHA256" "$BUILT_CSS_SHA256"

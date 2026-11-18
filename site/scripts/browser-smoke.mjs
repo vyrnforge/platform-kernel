@@ -8,7 +8,8 @@ import { tmpdir } from 'node:os';
 import { resolve, join, extname } from 'node:path';
 import { version,capabilities } from '../src/data.mjs';
 import { developerGuides } from '../src/docs-data.mjs';
-import {resolveRoute} from '../src/routes.mjs';
+import {resolveRoute,referenceTopics} from '../src/routes.mjs';
+import {workbenchModes,scenariosFor} from '../src/workbench-data.mjs';
 const sleep=ms=>new Promise(r=>setTimeout(r,ms));
 const dist=resolve('dist'),prefix='/platform-kernel/';
 const server=createServer(async(req,res)=>{try{
@@ -305,6 +306,68 @@ try{
   assert.equal(await evaluate('document.querySelectorAll("#consumer-evidence-heading ~ .request-failures-scroll tbody tr").length'),10,'published conformance IDs must be listed');
   assert.ok((await evaluate(q('.guide-code-shell code')+'.textContent')).includes('<scope>test</scope>'),'testkit must remain test scope');
 
+  // Issue #83 — full supported route/state matrix in the rendered production bundle.
+  // Semantic checks are deterministic smoke gates, NOT a complete WCAG/AT audit.
+  const matrix=[
+    ['#/','.home-hero'],
+    ...developerGuides.map(guide=>['#/docs/'+guide.id,'#guide-heading']),
+    ['#/docs/preview','#guide-heading'],
+    ...referenceTopics.map(topic=>['#/reference/'+topic.id,'#reference-heading']),
+    ...workbenchModes.flatMap(mode=>
+      (mode.id==='request'?['scoped','tenantless']:['scoped'])
+        .flatMap(scope=>scenariosFor(mode.id,scope).map(s=>
+          ['#/playground?mode='+mode.id+'&scope='+scope+'&scenario='+s.id,'.wb-frame'])))
+  ];
+  let inspectedControls=0,checkedInternalLinks=0;
+  for(const [hash,target] of matrix){
+    await evaluate('location.hash='+JSON.stringify(hash));
+    await wait('!!document.querySelector('+JSON.stringify(target)+')','quality route missing '+hash);
+    await sleep(85);
+    const audit=await evaluate(`(()=>{
+      const elements=[...document.querySelectorAll('[id]')];
+      const ids=new Set(),duplicates=[];
+      for(const el of elements){if(ids.has(el.id))duplicates.push(el.id);ids.add(el.id);}
+      const accessible=el=>(el.getAttribute('aria-label')||el.getAttribute('aria-labelledby')&&
+        document.getElementById(el.getAttribute('aria-labelledby'))?.textContent||el.textContent||'').trim();
+      const unnamedButtons=[...document.querySelectorAll('button')].filter(x=>!accessible(x)).length;
+      const unnamedLinks=[...document.querySelectorAll('a[href]')].filter(x=>!accessible(x)).length;
+      const unlabeledInputs=[...document.querySelectorAll('input,select,textarea')].filter(x=>!x.labels?.length&&!x.getAttribute('aria-label')&&!x.getAttribute('aria-labelledby')).length;
+      const missingControls=[...document.querySelectorAll('[aria-controls]')].filter(x=>
+        x.getAttribute('aria-controls').split(' ').some(id=>!document.getElementById(id))).length;
+      const positiveTab=[...document.querySelectorAll('[tabindex]')].filter(x=>Number(x.getAttribute('tabindex'))>0).length;
+      return {duplicates,unnamedButtons,unnamedLinks,unlabeledInputs,missingControls,positiveTab,
+        links:[...document.querySelectorAll('a[href]')].map(x=>x.getAttribute('href')).filter(x=>x.startsWith('#/')),
+        controls:document.querySelectorAll('button,input,select,textarea').length,
+        overflow:document.documentElement.scrollWidth>window.innerWidth+1,
+        headings:document.querySelectorAll('h1,h2,h3,h4').length};
+    })()`);
+    assert.deepEqual(audit.duplicates,[],'Duplicate DOM IDs on '+hash);
+    for(const key of ['unnamedButtons','unnamedLinks','unlabeledInputs','missingControls','positiveTab']){
+      assert.equal(audit[key],0,key+' on '+hash+': '+JSON.stringify(audit));
+    }
+    assert.ok(!audit.overflow,'Whole-page overflow on '+hash);
+    assert.ok(audit.headings>0,'No content headings on '+hash);
+    for(const href of audit.links)assert.notEqual(resolveRoute(href).page,'notfound','Broken rendered hash link '+href+' on '+hash);
+    inspectedControls+=audit.controls;checkedInternalLinks+=audit.links.length;
+  }
+  // Reduced-motion preference must disable state transition animation on the
+  // existing mode controls; still requires an actual OS/browser human check.
+  await send('Emulation.setEmulatedMedia',{features:[{name:'prefers-reduced-motion',value:'reduce'}]});
+  await evaluate('location.hash="#/playground"');
+  await wait('!!document.querySelector(".wb-profile")','reduced motion Playground unavailable');
+  assert.equal(await evaluate('matchMedia("(prefers-reduced-motion: reduce)").matches'),true,'reduced motion emulation failed');
+  assert.ok((await evaluate('getComputedStyle(document.querySelector(".wb-profile")).transitionDuration')).split(',').every(s=>parseFloat(s)===0),'reduced motion mode selector still transitions');
+  await send('Emulation.setEmulatedMedia',{features:[]});
+  await evaluate('location.hash="#/"');
+  await wait('!!document.querySelector(".home-hero")','home performance route missing');
+  const perf=await evaluate(`(()=>{
+    const nav=performance.getEntriesByType('navigation')[0];
+    return {domNodes:document.querySelectorAll('*').length,resourceCount:performance.getEntriesByType('resource').length,
+      dclMs:nav?Math.round(nav.domContentLoadedEventEnd):null,
+      loadMs:nav?Math.round(nav.loadEventEnd):null};
+  })()`);
+  console.log('SITE_BROWSER_QA '+JSON.stringify({routeCount:matrix.length,inspectedControls,checkedInternalLinks,reducedMotion:true,perf}));
+
   // Baseline semantic and small-text contrast checks. This is not an AT or WCAG certification.
   const computedContrast=async selector=>{
     const expr='(()=>{'+
@@ -324,7 +387,7 @@ try{
   for(const [hash,selectors] of [
     ['#/docs/request',['.guide-breadcrumb','.guide-excerpt-note','.docs-search-count']],
     ['#/reference/architecture',['.side-kicker','.reference-aside-note']],
-    ['#/playground?mode=request&scope=scoped&scenario=success',['.wb-profile-number','.wb-stage-slash']]
+    ['#/playground?mode=request&scope=scoped&scenario=success',['.wb-profile-number','.wb-stage-slash','.wb-trace-state','.wb-decision-detail p','.wb-code-kind']]
   ]){
     await evaluate('location.hash='+JSON.stringify(hash));
     await wait('!!document.querySelector('+JSON.stringify(selectors[0])+')','contrast target route '+hash);
