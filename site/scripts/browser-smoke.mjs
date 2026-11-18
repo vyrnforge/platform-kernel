@@ -227,6 +227,10 @@ try{
   await click('.wb-trace-actions button:first-child');
   assert.equal(await evaluate('document.querySelector(".wb-inspection-tag").textContent.includes("1 OF 6")'),true,'previous decision navigation works');
 
+  // Complete the newly added example handoff before the independent
+  // primary-navigation test, so its heading-focus assertion starts in Docs.
+  await click('.wb-check-pane a');
+  await wait('location.hash==="#/docs/request" && document.activeElement?.id==="guide-heading"','example handoff should enter its integration guide');
   // One playground only, with published code output and negative scenarios.
   await click('.primary-nav a[href="#/playground"]');
   await wait('location.hash==="#/playground" && !!document.querySelector(".wb-frame")','playground failed');
