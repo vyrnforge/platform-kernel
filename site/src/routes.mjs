@@ -45,10 +45,17 @@ export function resolveRoute(hash=''){
     const params=new URLSearchParams(query);
     const requestedMode=params.get('mode');
     const mode=workbenchModes.some(item=>item.id===requestedMode)?requestedMode:'core';
-    const scope=params.get('scope')==='tenantless'?'tenantless':'scoped';
+    const requestedScope=params.get('scope');
+    const scope=mode==='request'&&requestedScope==='tenantless'?'tenantless':'scoped';
+    const available=scenariosFor(mode,scope);
     const wantedScenario=params.get('scenario')||'success';
-    const scenario=scenariosFor(mode,scope).some(item=>item.id===wantedScenario)?wantedScenario:'success';
-    return {page:'playground',title:'Playground',mode,scope,scenario,canonical:normalized};
+    const scenario=available.some(item=>item.id===wantedScenario)?wantedScenario:'success';
+    const corrections=[];
+    if(requestedMode&&!workbenchModes.some(item=>item.id===requestedMode))corrections.push('Unknown application pattern');
+    if(requestedScope&&(requestedScope!=='scoped'&&requestedScope!=='tenantless'||mode!=='request'&&requestedScope!=='scoped'))corrections.push('Unsupported endpoint scope');
+    if(params.has('scenario')&&wantedScenario!==scenario)corrections.push('Scenario unavailable for this pattern and scope');
+    const recovery=corrections.length?corrections.join('; ')+'. Showing '+available.find(item=>item.id===scenario).title+'. Choose a supported option or return to your guide.':null;
+    return {page:'playground',title:'Playground',mode,scope,scenario,recovery,canonical:normalized};
   }
   if(normalized==='#/docs')return {page:'docs',id:'install',title:'Documentation',canonical:'#/docs/install'};
   // Section deep links are optional, validated hints within the existing guides,

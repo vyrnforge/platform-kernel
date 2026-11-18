@@ -76,3 +76,26 @@ test('private site package metadata cannot be mistaken for a published Java vers
   assert.equal(lock.version,pkg.version);
   assert.equal(lock.packages[''].version,pkg.version);
 });
+
+
+test('invalid Playground URLs recover visibly without running nonexistent scenarios',()=>{
+  const unknown=resolveRoute('#/playground?mode=unsupported&scope=tenantless&scenario=anything');
+  assert.equal(unknown.page,'playground');
+  assert.equal(unknown.mode,'core');
+  assert.equal(unknown.scope,'scoped');
+  assert.equal(unknown.scenario,'success');
+  assert.match(unknown.recovery,/Unknown application pattern/);
+  assert.match(unknown.recovery,/Unsupported endpoint scope/);
+  assert.match(unknown.recovery,/Scenario unavailable/);
+  const notAvailable=resolveRoute('#/playground?mode=request&scope=tenantless&scenario=membership');
+  assert.equal(notAvailable.mode,'request');
+  assert.equal(notAvailable.scope,'tenantless');
+  assert.equal(notAvailable.scenario,'success');
+  assert.match(notAvailable.recovery,/Scenario unavailable/);
+  assert.equal(resolveRoute('#/playground?mode=request&scope=scoped&scenario=membership').recovery,null);
+  assert.equal(resolveRoute('#/playground').recovery,null);
+  const unsupportedScope=resolveRoute('#/playground?mode=mutation&scope=tenantless&scenario=replay');
+  assert.equal(unsupportedScope.scope,'scoped');
+  assert.equal(unsupportedScope.scenario,'replay');
+  assert.match(unsupportedScope.recovery,/Unsupported endpoint scope/);
+});
