@@ -226,3 +226,8 @@
 @media(max-width:610px){.wb-section{padding-top:44px}.wb-intro{margin-bottom:20px}.wb-capability-atlas{padding:15px;margin-bottom:19px;border-radius:14px}.wb-capability-intro{margin-bottom:15px}.wb-capability-intro h3{font-size:24px}.wb-capability-grid{gap:7px}.wb-capability-card{min-height:149px;padding:11px;gap:7px}.wb-capability-card strong{font-size:13px}.wb-capability-card small{font-size:11px}.wb-capability-card-top{font-size:9px}.wb-capability-detail{padding:15px;border-radius:10px}.wb-capability-detail-grid{grid-template-columns:1fr;gap:12px}}
 @media(max-width:359px){.wb-capability-grid{grid-template-columns:1fr}.wb-capability-card{min-height:110px}}
 @media(prefers-reduced-motion:reduce){.wb-capability-card{transition:none}}
+
+/* Intentional keyboard/mobile travel between nine-card inventory and its detail. */
+.wb-capability-detail h4,.wb-capability-intro h3{scroll-margin-top:110px}
+.wb-capability-detail h4:focus-visible,.wb-capability-intro h3:focus-visible{outline:3px solid #e3aa34;outline-offset:5px}
+.wb-capability-detail-actions button.wb-capability-back{border:1px solid #54739b;background:#244367;color:#e7f0fd;min-height:42px;cursor:pointer}
