@@ -189,3 +189,40 @@
   .wb-result-card .wb-trace-heading{align-items:flex-start;gap:9px}
   .wb-result-card .wb-outcome{max-width:100%}
 }
+
+/* Capability-first Playground: source-backed discovery ahead of three simulations. */
+.wb-capability-atlas{border:1px solid #cbd9eb;border-radius:20px;background:#fff;box-shadow:0 16px 44px #173c6a0b;padding:28px;margin:0 0 28px;min-width:0}
+.wb-capability-intro{display:flex;align-items:end;justify-content:space-between;gap:22px;margin-bottom:23px}
+.wb-capability-kicker{display:inline-flex;border:1px solid #c7d8f1;background:#edf4ff;border-radius:99px;padding:7px 11px;color:#285ca2;font-size:10px;font-weight:850;letter-spacing:.9px}
+.wb-capability-intro h3{font-size:clamp(22px,2.7vw,32px);line-height:1.15;letter-spacing:-.75px;color:#15304e;margin:12px 0 8px}
+.wb-capability-intro p{font-size:13px;line-height:1.65;color:#526c88;margin:0;max-width:68ch}
+.wb-capability-intro>a{flex:none;font-size:12px;font-weight:750;color:#2859a1;padding-bottom:5px}
+.wb-capability-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+.wb-capability-card{position:relative;display:flex;flex-direction:column;align-items:flex-start;text-align:left;gap:8px;border-radius:13px;border:1px solid #d9e3ef;background:linear-gradient(154deg,#fff,#f8fbff);padding:17px;min-width:0;min-height:158px;color:#253c56;transition:border-color .15s,box-shadow .15s,transform .15s}
+.wb-capability-card:hover{border-color:#86acdf;box-shadow:0 7px 17px #234a7110}
+.wb-capability-card.is-selected{background:linear-gradient(155deg,#f0f6ff,#e7f0ff);border-color:#3f79cd;box-shadow:inset 0 0 0 1px #75a3e1,0 7px 19px #234a7110}
+.wb-capability-card-top{display:flex;align-items:center;justify-content:space-between;gap:8px;width:100%;color:#5a7696;font-size:10px;font-weight:800;letter-spacing:.65px;text-transform:uppercase}
+.wb-capability-card strong{font-size:15px;line-height:1.3;letter-spacing:-.2px;color:#193c65}
+.wb-capability-card small{color:#506d89;font-size:12px;line-height:1.45}
+.wb-capability-card-state{margin-top:auto;border:1px solid #d5dfeb;background:#fff;border-radius:99px;padding:4px 8px;font-size:10px;color:#496684;font-weight:750}
+.wb-capability-detail{margin-top:14px;border-radius:15px;padding:20px 22px;background:#112844;color:#e7f0fd;min-width:0}
+.wb-capability-detail-heading{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-bottom:14px}
+.wb-capability-detail .wb-overline{color:#a7c4ed}
+.wb-capability-detail h4{font-size:20px;letter-spacing:-.3px;margin:6px 0 0;color:#fff}
+.wb-capability-detail-state{border:1px solid #54739b;color:#e2eeff;background:#244367;font-size:10px;font-weight:750;border-radius:999px;padding:7px 10px}
+.wb-capability-detail-grid{display:grid;grid-template-columns:1fr 1fr;gap:20px}
+.wb-capability-detail-grid>div{min-width:0}
+.wb-capability-detail-grid strong{font-size:11px;color:#a9ceff;display:block;letter-spacing:.55px;text-transform:uppercase;margin-bottom:7px}
+.wb-capability-detail-grid p{font-size:12px;line-height:1.7;color:#e3edfb;margin:0}
+.wb-capability-limit{font-size:11px;line-height:1.55;border-left:2px solid #76a9f2;margin:12px 0 0;padding-left:9px;color:#cddff6}
+.wb-capability-detail-actions{display:flex;gap:13px;align-items:center;flex-wrap:wrap;margin-top:17px}
+.wb-capability-detail-actions :is(a,button){font-size:12px;font-weight:800;border-radius:8px;padding:10px 12px;line-height:1.45;text-decoration:none}
+.wb-capability-detail-actions a:not(.wb-capability-try){color:#bdd9fa;padding-left:0}
+.wb-capability-detail-actions .wb-capability-try{color:#133d70;background:#e7f1ff;border:1px solid #e7f1ff;min-height:42px;display:inline-flex;align-items:center;gap:12px}
+.wb-capability-detail-actions button.wb-capability-try{cursor:pointer}
+.wb-capability-card:focus-visible,.wb-capability-detail-actions :is(a,button):focus-visible{outline:3px solid #e3aa34;outline-offset:3px}
+.wb-capability-detail{scroll-margin-top:95px}
+@media(max-width:850px){.wb-capability-atlas{padding:20px}.wb-capability-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.wb-capability-intro{align-items:start;flex-direction:column;gap:11px}.wb-capability-card{min-height:143px;padding:13px}}
+@media(max-width:610px){.wb-section{padding-top:44px}.wb-intro{margin-bottom:20px}.wb-capability-atlas{padding:15px;margin-bottom:19px;border-radius:14px}.wb-capability-intro{margin-bottom:15px}.wb-capability-intro h3{font-size:24px}.wb-capability-grid{gap:7px}.wb-capability-card{min-height:149px;padding:11px;gap:7px}.wb-capability-card strong{font-size:13px}.wb-capability-card small{font-size:11px}.wb-capability-card-top{font-size:9px}.wb-capability-detail{padding:15px;border-radius:10px}.wb-capability-detail-grid{grid-template-columns:1fr;gap:12px}}
+@media(max-width:359px){.wb-capability-grid{grid-template-columns:1fr}.wb-capability-card{min-height:110px}}
+@media(prefers-reduced-motion:reduce){.wb-capability-card{transition:none}}
