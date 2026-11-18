@@ -446,7 +446,7 @@ try{
     // Tables and code may scroll locally; the document itself must not.
     for(const id of ['request','jdbc']){
       await evaluate('location.hash="#/docs/'+id+'"');
-      await wait('document.querySelector(".guide-article") && document.querySelector(".request-failures-scroll")','integration guide '+id+' missing at '+width);
+      await wait('!!document.querySelector(".guide-article") && !!document.querySelector(".request-failures-scroll")','integration guide '+id+' missing at '+width);
       assert.ok(await evaluate('document.documentElement.scrollWidth<=window.innerWidth+1'),'Page-level overflow in '+id+' guide at '+width+'px');
       assert.equal(await evaluate('getComputedStyle(document.querySelector(".request-failures-scroll")).overflowX'),'auto','table scroll should remain local in '+id);
       if(width<=640)assert.ok(await evaluate('document.querySelector(".request-failures-scroll").scrollWidth>document.querySelector(".request-failures-scroll").clientWidth'),'wide table lost local scrolling in '+id+' at '+width);
