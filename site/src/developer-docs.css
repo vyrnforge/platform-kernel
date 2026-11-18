@@ -134,3 +134,8 @@
 .guide-article :is(h2,h3,summary)[id]{scroll-margin-top:110px}
 .guide-article :is(h2,h3,summary)[id]:focus{outline:3px solid #356eb8;outline-offset:5px;border-radius:3px}
 @media(max-width:640px){.docs-result-content small{font-size:11px}.guide-article :is(h2,h3,summary)[id]{scroll-margin-top:130px}}
+
+/* Narrow documentation reflow: long inline Java identifiers in numbered steps
+   can otherwise expand the whole page at 320px. Keep wide examples/tables
+   independently scrollable in their existing containers. */
+.guide-section li{overflow-wrap:anywhere}
