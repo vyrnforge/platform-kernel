@@ -241,6 +241,7 @@ try{
   assert.ok((await evaluate(q('.wb-capability-detail')+'.textContent')).includes('What the library ships'),'capability details expose published contract');
   assert.ok((await evaluate(q('.wb-capability-detail')+'.textContent')).includes('What your application supplies'),'capability details preserve ownership');
   await click('.wb-capability-card:nth-child(6)');
+  assert.equal(await evaluate('document.activeElement?.id'),'wb-capability-detail-title','capability selection must focus distant detail heading');
   assert.ok((await evaluate(q('#wb-capability-detail-title')+'.textContent')).includes('Events & audit'),'capability selection changes detail');
   assert.ok((await evaluate(q('.wb-capability-detail-grid')+'.textContent')).includes('JdbcReliabilityTransaction'),'published API class shown');
   await click('.wb-capability-try');
@@ -249,6 +250,8 @@ try{
   await click('.wb-capability-card:nth-child(8)');
   assert.ok((await evaluate(q('.wb-capability-detail')+'.textContent')).includes('contract only'),'file references must not imply executable behavior');
   assert.equal(await evaluate('document.querySelector(".wb-capability-detail-actions a.wb-capability-try").getAttribute("href")'),'#/reference/capabilities','contract-only capability links to reference');
+  await click('.wb-capability-back');
+  assert.equal(await evaluate('document.activeElement?.id'),'wb-capability-title','browse other capabilities returns to inventory heading');
   await click('.wb-profile:nth-child(2)');
   await click('.wb-scenario:nth-child(2)');
   assert.ok((await evaluate(q('.wb-outcome')+'.textContent')).includes('401'),'unverified identity denial visible');
