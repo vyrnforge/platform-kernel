@@ -8,6 +8,39 @@ import './developer-docs.css';
 
 const groups=['Getting started','Integrate','Test & operate'];
 
+/* Section links reuse the existing validated Docs hash routes and heading IDs.
+   Only longer implementation guides need a local reading path; short first-run
+   guides retain their simpler one-column reading flow. */
+const readingPath={
+  request:[
+    {id:'prerequisite',label:'Before you start'},
+    {id:'steps',label:'Steps'},
+    {id:'scope',label:'Choose scope'},
+    {id:'failures',label:'Failure & recovery'},
+    {id:'example',label:'Example'},
+    {id:'verification',label:'Verify'},
+    {id:'ownership',label:'Ownership'}
+  ],
+  jdbc:[
+    {id:'prerequisite',label:'Before you start'},
+    {id:'steps',label:'Steps'},
+    {id:'decisions',label:'Decision outcomes'},
+    {id:'recovery',label:'Recovery cases'},
+    {id:'example',label:'Example'},
+    {id:'troubleshooting',label:'Troubleshooting'},
+    {id:'verification',label:'Verify'}
+  ],
+  assure:[
+    {id:'prerequisite',label:'Before you start'},
+    {id:'steps',label:'Test steps'},
+    {id:'conformance',label:'Conformance checks'},
+    {id:'example',label:'Testkit example'},
+    {id:'verification',label:'Verify'},
+    {id:'ownership',label:'Ownership'}
+  ]
+};
+
+
 export function DeveloperDocs({guideId='install',section='overview',selectedSampleIndex=null,searchQuery=null}){
   const [query,setQuery]=useState(searchQuery||'');
   const searchInputRef=useRef(null);
@@ -63,6 +96,14 @@ export function DeveloperDocs({guideId='install',section='overview',selectedSamp
         <div className="guide-topline"><span>Practical integration</span><span>v{version} · released APIs</span></div>
         <h2 id="guide-heading" tabIndex={-1}>{guide.title}</h2>
         <p className="guide-summary">{guide.summary}</p>
+        {readingPath[guide.id]&&<nav className="guide-reading-path" aria-label="Sections in this guide">
+          <span className="guide-reading-path-title">In this guide</span>
+          <div className="guide-reading-path-links">
+            {readingPath[guide.id].map(item=><a key={item.id}
+              href={'#/docs/'+guide.id+'?section='+item.id}
+              aria-current={section===item.id?'location':undefined}>{item.label}</a>)}
+          </div>
+        </nav>}
         <div className="guide-callout"><strong>When to use this</strong><p>{guide.when}</p><strong>What the Kernel provides</strong><p>{guide.provides}</p></div>
         <section className="guide-section"><h3 id="guide-prerequisite-heading" tabIndex={-1}>Before you start</h3><p>{guide.prerequisite}</p></section>
         <section className="guide-section"><h3 id="guide-steps-heading" tabIndex={-1}>Steps</h3><ol>{guide.steps.map((step,i)=><li key={i}>{step}</li>)}</ol></section>
