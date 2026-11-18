@@ -53,9 +53,10 @@ export function IntegrationWorkbench({mode='core',scope='scoped',scenario='succe
     target.focus({preventScroll:true});
   }
   function inspectSpotlight(){
+    // The inspector heading persists across local stage selections. Focus it
+    // immediately, without relying on throttled animation frames in browsers.
     selectStep(spotlightIndex);
-    // Inspector is persistent; give React one frame to render the chosen gate.
-    requestAnimationFrame(()=>jumpTo('wb-inspection-heading'));
+    jumpTo('wb-inspection-heading');
   }
   async function copyCode(){
     try{
