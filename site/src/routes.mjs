@@ -51,11 +51,21 @@ export function resolveRoute(hash=''){
     return {page:'playground',title:'Playground',mode,scope,scenario,canonical:normalized};
   }
   if(normalized==='#/docs')return {page:'docs',id:'install',title:'Documentation',canonical:'#/docs/install'};
-  if(normalized==='#/docs/preview')return {page:'docs',id:'preview',title:'v0.4.0 developer preview · NOT RELEASED',canonical:normalized};
+  // Section deep links are optional, validated hints within the existing guides,
+  // never new top-level destinations. Query text is retained for Back/Forward.
   if(normalized.startsWith('#/docs/')){
-    const id=normalized.slice('#/docs/'.length);
-    const guide=developerGuides.find(x=>x.id===id);
-    if(guide)return {page:'docs',id,title:guide.title,canonical:normalized};
+    const [path,rawQuery='']=normalized.slice('#/docs/'.length).split('?',2);
+    const guide=developerGuides.find(x=>x.id===path);
+    if(path==='preview'||guide){
+      const params=new URLSearchParams(rawQuery);
+      const sections=['overview','prerequisite','steps','scope','failures','decisions','recovery','conformance','example','troubleshooting','verification','ownership'];
+      const section=sections.includes(params.get('section'))?params.get('section'):'overview';
+      const index=Number(params.get('sample'));
+      const sampleIndex=guide&&params.has('sample')&&Number.isInteger(index)&&index>=0&&index<guide.samples.length?index:null;
+      const searchQuery=params.has('q')?params.get('q').slice(0,120):null;
+      return {page:'docs',id:path,title:path==='preview'?'v0.4.0 developer preview · NOT RELEASED':guide.title,
+        section:path==='preview'?'overview':section,sampleIndex,searchQuery,canonical:normalized};
+    }
   }
   if(normalized==='#/reference')return {page:'reference',id:'architecture',title:'Reference',canonical:'#/reference/architecture'};
   if(normalized.startsWith('#/reference/')){
