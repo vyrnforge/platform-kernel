@@ -416,6 +416,7 @@ try{
     return evaluate(expr);
   };
   for(const [hash,selectors] of [
+    ['#/',['.brand-name small']],
     ['#/docs/request',['.guide-breadcrumb','.guide-excerpt-note','.docs-search-count']],
     ['#/reference/architecture',['.side-kicker','.reference-aside-note']],
     ['#/playground?mode=request&scope=scoped&scenario=success',['.wb-profile-number','.wb-stage-slash','.wb-trace-state','.wb-decision-detail p','.wb-code-kind']]
