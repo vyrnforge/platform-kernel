@@ -453,12 +453,28 @@ try{
     }
     await evaluate('location.hash="#/docs/first"');
     await wait('!!document.querySelector(".guide-article")','return to first guide after reflow tests');
-    if(width<=640)assert.equal(await evaluate('getComputedStyle(document.querySelector(".docs-guide-nav")).display'),'flex','mobile guide links use compact wrapping navigation at '+width);
+    if(width<=640){
+      assert.equal(await evaluate('getComputedStyle(document.querySelector(".docs-guide-nav")).overflowX'),'auto','guide navigation must scroll locally at '+width);
+      assert.equal(await evaluate('document.querySelectorAll(".docs-guide-nav a").length'),5,'all published guides remain reachable');
+      assert.ok(await evaluate('document.querySelector(".docs-guide-nav").scrollWidth>document.querySelector(".docs-guide-nav").clientWidth'),'guide rail must expose more topics at '+width);
+      assert.ok(await evaluate('document.querySelector(".guide-article").getBoundingClientRect().top<window.innerHeight'),'current guide content should begin within the first viewport at '+width);
+      await evaluate('(()=>{const links=document.querySelectorAll(".docs-guide-nav a");links[links.length-1].focus()})()');
+      await wait('document.querySelector(".docs-guide-nav").scrollLeft>0','keyboard focus should bring the last guide into view at '+width);
+      assert.ok(await evaluate('document.documentElement.scrollWidth<=window.innerWidth+1'),'guide rail must not create page overflow at '+width);
+    }
     assert.equal(await evaluate('getComputedStyle(document.querySelector(".guide-code-shell pre")).overflowX'),'auto','code has local horizontal scrolling at '+width);
     if(width<=390)assert.ok(await evaluate('document.querySelector(".guide-code-shell pre").scrollWidth>document.querySelector(".guide-code-shell pre").clientWidth'),'long code scrolls at narrow viewport');
     await evaluate('location.hash="#/reference/architecture"');
     await wait('!!document.querySelector(".ownership-grid")','responsive reference missing');
     assert.ok(await evaluate('document.documentElement.scrollWidth<=window.innerWidth+1'),'Reference overflows viewport '+width);
+    if(width<=640){
+      assert.equal(await evaluate('document.querySelectorAll(".reference-nav a").length'),3,'all reference topics remain available');
+      assert.equal(await evaluate('getComputedStyle(document.querySelector(".reference-nav")).overflowX'),'auto','reference topic rail scrolls locally');
+      assert.ok(await evaluate('document.querySelector(".reference-article").getBoundingClientRect().top<window.innerHeight'),'reference article should begin within the first viewport at '+width);
+      await evaluate('document.querySelectorAll(".reference-nav a")[2].focus()');
+      await wait('document.querySelector(".reference-nav").scrollLeft>0','keyboard focus should reveal last reference topic at '+width);
+      assert.ok(await evaluate('document.documentElement.scrollWidth<=window.innerWidth+1'),'reference topic rail must not overflow document');
+    }
     await evaluate('location.hash="#/"');
     await wait('!!document.querySelector(".home-hero")','responsive home missing');
     assert.ok(await evaluate('document.documentElement.scrollWidth<=window.innerWidth+1'),'Home overflows viewport '+width);
