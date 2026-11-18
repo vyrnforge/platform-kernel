@@ -115,7 +115,7 @@ try{
   assert.equal(await evaluate('document.querySelector(".guide-troubleshooting").open'),true,'linked troubleshooting details must be open');
   assert.equal(await evaluate('document.querySelector("#guide-search").value'),'classpath separator','search text should be restorable');
   await evaluate('history.back()');
-  await wait('location.hash==="#/docs/first"','browser Back did not restore guide URL');
+  await wait('location.hash==="#/docs/assure"','browser Back did not restore the originating assurance guide URL');
   await wait('document.activeElement?.id==="guide-heading"','browser Back did not refocus guide heading; active='+await evaluate('document.activeElement?.id'));
   await evaluate('history.forward()');
   await wait('location.hash.includes("section=troubleshooting") && document.activeElement?.id==="guide-troubleshooting-summary"','Forward did not restore matching section');
