@@ -333,7 +333,7 @@ try{
       const unnamedLinks=[...document.querySelectorAll('a[href]')].filter(x=>!accessible(x)).length;
       const unlabeledInputs=[...document.querySelectorAll('input,select,textarea')].filter(x=>!x.labels?.length&&!x.getAttribute('aria-label')&&!x.getAttribute('aria-labelledby')).length;
       const missingControls=[...document.querySelectorAll('[aria-controls]')].filter(x=>
-        x.getAttribute('aria-controls').split(/\s+/).some(id=>!document.getElementById(id))).length;
+        x.getAttribute('aria-controls').split(' ').some(id=>!document.getElementById(id))).length;
       const positiveTab=[...document.querySelectorAll('[tabindex]')].filter(x=>Number(x.getAttribute('tabindex'))>0).length;
       return {duplicates,unnamedButtons,unnamedLinks,unlabeledInputs,missingControls,positiveTab,
         links:[...document.querySelectorAll('a[href]')].map(x=>x.getAttribute('href')).filter(x=>x.startsWith('#/')),
