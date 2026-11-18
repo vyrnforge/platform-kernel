@@ -209,15 +209,28 @@ try{
   await wait('location.hash.includes("mode=request") && document.querySelectorAll(".wb-trace-step").length===6','request walkthrough deep link failed');
   assert.ok((await evaluate(q('.wb-inspection')+'.innerText')).includes('What is checked?'),'decision inspector explains required checks');
   assert.ok((await evaluate(q('.wb-inspection')+'.innerText')).includes('Who owns this?'),'decision inspector explains responsibility');
+  assert.equal(await evaluate('document.querySelectorAll(".wb-result-card").length'),1,'one concise scenario result only');
+  assert.ok((await evaluate(q('.wb-result-topline')+'.innerText')).includes('not executed'),'result must be explicitly illustrative');
   await click('.wb-scenario:nth-child(4)');
   await wait('location.hash.includes("scenario=cross-tenant")','cross-tenant scenario URL missing');
   assert.ok((await evaluate(q('.wb-outcome')+'.textContent')).includes('404'),'cross-tenant resource must be hidden');
   assert.equal(await evaluate('document.querySelectorAll(".wb-track li[data-state=blocked]").length'),1,'first failing gate is shown');
+  assert.ok((await evaluate(q('.wb-result-facts')+'.textContent')).includes('Establish request scope'),'result identifies true first blocked gate');
+  assert.ok((await evaluate(q('.wb-result-facts')+'.textContent')).includes('Kernel · request pipeline'),'result identifies gate owner');
+  await click('.wb-result-primary');
+  await wait('document.activeElement?.id==="wb-inspection-heading" && document.querySelector(".wb-inspection-tag")?.textContent.includes("2 OF 6")','spotlight jumps to blocked decision and focuses inspector');
+  await click('.wb-result-actions button:last-child');
+  await wait('document.activeElement?.id==="wb-code-heading"','published example jump must focus a real heading');
+  assert.ok((await evaluate(q('.wb-scenario-check')+'.textContent')).includes('Cross-tenant resource'),'verification handoff names selected scenario');
   await click('.wb-track li:nth-child(2) button');
   assert.equal(await evaluate('document.querySelector(".wb-inspection-tag").textContent.includes("2 OF 6")'),true,'second gate inspection opened');
   await click('.wb-trace-actions button:first-child');
   assert.equal(await evaluate('document.querySelector(".wb-inspection-tag").textContent.includes("1 OF 6")'),true,'previous decision navigation works');
 
+  // Complete the newly added example handoff before the independent
+  // primary-navigation test, so its heading-focus assertion starts in Docs.
+  await click('.wb-check-pane a');
+  await wait('location.hash==="#/docs/request" && document.activeElement?.id==="guide-heading"','example handoff should enter its integration guide');
   // One playground only, with published code output and negative scenarios.
   await click('.primary-nav a[href="#/playground"]');
   await wait('location.hash==="#/playground" && !!document.querySelector(".wb-frame")','playground failed');
