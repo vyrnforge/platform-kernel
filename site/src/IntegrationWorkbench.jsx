@@ -126,7 +126,7 @@ export function IntegrationWorkbench({mode='core',scope='scoped',scenario='succe
           </nav>
           <div className="wb-wizard-context"><span>{phase+1} / {phases.length} steps</span><strong>{guide.title}</strong><small>{capability.status} · {guide.mode?'guided example':'contract guide'}</small></div>
         </div>
-        <div className="wb-wizard-body">
+        <div className="wb-wizard-body" id="wb-wizard-panel">
           <div className="wb-wizard-panel-heading">
             <div><span className="wb-overline">STEP {String(phase+1).padStart(2,'0')} · {phases[phase].title.toUpperCase()}</span>
               <h3 id="wb-wizard-panel-title" tabIndex={-1}>{panelTitle}</h3></div>
