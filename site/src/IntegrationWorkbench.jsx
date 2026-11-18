@@ -26,7 +26,10 @@ const readyHash=(guide,scope,scenario)=>{
 export function IntegrationWorkbench({mode='core',scope='scoped',scenario='success',capabilityId=null,recovery=null,visitId=0}){
   const guide=capabilityGuide(capabilityId)||capabilityGuide(inferCapability(mode,scenario))||capabilityGuides[0];
   const capability=capabilities.find(item=>item.title===guide.title);
-  const initialPhase=()=>new URLSearchParams((window.location.hash.split('?')[1]||'')).has('mode')?3:0;
+  const initialPhase=()=>{
+    const params=new URLSearchParams(window.location.hash.split('?')[1]||'');
+    return params.has('mode')?3:params.has('cap')?1:0;
+  };
   const [phaseState,setPhaseState]=useState(()=>({key:visitId,phase:initialPhase()}));
   const phase=phaseState.key===visitId?phaseState.phase:initialPhase();
   const [selection,setSelection]=useState({key:'',step:0});
