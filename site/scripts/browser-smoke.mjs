@@ -286,6 +286,37 @@ try{
   assert.ok((await evaluate(q('.wb-copy-feedback')+'.textContent')).match(/Copied|Clipboard unavailable/),'copy permission result has usable fallback');
 
 
+  // Long-guide reading flow uses only existing section routes and accessible
+  // headings: no second sidebar or another Docs destination.
+  await evaluate('location.hash="#/docs/request"');
+  await wait('!!document.querySelector(".guide-reading-path")','request reading path missing');
+  assert.equal(await evaluate('document.querySelectorAll(".guide-reading-path a").length'),7,'request section map mismatch');
+  assert.ok((await evaluate(q('.guide-reading-path')+'.getAttribute("aria-label")'))==='Sections in this guide');
+  await click('.guide-reading-path a[href="#/docs/request?section=failures"]');
+  await wait('location.hash.includes("section=failures") && document.activeElement?.id==="request-denials-heading"','failure jump lost heading focus');
+  assert.equal(await evaluate('document.querySelector(".guide-reading-path a[href*=failures]").getAttribute("aria-current")'),'location','selected section not identified');
+  await evaluate('history.back()');
+  await wait('location.hash==="#/docs/request" && document.activeElement?.id==="guide-heading"','Back should return to guide overview');
+  await evaluate('history.forward()');
+  await wait('location.hash.includes("section=failures") && document.activeElement?.id==="request-denials-heading"','Forward should restore selected section focus');
+  await evaluate('location.hash="#/docs/jdbc"');
+  await wait('!!document.querySelector(".guide-reading-path")','JDBC reading path missing');
+  assert.equal(await evaluate('document.querySelectorAll(".guide-reading-path a").length'),7,'JDBC section map mismatch');
+  assert.equal(await evaluate('document.querySelector(".request-decisions details.guide-troubleshooting").open'),false,'recovery should not expand automatically on overview');
+  await click('.guide-reading-path a[href="#/docs/jdbc?section=recovery"]');
+  await wait('location.hash.includes("section=recovery") && document.querySelector(".request-decisions details.guide-troubleshooting")?.open','recovery jump failed to open native disclosure');
+  assert.equal(await evaluate('document.activeElement?.id'),'jdbc-recovery-heading','recovery jump did not focus summary');
+  await evaluate('location.hash="#/docs/assure"');
+  await wait('!!document.querySelector(".guide-reading-path")','consumer assurance reading path missing');
+  assert.equal(await evaluate('document.querySelectorAll(".guide-reading-path a").length'),6,'consumer section map mismatch');
+  await click('.guide-reading-path a[href="#/docs/assure?section=conformance"]');
+  await wait('location.hash.includes("section=conformance") && document.activeElement?.id==="consumer-evidence-heading"','conformance jump failed');
+  await evaluate('location.hash="#/docs/first"');
+  await wait('!!document.querySelector(".guide-article")','first guide missing');
+  assert.equal(await evaluate('document.querySelectorAll(".guide-reading-path").length'),0,'short first Java guide should not gain redundant in-article navigation');
+  await evaluate('location.hash="#/docs/install"');
+  await wait('document.activeElement?.id==="guide-heading"','restore install guide after reading-flow test');
+
   // The existing JDBC guide must explain every decision and support keyboard flow to the one Playground.
   await evaluate('location.hash="#/docs/jdbc"');
   await wait('document.querySelectorAll("#jdbc-decision-heading").length===1','JDBC decision guide absent');
@@ -450,6 +481,13 @@ try{
       assert.ok(await evaluate('document.documentElement.scrollWidth<=window.innerWidth+1'),'Page-level overflow in '+id+' guide at '+width+'px');
       assert.equal(await evaluate('getComputedStyle(document.querySelector(".request-failures-scroll")).overflowX'),'auto','table scroll should remain local in '+id);
       if(width<=640)assert.ok(await evaluate('document.querySelector(".request-failures-scroll").scrollWidth>document.querySelector(".request-failures-scroll").clientWidth'),'wide table lost local scrolling in '+id+' at '+width);
+      if(width<=640){
+        assert.ok(await evaluate('document.querySelector(".guide-reading-path").scrollWidth<=document.querySelector(".guide-article").clientWidth'),'reading path must fit article at '+width);
+        assert.ok(await evaluate('document.querySelector(".guide-reading-path-links").scrollWidth>document.querySelector(".guide-reading-path-links").clientWidth'),'section links should have local scroll at '+width);
+        await evaluate('(()=>{const links=document.querySelectorAll(".guide-reading-path a");links[links.length-1].focus()})()');
+        await wait('document.querySelector(".guide-reading-path-links").scrollLeft>0','keyboard focus should reveal last in-guide section at '+width);
+        assert.ok(await evaluate('document.documentElement.scrollWidth<=window.innerWidth+1'),'section navigation must not cause whole-page overflow at '+width);
+      }
     }
     await evaluate('location.hash="#/docs/first"');
     await wait('!!document.querySelector(".guide-article")','return to first guide after reflow tests');
