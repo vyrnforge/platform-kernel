@@ -126,3 +126,8 @@
 
 /* At wide widths both the sequential trace and code workspace expand with the page. */
 .wb-decision-detail p,.wb-outcome-note,.wb-check-pane li{max-width:90ch}
+
+/* Issue #82: One concise live status replaces the verbose, mutating inspector live region. */
+.wb-route-recovery{margin:0 0 14px;padding:11px 14px;border:1px solid #cdd9ea;border-left:3px solid #3a70bb;border-radius:6px;background:#f4f8fe;color:#345474;font-size:12px;line-height:1.65}
+.wb-route-recovery strong{color:#25476b}
+.wb-section .wb-trace-step:focus-visible,.wb-section .wb-trace-actions button:focus-visible{outline:3px solid #d49111;outline-offset:3px}
