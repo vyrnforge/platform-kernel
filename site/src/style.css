@@ -30,7 +30,7 @@ h3{font-size:19px;letter-spacing:-.4px}
 .brand:hover{text-decoration:none}
 .brand-mark{display:grid;place-items:center;width:37px;height:37px;border-radius:9px;background:#275cbe;color:#fff;font-size:21px;font-weight:900}
 .brand-name{letter-spacing:1.2px;font-size:12px;line-height:1.2;font-weight:850}
-.brand-name small{display:block;font-size:9px;color:#677a95;letter-spacing:1.5px;margin-top:3px}
+.brand-name small{display:block;font-size:9px;color:#61748d;letter-spacing:1.5px;margin-top:3px}
 .primary-nav{display:flex;align-items:center;gap:5px;flex-wrap:wrap}
 .primary-nav a{padding:9px 13px;font-size:13px;font-weight:700;color:#52667f;border-radius:8px}
 .primary-nav a[aria-current="page"]{background:#eaf1ff;color:#1e54a8}
