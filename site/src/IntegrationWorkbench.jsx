@@ -48,7 +48,8 @@ export function IntegrationWorkbench({mode='core',scope='scoped',scenario='succe
     trace.steps.findIndex(x=>x.state==='blocked'):guide.id==='idempotency'&&activeScenario==='replay'?1:trace.steps.length-1):0;
   const spotlight=trace?.steps[spotlightIndex];
   const readyCount=guide.prepare.filter((_,i)=>readiness[guide.id+':'+i]).length;
-  const code=codeTab==='java'?recipe.java:recipe.maven;
+  const effectiveCodeTab=guide.mode?codeTab:'maven';
+  const code=effectiveCodeTab==='java'?recipe.java:recipe.maven;
   const panelTitle=phase===0?'Which Kernel capability do you want to integrate?':
     phase===1?'Understand '+guide.title:
     phase===2?'Prepare for '+guide.title:
@@ -76,9 +77,11 @@ export function IntegrationWorkbench({mode='core',scope='scoped',scenario='succe
   function selectCapability(id){
     const next=capabilityGuide(id);
     if(!next)return;
+    setCodeTab('maven');
     updateRoute(readyHash(next,next.scope,next.scenario),1);
   }
   function changeScenario(next){
+    setCopyStatus('');
     updateRoute(readyHash(guide,scope,next),3);
   }
   function changeScope(next){
@@ -95,7 +98,7 @@ export function IntegrationWorkbench({mode='core',scope='scoped',scenario='succe
     try{
       if(!navigator.clipboard?.writeText)throw Error('Clipboard unavailable');
       await navigator.clipboard.writeText(code);
-      setCopyStatus('Copied '+(codeTab==='maven'?'Maven dependencies':'Java example')+' to clipboard.');
+      setCopyStatus('Copied '+(effectiveCodeTab==='maven'?'Maven dependencies':'Java example')+' to clipboard.');
     }catch{
       setCopyStatus('Clipboard unavailable. Select the example text to copy manually.');
     }
@@ -247,12 +250,12 @@ export function IntegrationWorkbench({mode='core',scope='scoped',scenario='succe
               <div className="wb-export-grid">
                 <div className="wb-code-pane">
                   <div className="wb-code-tabs"><div role="group" aria-label="Published code type">
-                    <button type="button" aria-pressed={codeTab==='maven'} className={codeTab==='maven'?'is-selected':''} onClick={()=>{setCodeTab('maven');setCopyStatus('')}}>pom.xml</button>
-                    {guide.mode&&<button type="button" aria-pressed={codeTab==='java'} className={codeTab==='java'?'is-selected':''} onClick={()=>{setCodeTab('java');setCopyStatus('')}}>Java example</button>}
+                    <button type="button" aria-pressed={effectiveCodeTab==='maven'} className={effectiveCodeTab==='maven'?'is-selected':''} onClick={()=>{setCodeTab('maven');setCopyStatus('')}}>pom.xml</button>
+                    {guide.mode&&<button type="button" aria-pressed={effectiveCodeTab==='java'} className={effectiveCodeTab==='java'?'is-selected':''} onClick={()=>{setCodeTab('java');setCopyStatus('')}}>Java example</button>}
                     </div><button type="button" className="wb-copy" onClick={copyCode}>Copy code</button>
                   </div>
-                  <div className="wb-code-kind">{codeTab==='maven'?'Maven dependency fragments · published v'+version:recipe.javaKind}</div>
-                  <pre tabIndex={0} aria-label="Published code, scroll horizontally if needed"><code>{tokenizeCode(code,codeTab==='maven'?'xml':'java').map((part,i)=>part.kind?<span key={i} className={'tok-'+part.kind}>{part.text}</span>:part.text)}</code></pre>
+                  <div className="wb-code-kind">{effectiveCodeTab==='maven'?'Maven dependency fragments · published v'+version:recipe.javaKind}</div>
+                  <pre tabIndex={0} aria-label="Published code, scroll horizontally if needed"><code>{tokenizeCode(code,effectiveCodeTab==='maven'?'xml':'java').map((part,i)=>part.kind?<span key={i} className={'tok-'+part.kind}>{part.text}</span>:part.text)}</code></pre>
                   <p className="wb-copy-feedback" role="status">{copyStatus}</p>
                 </div>
                 <div className="wb-check-pane">
