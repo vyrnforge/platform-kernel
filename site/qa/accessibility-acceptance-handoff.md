@@ -1,0 +1,29 @@
+# Accessibility and first-user acceptance — verified automation vs outstanding human tests
+
+**Date:** 18 November 2026. **Basis:** Public GitHub Pages deployment [#44262752268](https://github.com/vyrnforge/platform-kernel/actions/runs/44262752268), commit `fb3f2a98b7a238d74b0c0181f3056dcd7607118f`, published Java library v0.3.2. The public deployment verifier checked JS SHA-256 `ccaab7333e05983bea9a81623d73b693b9a02f24e77215896d86d975f3790d73` and CSS SHA-256 `e949d2f651597d3eb37511961fad7489e8ce7f344022190f91a629cb8fa0cb55`.
+
+## Completed technical evidence
+
+- Retrieved the exact GitHub Pages artifact for the above deployment and independently verified both SHA-256 hashes. Rendered its embedded code and styles in local Chromium by injecting the exact asset bytes into an `about:blank` document because the local browser cannot navigate public or loopback URLs. **This reproduces the built application assets but does not constitute a browser session at the live public URL.**
+- Audited nine representative route/scenario states — Home, Install, First Java, Request, JDBC, Consumer Assurance, tenant-scoped membership denial in the single Playground, Reference architecture and unpublished v0.4.0 preview — at **320, 390, 640 and 1280 CSS-pixel** viewports (36 combinations). Observed **zero page-level horizontal overflow** and **zero unnamed interactive accessibility-tree nodes** among the sampled exposed buttons, links and inputs. This is a *limited automated sample*, not a complete accessibility audit.
+- Automated keyboard traversal on Chromium was also probed. The first immediate-after-Tab measurement falsely suggested off-screen focus because smooth scrolling was still in progress; allowing scrolling to settle under the **reduced-motion preference** visibly brought focused controls into the viewport in the sampled Install journey. Do **not** file a focus-loss defect based on immediate un-stabilized DOM geometry.
+- Existing Pages CI already checks DOM labeling, code/tab/Playground flow, 27 route-state URLs and mobile responsive layouts. This change adds a **real Chromium accessibility-tree gate across that entire existing route matrix** without a new dependency: interactive computed names, exactly one main landmark and a named heading. CI passing proves only those checks.
+
+## Human acceptance — not performed
+
+| ID | Required device/task | Steps and evidence to record | Exit requirement |
+| --- | --- | --- | --- |
+| A11Y-01 | Windows 11, Chrome keyboard-only | Home → Docs → Install → First Java; Tab, Shift+Tab, Enter/Space, escape/no-result reset, code select/copy denied; note focus visible and next action | No lost/unreachable focus, or linked defect and retest |
+| A11Y-02 | Windows 11, Firefox keyboard-only | Same flow plus Docs search → Request failure → Back/Forward; Playground scenario and selected decision → Reference | Tab order, named inputs and route announcements verified by human |
+| A11Y-03 | NVDA + Chrome on Windows | Navigate by landmarks/headings/links; search for `TENANT_CONTEXT_MISMATCH`, follow failures result; run Playground membership denial through passed/blocked/not reached; try code copy | Record announced name/role/state, verbosity, heading/focus recovery, exact NVDA/Chrome versions |
+| A11Y-04 | VoiceOver + Safari on macOS (iOS subset separately) | Repeat guided reading, article section jump, disclosure, code tab and scenario status; screen-reader rotor/headings and native control activation | Record speech/reading order, focus and status without guessed outcomes |
+| A11Y-05 | Actual browser **200% and 400% zoom** | In Chrome and Firefox, *use browser zoom UI*; inspect four primary destinations, full guide text, table and code local scroll, sticky/header occlusion and keyboard target visibility | No loss of content/functionality; record real zoom percentage and screenshots |
+| A11Y-06 | Target-size, contrast and reduced-motion assessment | Inspect small footer/inline links for WCAG 2.2 target-spacing or inline exemptions; test real OS reduced-motion preference, nontext contrast and pointer alternatives | Criterion-level rationale, evidence and reviewer disposition; **do not** equate <24px box height with automatic failure |
+| USER-01 | Actual Windows PowerShell + Java 21 | Download published `platform-kernel:0.3.2` JAR, compile/run exact First Java class; verify two UUIDv7 lines, Windows `; ` vs Unix `:` classpath, show recovery for failures | Real Windows screenshot/terminal output and independent reviewer signoff under issue #78 |
+| USER-02 | Two unfamiliar Java integrators | From Home locate v0.3.2 dependency, compile/run, find Request/JDBC ownership, recover first error; *observe* completion, first failure and time, do not invent participants | Two observed anonymized task records or explicit owner-approved recruiting deferral under issue #78 |
+
+**Record each case:** `test ID | main SHA | URL + hash | hardware/OS | browser version | AT + version | actual zoom | step/action | expected focus/name/role/state | observed speech/visual result | first failure | severity | screenshot/log path | owner | retest and approval`.
+
+**Known limits:** Local Chromium is neither NVDA nor VoiceOver, CSS viewport changes are not browser 200%/400% zoom, and a correct AX name does not prove a usable assistive-technology experience. Do not close epic #76 or issues #77/#78 based on these automated checks. Any defect in a shared public UI component belongs with the Shared UI Library owner; do not add shared UI implementations or change Kernel runtime. Java v0.4.0 PR #65 remains draft, unmerged and unpublished.
+
+**Manual QA handoff:** QA/UX executes A11Y tasks with real hardware and assistive technologies; Java DX/QA executes Windows and two developer task sessions. Record failures on the relevant existing issue, fix in a scoped PR, and retest before owner acceptance.

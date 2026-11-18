@@ -349,7 +349,7 @@ try{
         .flatMap(scope=>scenariosFor(mode.id,scope).map(s=>
           ['#/playground?mode='+mode.id+'&scope='+scope+'&scenario='+s.id,'.wb-frame'])))
   ];
-  let inspectedControls=0,checkedInternalLinks=0;
+  let inspectedControls=0,checkedInternalLinks=0,inspectedAXControls=0;
   for(const [hash,target] of matrix){
     await evaluate('location.hash='+JSON.stringify(hash));
     await wait('!!document.querySelector('+JSON.stringify(target)+')','quality route missing '+hash);
@@ -379,6 +379,21 @@ try{
     assert.ok(!audit.overflow,'Whole-page overflow on '+hash);
     assert.ok(audit.headings>0,'No content headings on '+hash);
     for(const href of audit.links)assert.notEqual(resolveRoute(href).page,'notfound','Broken rendered hash link '+href+' on '+hash);
+    // Check the actual Chromium accessibility tree as a second, independent
+    // accessible-name source. DOM text heuristics alone can miss computed-name
+    // regressions. This is not a screen-reader test or WCAG certification.
+    const ax=(await send('Accessibility.getFullAXTree')).nodes||[];
+    const interactiveAXRoles=new Set(['button','link','checkbox','radioButton','textField','searchbox','comboBox','switch','tab']);
+    const exposed=ax.filter(node=>!node.ignored);
+    const interactive=exposed.filter(node=>interactiveAXRoles.has(node.role?.value));
+    const axUnnamed=interactive.filter(node=>!String(node.name?.value??'').trim());
+    assert.deepEqual(axUnnamed.map(node=>({role:node.role?.value,backendDOMNodeId:node.backendDOMNodeId})),[],
+      'Unnamed interactive element in Chromium accessibility tree on '+hash);
+    assert.equal(exposed.filter(node=>node.role?.value==='main').length,1,
+      'Expected one accessible main landmark on '+hash);
+    assert.ok(exposed.some(node=>node.role?.value==='heading'&&String(node.name?.value??'').trim()),
+      'Expected a named accessible heading on '+hash);
+    inspectedAXControls+=interactive.length;
     inspectedControls+=audit.controls;checkedInternalLinks+=audit.links.length;
   }
   // Reduced-motion preference must disable state transition animation on the
@@ -397,7 +412,7 @@ try{
       dclMs:nav?Math.round(nav.domContentLoadedEventEnd):null,
       loadMs:nav?Math.round(nav.loadEventEnd):null};
   })()`);
-  console.log('SITE_BROWSER_QA '+JSON.stringify({routeCount:matrix.length,inspectedControls,checkedInternalLinks,reducedMotion:true,perf}));
+  console.log('SITE_BROWSER_QA '+JSON.stringify({routeCount:matrix.length,inspectedControls,inspectedAXControls,checkedInternalLinks,reducedMotion:true,perf}));
 
   // Baseline semantic and small-text contrast checks. This is not an AT or WCAG certification.
   const computedContrast=async selector=>{
