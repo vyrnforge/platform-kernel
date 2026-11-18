@@ -442,6 +442,17 @@ try{
     await evaluate('location.hash="#/docs/first"');
     await wait('!!document.querySelector(".guide-article")','mobile docs missing');
     assert.ok(await evaluate('document.documentElement.scrollWidth<=window.innerWidth+1'),'Docs overflow viewport '+width);
+    // Both integration guides contain long inline Java API identifiers.
+    // Tables and code may scroll locally; the document itself must not.
+    for(const id of ['request','jdbc']){
+      await evaluate('location.hash="#/docs/'+id+'"');
+      await wait('!!document.querySelector(".guide-article") && !!document.querySelector(".request-failures-scroll")','integration guide '+id+' missing at '+width);
+      assert.ok(await evaluate('document.documentElement.scrollWidth<=window.innerWidth+1'),'Page-level overflow in '+id+' guide at '+width+'px');
+      assert.equal(await evaluate('getComputedStyle(document.querySelector(".request-failures-scroll")).overflowX'),'auto','table scroll should remain local in '+id);
+      if(width<=640)assert.ok(await evaluate('document.querySelector(".request-failures-scroll").scrollWidth>document.querySelector(".request-failures-scroll").clientWidth'),'wide table lost local scrolling in '+id+' at '+width);
+    }
+    await evaluate('location.hash="#/docs/first"');
+    await wait('!!document.querySelector(".guide-article")','return to first guide after reflow tests');
     if(width<=640)assert.equal(await evaluate('getComputedStyle(document.querySelector(".docs-guide-nav")).display'),'flex','mobile guide links use compact wrapping navigation at '+width);
     assert.equal(await evaluate('getComputedStyle(document.querySelector(".guide-code-shell pre")).overflowX'),'auto','code has local horizontal scrolling at '+width);
     if(width<=390)assert.ok(await evaluate('document.querySelector(".guide-code-shell pre").scrollWidth>document.querySelector(".guide-code-shell pre").clientWidth'),'long code scrolls at narrow viewport');
