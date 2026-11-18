@@ -153,7 +153,7 @@ export function IntegrationWorkbench({mode='core',scope='scoped',scenario='succe
               <section id="wb-inspection" className="wb-inspection" aria-labelledby="wb-inspection-heading">
                 <span className="wb-inspection-tag">DECISION {stepIndex+1} OF {trace.steps.length}</span>
                 <span className={'wb-inspection-state is-'+current.state}>{stepLabels[current.state]}</span>
-                <h4 id="wb-inspection-heading">{current.name}</h4>
+                <h4 id="wb-inspection-heading" tabIndex={-1}>{current.name}</h4>
                 <div className="wb-decision-detail"><strong>What is checked?</strong><p>{current.check}</p></div>
                 <div className="wb-decision-detail"><strong>Why this result?</strong><p>{current.description}</p></div>
                 <div className="wb-decision-detail"><strong>Who owns this?</strong><p>{current.owner}</p></div>
