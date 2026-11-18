@@ -1,5 +1,6 @@
 import {developerGuides} from './docs-data.mjs';
 import {workbenchModes,scenariosFor} from './workbench-data.mjs';
+import {capabilityGuide,inferCapability} from './capability-guides.mjs';
 
 export const referenceTopics=[
   {id:'architecture',title:'Architecture & ownership'},
@@ -54,8 +55,14 @@ export function resolveRoute(hash=''){
     if(requestedMode&&!workbenchModes.some(item=>item.id===requestedMode))corrections.push('Unknown application pattern');
     if(requestedScope&&(requestedScope!=='scoped'&&requestedScope!=='tenantless'||mode!=='request'&&requestedScope!=='scoped'))corrections.push('Unsupported endpoint scope');
     if(params.has('scenario')&&wantedScenario!==scenario)corrections.push('Scenario unavailable for this pattern and scope');
+    const requestedCapability=params.get('cap');
+    const selectedCapability=capabilityGuide(requestedCapability);
+    const capabilityId=selectedCapability&&(!selectedCapability.mode||selectedCapability.mode===mode)?
+      selectedCapability.id:inferCapability(mode,scenario);
+    if(requestedCapability&&!selectedCapability)corrections.push('Unknown capability guide');
+    if(selectedCapability?.mode&&selectedCapability.mode!==mode)corrections.push('Capability and integration pattern do not match');
     const recovery=corrections.length?corrections.join('; ')+'. Showing '+available.find(item=>item.id===scenario).title+'. Choose a supported option or return to your guide.':null;
-    return {page:'playground',title:'Playground',mode,scope,scenario,recovery,canonical:normalized};
+    return {page:'playground',title:'Playground',mode,scope,scenario,capabilityId,recovery,canonical:normalized};
   }
   if(normalized==='#/docs')return {page:'docs',id:'install',title:'Documentation',canonical:'#/docs/install'};
   // Section deep links are optional, validated hints within the existing guides,
