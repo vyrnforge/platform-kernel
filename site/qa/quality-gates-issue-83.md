@@ -13,6 +13,18 @@
 | Post-deploy public provenance | On main only, after successful GitHub Pages deploy: `node site/scripts/verify-deployment.mjs <pages_url> <js_sha256> <css_sha256>` | Fetches public HTTPS index/JS/CSS, retries boundedly, compares exact asset bytes (SHA-256) against same-run build. Fails if public deployment cannot be independently confirmed |
 | Scoped workflows | Required CI and security checks remain fail-closed | Pure site changes do not run full Java/PostgreSQL/release staging; Java source/release boundaries unchanged |
 
+## Initial measured build baseline — advisory, not a signed-off performance budget
+
+Captured on the **passing** [GitHub Pages Chromium workflow #44251094273](https://github.com/vyrnforge/platform-kernel/actions/runs/44251094273) at PR head `2adbe4273b629c2524b5f1f5260b6e8ae8f201ce` (18 November 2026), on a GitHub-hosted Ubuntu runner using the production esbuild bundle.
+
+| Asset | Raw bytes | Gzip bytes |
+| --- | ---: | ---: |
+| app.js | 336,570 | 100,398 |
+| app.css | 39,842 | 9,209 |
+| index.html | 951 | 543 |
+
+Chromium inspected **27** supported routes/states, **383** controls and **313** rendered internal links, with zero failures after remediation. Source link inventory checked **14** Markdown-local links and listed **3** external hostnames without live availability assertions. The one local headless browser capture reported **124 DOM nodes**, **3** resource entries and **166 ms** navigation DOMContentLoaded/load; these are **CI harness observations, not real-user latency or Core Web Vitals**. Hard budgets stay advisory until Product/QA ratify variance margins and maintainers explicitly add an accepted `site/qa/performance-baseline.json`.
+
 ## Current fact versus pending evidence
 
 - **Source-confirmed:** Original Pages pipeline built and ran Chromium on pull requests and automatically deployed main, but did not prove the exact public site content after deployment. Browser smoke checked selected states, not every supported Playground case. No full axe/Lighthouse dependency or audited performance budget was present.
