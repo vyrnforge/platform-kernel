@@ -1,16 +1,34 @@
 import React,{useState} from 'react';
-import {version} from './data.mjs';
+import {version,capabilities} from './data.mjs';
 import {getWorkbenchTrace,getWorkbenchRecipe,workbenchModes,scenariosFor} from './workbench-data.mjs';
 import {tokenizeCode} from './code-tokens.mjs';
 import './kernel-workbench.css';
 
 const stepLabels={done:'Passed',blocked:'Stopped here',skipped:'Not required',pending:'Not reached'};
 
+// These are *related journeys*, not nine browser executors. The published
+// capability catalog in data.mjs remains the source of truth for what ships.
+const capabilityJourneys={
+  'Identity & tenancy':{mode:'request',scope:'scoped',scenario:'membership',label:'Explore tenant membership'},
+  'API standards':{mode:'request',scope:'scoped',scenario:'cross-tenant',label:'Trace an HTTP boundary'},
+  'IDs & contracts':{mode:'core',scope:'scoped',scenario:'success',label:'Explore UUIDv7 and correlation'},
+  'Module & feature controls':{mode:'request',scope:'scoped',scenario:'module',label:'Inspect module entitlement'},
+  'Idempotency':{mode:'mutation',scope:'scoped',scenario:'replay',label:'Explore safe replay'},
+  'Events & audit':{mode:'mutation',scope:'scoped',scenario:'success',label:'Explore atomic intents'},
+  'Observability & health':{mode:'core',scope:'scoped',scenario:'success',label:'Trace correlation propagation',
+    note:'This journey shows correlation propagation; health aggregation and telemetry adapters are covered in the reference.'},
+  'File references':{reference:true,label:'Read the contract',
+    note:'FileReference is a published contract only; the Playground does not access stored files or grant permissions.'},
+  'Consumer testkit':{mode:'core',scope:'scoped',scenario:'success',testkit:true,label:'Inspect test-scope dependency',
+    note:'This journey shows the testkit dependency, not a live conformance test or production verification.'}
+};
+
 export function IntegrationWorkbench({mode='core',scope='scoped',scenario='success',recovery=null,visitId=0}){
   const [selection,setSelection]=useState({key:'',step:0});
   const [testkit,setTestkit]=useState(false);
   const [codeTab,setCodeTab]=useState('maven');
   const [copyStatus,setCopyStatus]=useState('');
+  const [selectedCapability,setSelectedCapability]=useState('IDs & contracts');
   const trace=getWorkbenchTrace(mode,scope,scenario);
   const recipe=getWorkbenchRecipe(mode,scope,testkit);
   const scenarios=scenariosFor(mode,scope);
@@ -33,6 +51,8 @@ export function IntegrationWorkbench({mode='core',scope='scoped',scenario='succe
   // this browser executed a real request or transaction.
   const spotlightIndex=firstBlock>=0?firstBlock:mode==='mutation'&&scenario==='replay'?1:mode==='core'?1:trace.steps.length-1;
   const spotlight=trace.steps[spotlightIndex];
+  const capability=capabilities.find(item=>item.title===selectedCapability)||capabilities[0];
+  const related=capabilityJourneys[capability.title];
 
   // The URL is the source of truth for mode/scope/scenario. Local stage selection
   // does not modify history. Code-copy feedback is reset only by user actions.
@@ -46,6 +66,15 @@ export function IntegrationWorkbench({mode='core',scope='scoped',scenario='succe
   }
   function selectScope(next){navigate(mode,next,'success')}
   function selectScenario(next){navigate(mode,scope,next)}
+  function exploreCapability(){
+    if(related.reference)return;
+    if(related.testkit)setTestkit(true);
+    setCodeTab('maven');
+    navigate(related.mode,related.scope,related.scenario);
+    // Programmatic, user-initiated navigation. The existing Playground heading
+    // is persistent and focusable; no timeout or competing live region.
+    jumpTo('workbench-title');
+  }
   function jumpTo(id){
     const target=document.getElementById(id);
     if(!target)return;
@@ -71,13 +100,48 @@ export function IntegrationWorkbench({mode='core',scope='scoped',scenario='succe
       <div className="wb-intro">
         <div>
           <span className="wb-kicker">SIMULATED LEARNING / RELEASED v{version}</span>
-          <h2 id="workbench-title" tabIndex={-1}>Trace a request. <em>Understand the boundary.</em></h2>
-          <p className="lead">Follow one real integration path at a time. Inspect each decision, who owns it and where failures stop the application. The sample code stays pinned to the published library.</p>
+          <h2 id="workbench-title" tabIndex={-1}>Explore the foundation. <em>Trace the integration.</em></h2>
+          <p className="lead">Discover the capabilities in the published Java library, then follow a focused example to see what Kernel provides and where your application takes over.</p>
         </div>
       </div>
+      <section className="wb-capability-atlas" aria-labelledby="wb-capability-title">
+        <div className="wb-capability-intro">
+          <div><span className="wb-capability-kicker">PUBLISHED LIBRARY · v{version}</span>
+            <h3 id="wb-capability-title">What Platform Kernel actually ships.</h3>
+            <p>{capabilities.length} capability areas across identity, contracts, reliability and operations. Select a capability to see the concrete library contract and what your product must supply.</p>
+          </div>
+          <a href="#/reference/capabilities">Complete capability reference <span aria-hidden="true">↗</span></a>
+        </div>
+        <div className="wb-capability-grid" aria-label="Published Kernel capability areas">
+          {capabilities.map((item,index)=><button type="button" className={'wb-capability-card'+(selectedCapability===item.title?' is-selected':'')}
+            aria-pressed={selectedCapability===item.title} aria-controls="wb-capability-detail"
+            key={item.title} onClick={()=>setSelectedCapability(item.title)}>
+            <span className="wb-capability-card-top"><span>{String(index+1).padStart(2,'0')} / {item.category}</span><span aria-hidden="true">↗</span></span>
+            <strong>{item.title}</strong>
+            <small>{item.summary}</small>
+            <span className="wb-capability-card-state">{item.status}</span>
+          </button>)}
+        </div>
+        <section className="wb-capability-detail" id="wb-capability-detail" aria-labelledby="wb-capability-detail-title">
+          <div className="wb-capability-detail-heading">
+            <div><span className="wb-overline">SELECTED CAPABILITY · v{version}</span><h4 id="wb-capability-detail-title">{capability.title}</h4></div>
+            <span className="wb-capability-detail-state">{capability.status}</span>
+          </div>
+          <div className="wb-capability-detail-grid">
+            <div><strong>What the library ships</strong><p>{capability.ships}</p></div>
+            <div><strong>What your application supplies</strong><p>{capability.needs}</p></div>
+          </div>
+          {related.note&&<p className="wb-capability-limit">{related.note}</p>}
+          <div className="wb-capability-detail-actions">
+            {related.reference?<a className="wb-capability-try" href="#/reference/capabilities">Read the published contract <span aria-hidden="true">→</span></a>:
+              <button type="button" className="wb-capability-try" onClick={exploreCapability}>{related.label} <span aria-hidden="true">→</span></button>}
+            <a href="#/docs/install">Start with installation</a>
+          </div>
+        </section>
+      </section>
       <div className="wb-frame">
         <div className="wb-toolbar">
-          <div className="wb-toolbar-title"><span className="wb-icon" aria-hidden="true">⌘</span><div><strong>Integration Playground</strong><small>Choose a path · inspect a decision · verify in your application</small></div></div>
+          <div className="wb-toolbar-title"><span className="wb-icon" aria-hidden="true">⌘</span><div><strong>Integration walkthrough</strong><small>Choose a path · inspect a decision · verify in your application</small></div></div>
           <div className="wb-toolbar-right">Simulation, not executable Java <span className="wb-toolbar-version">v{version} published</span></div>
         </div>
         <div className="wb-layout">
@@ -107,12 +171,6 @@ export function IntegrationWorkbench({mode='core',scope='scoped',scenario='succe
                 <span><strong>{item.title}</strong><small>{item.hint}</small></span>
               </button>)}</div>
             </fieldset>
-            <div className="wb-config-outcome">
-              <span className="wb-overline">SIMULATED OUTCOME</span>
-              <strong>{trace.outcome}</strong>
-              <span>{firstBlock>=0?'Stopped at: '+spotlight.name:'Key decision: '+spotlight.name}</span>
-              <button type="button" onClick={()=>jumpTo('wb-result-title')}>View result <span aria-hidden="true">→</span></button>
-            </div>
             <label className="wb-testkit"><input type="checkbox" checked={testkit} onChange={e=>{setTestkit(e.target.checked);setCopyStatus('')}}/><span><strong>Include consumer testkit</strong><small>Test-scope dependency only</small></span></label>
             <p className="wb-aside-note">Learning simulation only. No credentials, Kernel APIs or database operations execute here. Verify every decision in your application.</p>
           </aside>
