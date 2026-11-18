@@ -503,6 +503,15 @@ try{
     await send('Emulation.setDeviceMetricsOverride',{width,height:900,deviceScaleFactor:1,mobile:width===390});
     await sleep(180);
     assert.ok(await evaluate('document.documentElement.scrollWidth<=window.innerWidth+1'),'Playground overflows viewport '+width);
+    // The capability wizard intro must be one readable vertical sequence.
+    // Page-level overflow alone missed a 90px-wide broken heading at 390px.
+    await evaluate('location.hash="#/playground"');
+    await wait('!!document.querySelector(".wb-wizard-intro h2")','wizard intro missing at '+width);
+    const hero=await evaluate('(()=>{const h=document.querySelector(".wb-wizard-intro h2").getBoundingClientRect(),p=document.querySelector(".wb-wizard-intro .lead").getBoundingClientRect(),k=document.querySelector(".wb-wizard-intro .wb-kicker").getBoundingClientRect();return {hWidth:h.width,hBottom:h.bottom,pTop:p.top,pWidth:p.width,kWidth:k.width,bodyWidth:document.documentElement.scrollWidth}})()');
+    assert.ok(hero.hWidth>=Math.min(width-58,260),'Wizard hero heading collapsed at '+width+': '+JSON.stringify(hero));
+    assert.ok(hero.pTop>=hero.hBottom-1,'Wizard hero introduction must stack below heading at '+width+': '+JSON.stringify(hero));
+    assert.ok(hero.pWidth>=Math.min(width-58,260),'Wizard lead must remain readable at '+width+': '+JSON.stringify(hero));
+    assert.ok(hero.bodyWidth<=width+1,'Wizard intro must not cause overflow at '+width);
     await evaluate('location.hash="#/docs/first"');
     await wait('!!document.querySelector(".guide-article")','mobile docs missing');
     assert.ok(await evaluate('document.documentElement.scrollWidth<=window.innerWidth+1'),'Docs overflow viewport '+width);

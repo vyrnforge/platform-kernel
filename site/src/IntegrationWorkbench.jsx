@@ -109,7 +109,7 @@ export function IntegrationWorkbench({mode='core',scope='scoped',scenario='succe
 
   return <section id="workbench" className="section wb-section" aria-labelledby="workbench-title">
     <div className="wrap">
-      <div className="wb-intro">
+      <div className="wb-intro wb-wizard-intro">
         <span className="wb-kicker">GUIDED INTEGRATION / PUBLISHED v{version}</span>
         <h2 id="workbench-title" tabIndex={-1}>From capability <em>to integration.</em></h2>
         <p className="lead">One guided path: discover what the library provides, prepare your application, inspect the relevant behavior, and leave with the released code and checks.</p>
