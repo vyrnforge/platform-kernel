@@ -231,3 +231,120 @@
 .wb-capability-detail h4,.wb-capability-intro h3{scroll-margin-top:110px}
 .wb-capability-detail h4:focus-visible,.wb-capability-intro h3:focus-visible{outline:3px solid #e3aa34;outline-offset:5px}
 .wb-capability-detail-actions button.wb-capability-back{border:1px solid #54739b;background:#244367;color:#e7f0fd;min-height:42px;cursor:pointer}
+
+/* Unified v0.3.2 integration wizard. Capability and walkthrough are ONE
+   step-scoped experience, never an independent atlas above another tool. */
+.wb-wizard{box-shadow:0 22px 54px #153c6812}
+.wb-wizard-progress{display:grid;grid-template-columns:minmax(0,1fr) 200px;align-items:stretch;background:#f7fafe;border-bottom:1px solid #d6e2f0}
+.wb-wizard-steps{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:0;min-width:0}
+.wb-wizard-step{min-width:0;display:flex;gap:10px;align-items:center;padding:17px 13px;background:transparent;border:0;border-right:1px solid #dce6f3;color:#4b627f;text-align:left}
+.wb-wizard-step:hover{background:#eff5fe}
+.wb-wizard-step.is-current{background:#e9f2ff;color:#184d96;box-shadow:inset 0 -3px #2e70d1}
+.wb-wizard-step.is-visited .wb-wizard-step-number{border-color:#b7d6c9;background:#e7f6ed;color:#1c6c50}
+.wb-wizard-step-number{flex:none;display:grid;place-items:center;width:32px;height:32px;border-radius:10px;background:#eef3f9;border:1px solid #d7e3f0;font:800 11px ui-monospace,SFMono-Regular,Consolas,monospace}
+.wb-wizard-step.is-current .wb-wizard-step-number{background:#285eb4;color:white;border-color:#285eb4}
+.wb-wizard-step-label{min-width:0;display:grid;gap:4px}
+.wb-wizard-step-label strong{font-size:12px;line-height:1.3}
+.wb-wizard-step-label small{font-size:10px;color:#617990;line-height:1.35}
+.wb-wizard-context{display:grid;align-content:center;gap:4px;padding:13px 16px;min-width:0;background:#e9f2fd}
+.wb-wizard-context span{color:#3869a7;font-size:10px;font-weight:800;letter-spacing:.65px;text-transform:uppercase}
+.wb-wizard-context strong{color:#15385e;font-size:13px;overflow-wrap:anywhere}
+.wb-wizard-context small{color:#576f87;font-size:10px;line-height:1.4}
+.wb-wizard-body{padding:29px 32px 25px;min-width:0}
+.wb-wizard-panel-heading{display:flex;justify-content:space-between;gap:16px;align-items:center;margin-bottom:15px}
+.wb-wizard-panel-heading h3{margin:7px 0 0;color:#142f52;font-size:clamp(22px,2.65vw,30px);letter-spacing:-.75px;line-height:1.22}
+.wb-wizard-panel-heading h3:focus{outline:none}
+.wb-wizard-panel-heading h3:focus-visible{outline:3px solid #d49111;outline-offset:5px}
+.wb-wizard-panel-heading h3{scroll-margin-top:112px}
+.wb-wizard-change{border:1px solid #ccdaea;background:white;color:#2e619c;font-weight:750;font-size:12px;border-radius:8px;padding:9px 12px;white-space:nowrap}
+.wb-wizard-lead{font-size:14px;line-height:1.7;color:#4d6884;max-width:75ch;margin:0 0 20px}
+.wb-phase-choose .wb-capability-grid{margin-top:10px}
+.wb-phase-choose .wb-capability-card{min-height:154px}
+.wb-phase-choose .wb-capability-card:hover{transform:none}
+.wb-wizard-two-col{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
+.wb-wizard-info{border:1px solid #d6e3f1;border-radius:13px;padding:21px;background:#fbfdff;min-width:0}
+.wb-wizard-info:first-child{border-top:3px solid #3774c9}
+.wb-wizard-info:nth-child(2){border-top:3px solid #95a9bd}
+.wb-wizard-info-kicker{font-size:10px;letter-spacing:1px;font-weight:850;color:#486e9b}
+.wb-wizard-info h4{font-size:17px;color:#233b55;margin:9px 0 12px}
+.wb-wizard-info p{font-size:13px;color:#4c6680;line-height:1.7;margin:0}
+.wb-wizard-caution{margin:18px 0 0;color:#4b6380;background:#f3f7fc;border:1px solid #dce5ee;border-radius:9px;padding:12px 15px;font-size:12px;line-height:1.65}
+.wb-wizard-read-more{display:flex;flex-wrap:wrap;gap:18px;margin-top:16px}
+.wb-wizard-read-more a{font-size:12px;font-weight:750;color:#285e9f}
+.wb-prerequisite-list{display:grid;gap:10px}
+.wb-prerequisite{display:flex;gap:14px;align-items:flex-start;border:1px solid #d8e2ec;border-radius:12px;background:#fff;padding:17px 18px;cursor:pointer;min-width:0}
+.wb-prerequisite.is-ready{background:#f0f9f4;border-color:#a9d6bb}
+.wb-prerequisite input{flex:none;width:18px;height:18px;accent-color:#2d7f64;margin-top:1px}
+.wb-prerequisite span{display:grid;gap:5px;min-width:0}
+.wb-prerequisite strong{font-size:13px;color:#244763}
+.wb-prerequisite small{font-size:13px;line-height:1.65;color:#4e6680}
+.wb-prepare-progress{margin-top:14px;display:flex;flex-wrap:wrap;gap:6px 18px;align-items:center}
+.wb-prepare-progress strong{font-size:12px;color:#295b8c}
+.wb-prepare-progress span{font-size:12px;color:#61748b}
+.wb-process-list{list-style:none;padding:0;margin:0 0 24px;display:grid;gap:0;border:1px solid #d9e4f0;border-radius:12px;overflow:hidden}
+.wb-process-list li{display:flex;gap:15px;padding:16px 17px;background:#fff;min-width:0}
+.wb-process-list li:not(:last-child){border-bottom:1px solid #e1e9f3}
+.wb-process-list li:nth-child(even){background:#f9fbff}
+.wb-process-number{font:850 11px ui-monospace,Consolas,monospace;color:#2c66ae;background:#eaf3ff;border:1px solid #c9dff8;border-radius:9px;padding:8px 10px;height:fit-content;flex:none}
+.wb-process-list h4{margin:0 0 4px;font-size:14px;color:#1b385a}
+.wb-process-list small{display:block;font-size:10px;letter-spacing:.5px;text-transform:uppercase;color:#4772a2;font-weight:800}
+.wb-process-list p{font-size:12px;color:#506a84;line-height:1.65;margin:6px 0 0}
+.wb-walkthrough-header{display:flex;justify-content:space-between;gap:14px;align-items:center;margin:18px 0 13px}
+.wb-walkthrough-header h4{margin:5px 0 0;color:#213753;font-size:18px}
+.wb-scope-picker{display:flex;gap:15px;align-items:center;flex-wrap:wrap;padding:12px 14px;background:#f2f7fd;border-radius:10px;margin-bottom:11px}
+.wb-scope-picker strong{font-size:12px;color:#284e7b}
+.wb-scope-picker .wb-scope-options{min-width:220px}
+.wb-phase-explore .wb-scenario-options{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:9px}
+.wb-phase-explore .wb-scenario{min-height:71px;align-items:start}
+.wb-phase-explore .wb-result-card{margin:19px 0}
+.wb-phase-explore .wb-trace-heading{align-items:center}
+.wb-phase-explore .wb-trace-heading h4{font-size:21px;line-height:1.25;margin:0}
+.wb-guide-only{background:#edf4ff;border:1px solid #d1e1f5;border-radius:12px;padding:17px 20px;margin-top:18px;color:#2c527f}
+.wb-guide-only strong{font-size:13px}
+.wb-guide-only p{font-size:13px;line-height:1.7}
+.wb-guide-only a{font-weight:750;color:#275fa5;font-size:12px}
+.wb-phase-implement .wb-export{margin-top:10px}
+.wb-phase-implement .wb-check-pane p{padding-top:11px;margin:12px 0 0}
+.wb-phase-implement .wb-check-pane p+p{border-top:0}
+.wb-phase-implement .wb-check-pane p strong{font-size:11px}
+.wb-wizard-footer{display:flex;justify-content:space-between;gap:10px;align-items:center;border-top:1px solid #dfe9f4;margin-top:30px;padding-top:18px}
+.wb-wizard-footer>span{font-size:11px;color:#617b99;text-align:center}
+.wb-wizard-footer button{border:1px solid #bfd0e5;border-radius:8px;min-height:43px;padding:10px 15px;font-size:12px;font-weight:800;color:#2a5c9a;background:#fff}
+.wb-wizard-footer .wb-wizard-next{background:#235db2;border-color:#235db2;color:#fff}
+.wb-wizard-footer button:disabled{background:#f4f6f9;color:#8194a8;border-color:#dee5ee}
+.wb-wizard :is(button,a,input):focus-visible{outline:3px solid #d49111;outline-offset:3px}
+@media(max-width:1140px){
+ .wb-wizard-progress{grid-template-columns:1fr}
+ .wb-wizard-context{display:flex;align-items:center;gap:9px;flex-wrap:wrap;border-top:1px solid #dce7f3;padding:9px 15px}
+ .wb-wizard-step{padding:13px 9px;gap:6px}
+ .wb-wizard-step-number{width:29px;height:29px}
+}
+@media(max-width:800px){
+ .wb-wizard-body{padding:23px 19px}
+ .wb-wizard-step-label small{display:none}
+ .wb-phase-explore .wb-scenario-options{grid-template-columns:repeat(2,minmax(0,1fr))}
+}
+@media(max-width:610px){
+ .wb-wizard-progress{display:block}
+ .wb-wizard-steps{grid-template-columns:repeat(5,minmax(0,1fr))}
+ .wb-wizard-step{display:grid;justify-items:center;gap:6px;padding:10px 3px}
+ .wb-wizard-step-number{width:27px;height:27px;border-radius:8px}
+ .wb-wizard-step-label strong{font-size:10px}
+ .wb-wizard-context{padding:10px 13px}
+ .wb-wizard-body{padding:20px 13px}
+ .wb-wizard-panel-heading{align-items:flex-start}
+ .wb-wizard-panel-heading h3{font-size:22px}
+ .wb-wizard-change{font-size:11px;padding:7px 8px}
+ .wb-phase-choose .wb-capability-card{min-height:143px}
+ .wb-wizard-two-col{grid-template-columns:1fr}
+ .wb-wizard-info{padding:15px}
+ .wb-process-list li{padding:13px 10px;gap:9px}
+ .wb-phase-explore .wb-scenario-options{grid-template-columns:repeat(2,minmax(0,1fr))}
+ .wb-phase-explore .wb-scenario{min-height:76px}
+ .wb-phase-explore .wb-trace-heading h4{font-size:18px}
+ .wb-wizard-footer{flex-wrap:wrap}
+ .wb-wizard-footer>span{order:-1;flex-basis:100%}
+ .wb-wizard-footer button{flex:1}
+}
+@media(max-width:390px){.wb-wizard-step-label strong{font-size:9px}.wb-wizard-step{padding-inline:1px}}
+@media(prefers-reduced-motion:reduce){.wb-wizard-step,.wb-prerequisite{transition:none}}
