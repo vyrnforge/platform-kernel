@@ -268,6 +268,8 @@ try{
   await click('.wb-wizard-step:nth-child(5)');
   assert.equal(await evaluate('document.querySelectorAll(".wb-code-tabs button[aria-pressed]").length'),1,'contract guide must not show unrelated Java example');
   assert.ok((await evaluate(q('.wb-code-pane code')+'.textContent')).includes('platform-kernel'),'contract requires published core artifact');
+  await evaluate('location.hash="#/playground?cap=files"');
+  await wait('!!document.querySelector(".wb-phase-understand") && document.querySelector("#wb-wizard-panel-title")?.textContent.includes("File references"),"shared contract-only link must open the right Understand step");
   await click('.wb-wizard-change');
   await click('.wb-capability-card:nth-child(9)');
   await wait('location.hash.includes("cap=testkit")','testkit guide selection failed');
