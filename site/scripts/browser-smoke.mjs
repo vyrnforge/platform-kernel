@@ -349,6 +349,8 @@ try{
   await wait('location.hash.includes("scenario=in-progress")','in-progress scenario deep link failed');
   assert.ok((await evaluate(q('.wb-outcome')+'.textContent')).includes('IN PROGRESS'),'concurrent retry must not read as REPLAY');
   assert.equal(await evaluate('document.querySelectorAll(".wb-track li[data-state=blocked]").length'),1,'in-progress must stop at acquire');
+  await click('.wb-wizard-step:nth-child(5)');
+  await wait('!!document.querySelector(".wb-check-pane a")','implementation phase must expose matching JDBC guide');
   await click('.wb-check-pane a');
   await wait('location.hash==="#/docs/jdbc" && !!document.querySelector("#jdbc-decision-heading")','return to JDBC guide failed');
   await click('.request-diagnostics a[href="#/docs/assure"]');
