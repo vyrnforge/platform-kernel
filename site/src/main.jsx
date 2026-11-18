@@ -98,7 +98,7 @@ function App(){
     <main id="main" tabIndex={-1}>
       {route.page==='home'&&<Home/>}
       {route.page==='docs'&&<DeveloperDocs guideId={route.id} section={route.section} selectedSampleIndex={route.sampleIndex} searchQuery={route.searchQuery}/>}
-      {route.page==='playground'&&<><h1 className="visually-hidden" tabIndex={-1} id="page-title">Interactive integration playground</h1><IntegrationWorkbench mode={route.mode} scope={route.scope} scenario={route.scenario} recovery={route.recovery} visitId={route.visitId}/></>}
+      {route.page==='playground'&&<><h1 className="visually-hidden" tabIndex={-1} id="page-title">Interactive integration playground</h1><IntegrationWorkbench mode={route.mode} scope={route.scope} scenario={route.scenario} capabilityId={route.capabilityId} recovery={route.recovery} visitId={route.visitId}/></>}
       {route.page==='reference'&&<Reference topic={route.id}/>}
       {route.page==='notfound'&&<NotFound/>}
     </main>
