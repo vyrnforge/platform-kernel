@@ -76,7 +76,7 @@ export function DeveloperDocs({guideId='install',section='overview',selectedSamp
     }
   }
   return <div className="docs-page content-surface">
-    <div className="wrap docs-page-heading"><span className="eyebrow">DEVELOPER DOCUMENTATION / v{version} PUBLISHED · v0.4.0 PREVIEW</span><h1 id="page-title" tabIndex={-1}>Learn by building.</h1><p>Task-based guides for the real v{version} Java library. Each recipe states what the Kernel provides and what your application must implement.</p></div>
+    <div className="wrap docs-page-heading"><span className="eyebrow">DEVELOPER DOCUMENTATION / v{version} PUBLISHED · v0.4.0 STATUS</span><h1 id="page-title" tabIndex={-1}>Learn by building.</h1><p>Task-based guides for the real v{version} Java library. Each recipe states what the Kernel provides and what your application must implement.</p></div>
     <div className="wrap docs-layout">
       <aside className="docs-sidebar">
         <div className="docs-sidebar-top"><label htmlFor="guide-search">Search documentation</label><input type="search" id="guide-search" ref={searchInputRef} placeholder="Find a guide…" value={query} onChange={e=>setQuery(e.target.value)}/></div>
@@ -100,9 +100,9 @@ export function DeveloperDocs({guideId='install',section='overview',selectedSamp
             })}</div>;
           })}
         </nav>
-        {previewVisible&&<div className="docs-preview-entry"><span className="side-kicker">UPCOMING · NOT PUBLISHED</span><a href="#/docs/preview" aria-current={isPreview?'page':undefined}>v0.4.0 Developer Preview <span aria-hidden="true">→</span></a></div>}
+        {previewVisible&&<div className="docs-preview-entry"><span className="side-kicker">UPCOMING · NOT PUBLISHED</span><a href="#/docs/preview" aria-current={isPreview?'page':undefined}>v0.4.0 Release Status <span aria-hidden="true">→</span></a></div>}
         {visible.length===0&&!previewVisible&&<p className="docs-search-empty">No matching guides. <button type="button" onClick={()=>{searchInputRef.current?.focus();setQuery('')}}>Clear search</button></p>}
-        <div className="docs-sidebar-note"><strong>Version boundary</strong><p>Core guides use published v{version}. The v0.4.0 preview is not released or installable yet.</p></div>
+        <div className="docs-sidebar-note"><strong>Version boundary</strong><p>Core guides use published v{version}. v0.4.0 is not released or installable; its public page shows status only.</p></div>
       </aside>
       {isPreview?<PreviewGuide/>:<article className="guide-article" aria-labelledby="guide-heading">
         <nav className="guide-breadcrumb" aria-label="Breadcrumb"><a href="#/docs/install">Documentation</a><span aria-hidden="true"> / </span><span>{guide.group}</span></nav>
