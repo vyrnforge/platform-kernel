@@ -639,6 +639,21 @@ try{
     assert.ok(hero.pTop>=hero.hBottom-1,'Wizard hero introduction must stack below heading at '+width+': '+JSON.stringify(hero));
     assert.ok(hero.pWidth>=Math.min(width-58,260),'Wizard lead must remain readable at '+width+': '+JSON.stringify(hero));
     assert.ok(hero.bodyWidth<=width+1,'Wizard intro must not cause overflow at '+width);
+    // Keyboard wizard step navigation deliberately focuses its current panel
+    // heading. The outline must clear the sticky site header at each reflow
+    // breakpoint, not merely exist offscreen/under the overlapping header.
+    await click('.wb-capability-card:nth-child(5)');
+    await wait('location.hash.includes("cap=idempotency") && !!document.querySelector(".wb-phase-understand")',
+      'idempotency wizard must enter Understand at '+width);
+    for(const step of [2,3,4,1]){
+      await click('.wb-wizard-step:nth-child('+(step+1)+')');
+      await wait('document.activeElement?.id==="wb-wizard-panel-title" && document.querySelector(".wb-wizard-step:nth-child('+(step+1)+')")?.getAttribute("aria-current")==="step"',
+        'keyboard heading not focused after wizard stage '+step+' at '+width);
+      const target=await evaluate('(()=>{const el=document.querySelector("#wb-wizard-panel-title");const r=el.getBoundingClientRect(),h=document.querySelector(".site-header").getBoundingClientRect();const top=document.elementFromPoint(Math.min(innerWidth-1,r.left+16),Math.min(innerHeight-1,r.top+Math.min(r.height/2,15)));return {headingTop:r.top,headerBottom:h.bottom,front:top===el||el.contains(top)}})()');
+      assert.ok(target.headingTop>=target.headerBottom+12,
+        'wizard keyboard-focused heading obscured by sticky header at '+width+', stage '+step+': '+JSON.stringify(target));
+      assert.ok(target.front,'wizard keyboard heading covered at '+width+', stage '+step+': '+JSON.stringify(target));
+    }
     await evaluate('location.hash="#/docs/first"');
     await wait('!!document.querySelector(".guide-article")','mobile docs missing');
     assert.ok(await evaluate('document.documentElement.scrollWidth<=window.innerWidth+1'),'Docs overflow viewport '+width);
