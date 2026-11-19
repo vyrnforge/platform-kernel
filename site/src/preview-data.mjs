@@ -7,7 +7,7 @@ export const preview={
   summary:'The next library version is under review and is not available for installation. Use the released v0.3.2 integration guides and API examples in production applications.',
   guidance:[
     'Install v0.3.2 from Maven Central using the published quickstart.',
-    'Check the candidate pull request for engineering review status, not installation instructions.',
+    'Check version availability in the Reference page; do not adopt unreleased APIs.',
     'Wait for a signed release and verified Maven Central availability before considering an upgrade.'
   ]
 };
