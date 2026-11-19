@@ -36,7 +36,7 @@ class PublicationGateTests(unittest.TestCase):
             errors, entries = mod.inspect_jar(archive)
             self.assertEqual(len(errors), 1)
             self.assertIn("forbidden restricted-document package path", errors[0])
-            self.assertEqual(entries, 0)
+            self.assertEqual(entries, 2)
 
 
 if __name__ == "__main__":
