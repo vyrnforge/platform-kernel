@@ -1,5 +1,5 @@
 import React from 'react';
-import {repo,source,version,candidateVersion,candidatePr,capabilities,architectures,releaseRun} from './data.mjs';
+import {repo,source,version,candidateVersion,candidatePr,capabilities,releaseRun} from './data.mjs';
 import {referenceTopics} from './routes.mjs';
 
 const guideLinks={
@@ -44,11 +44,7 @@ export function Reference({topic='architecture'}){
           <div className="ownership-grid">
             {boundaries.map(x=><section key={x.title}><span>{x.type}</span><h3>{x.title}</h3><p>{x.items}</p></section>)}
           </div>
-          <h3 className="reference-subhead">Deployment patterns</h3>
-          <div className="reference-patterns">
-            {architectures.map(x=><details key={x.title}><summary><strong>{x.title}</strong><span>{x.label}</span></summary><div><p>{x.description}</p><p><strong>Topology:</strong> {x.products.map(y=>y.name+' ('+y.instances+' instance'+(y.instances===1?'':'s')+')').join(' · ')}</p><p><strong>External services:</strong> {x.external}</p><p>{x.note}</p></div></details>)}
-          </div>
-          <p className="reference-caution">These are illustrative arrangements, not production throughput benchmarks or certified deployment profiles. Each domain remains authoritative for its own data and authorization.</p>
+          <p className="reference-caution">Kernel is embedded in your application. It does not prescribe a deployment topology, supply identity verification or own product data; your application retains deployment and domain authorization.</p>
           <a className="inline-link" href="#/docs/request">Read the identity integration guide →</a>
         </article>}
         {topic==='capabilities'&&<article className="reference-article" aria-labelledby="reference-heading">
