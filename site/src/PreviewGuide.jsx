@@ -1,6 +1,6 @@
 import React from 'react';
 import {preview} from './preview-data.mjs';
-import {version,candidatePr} from './data.mjs';
+import {version} from './data.mjs';
 
 // Preserve old documentation links, but only expose release status here.
 // Unpublished APIs and technical design live in the candidate engineering PR.
@@ -22,7 +22,7 @@ export function PreviewGuide(){
     </section>
     <section className="preview-part preview-handoff" aria-labelledby="preview-followup">
       <h3 id="preview-followup">Track the upcoming version</h3>
-      <p><a href={candidatePr} target="_blank" rel="noopener noreferrer">Candidate pull request and engineering review</a> · <a href="#/reference/releases">Published version information</a></p>
+      <p><a href="#/reference/releases">Published version information</a> · <a href="#/docs/install">Use the released v{version} library</a></p>
       <p>Installation guidance will be updated only after a separately authorized, verifiable release.</p>
     </section>
   </article>;
