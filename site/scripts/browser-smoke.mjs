@@ -79,7 +79,7 @@ try{
   assert.equal(await evaluate('document.activeElement?.matches(".guide-code-shell pre")'),true,'manual sample selection must focus the keyboard-scrollable pre');
   // Also activate the explicit selection action with keyboard Enter, not mouse.
   await evaluate('document.querySelector(".guide-select-code").focus()');
-  await send('Input.dispatchKeyEvent',{type:'keyDown',key:'Enter',code:'Enter',windowsVirtualKeyCode:13,nativeVirtualKeyCode:13,text:'\\r',unmodifiedText:'\\r'});
+  await send('Input.dispatchKeyEvent',{type:'keyDown',key:'Enter',code:'Enter',windowsVirtualKeyCode:13,nativeVirtualKeyCode:13,text:'\r',unmodifiedText:'\r'});
   await send('Input.dispatchKeyEvent',{type:'keyUp',key:'Enter',code:'Enter',windowsVirtualKeyCode:13,nativeVirtualKeyCode:13});
   await wait('document.querySelector(".guide-copy-status")?.textContent.startsWith("Code selected")','keyboard Select code button failed');
   assert.equal(await evaluate('window.getSelection()?.toString()'),await evaluate(q('.guide-code-shell code')+'.textContent'),'keyboard selection must preserve all syntax-highlighted text');
