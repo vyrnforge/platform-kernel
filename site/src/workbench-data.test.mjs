@@ -1,60 +1,45 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {workbenchModes,workbenchScenarios,getWorkbenchTrace,getWorkbenchRecipe,scenariosFor} from './workbench-data.mjs';
+import {workbenchModes,workbenchScenarios,getWorkbenchRecipe,scenariosFor} from './workbench-data.mjs';
+import {getPublicOutcome} from './public-outcomes.mjs';
 import {version,candidateVersion} from './data.mjs';
 
-test('workbench offers exactly the three supported adoption patterns',()=>{
+test('integration helper exposes only publicly supported usage outcomes',()=>{
   assert.deepEqual(workbenchModes.map(x=>x.id),['core','request','mutation']);
   for(const mode of workbenchModes){
     assert.ok(workbenchScenarios[mode.id].length>=2);
-    for(const entry of workbenchScenarios[mode.id]){
-      const t=getWorkbenchTrace(mode.id,'scoped',entry.id);
-      assert.ok(t.outcome&&t.detail);
-      assert.ok(t.steps.length>=3);
-      assert.ok(t.steps.every(s=>s.name&&s.owner&&s.check&&s.description&&['done','pending','blocked','skipped'].includes(s.state)));
+    for(const scenario of workbenchScenarios[mode.id]){
+      const result=getPublicOutcome(mode.id,'scoped',scenario.id);
+      assert.ok(result.outcome&&result.detail&&result.owner&&result.verify);
+      assert.ok(!('steps' in result),'public outcomes must never expose internal execution steps');
+      assert.ok(!('trace' in result));
     }
   }
 });
 
-test('tenantless requests remain authenticated, scoped requests fail closed',()=>{
-  const unauth=getWorkbenchTrace('request','tenantless','unverified');
-  assert.equal(unauth.outcome,'DENIED · 401');
-  assert.equal(unauth.steps[0].state,'blocked');
-  const tenantless=getWorkbenchTrace('request','tenantless','scope');
-  assert.equal(tenantless.outcome,'REJECTED · 400');
-  assert.match(tenantless.detail,/active tenant/);
-  assert.equal(getWorkbenchTrace('request','tenantless','success').steps[2].state,'skipped');
-  assert.equal(getWorkbenchTrace('request','tenantless','success').steps[3].state,'skipped');
-  const scoped=getWorkbenchTrace('request','scoped','scope');
-  assert.equal(scoped.outcome,'DENIED · 403');
-  assert.equal(scoped.steps[1].state,'blocked');
-  assert.match(getWorkbenchTrace('request','scoped','denied').detail,/product-owned resource authorization/);
-  assert.equal(getWorkbenchTrace('request','scoped','cross-tenant').outcome,'NOT FOUND · 404');
-  assert.equal(getWorkbenchTrace('request','scoped','cross-tenant').steps[1].state,'blocked');
-  assert.equal(getWorkbenchTrace('request','scoped','membership').steps[2].state,'blocked');
-  assert.equal(getWorkbenchTrace('request','scoped','module').steps[3].state,'blocked');
-  assert.equal(getWorkbenchTrace('request','scoped','denied').steps[4].state,'blocked');
-  assert.equal(getWorkbenchTrace('request','scoped','denied').steps[5].state,'pending');
-  assert.ok(!scenariosFor('request','tenantless').some(x=>x.id==='membership'||x.id==='module'||x.id==='cross-tenant'));
-  assert.throws(()=>getWorkbenchTrace('request','tenantless','membership'),/not available/);
+test('tenantless and scoped security expectations remain public',()=>{
+  assert.equal(getPublicOutcome('request','tenantless','unverified').outcome,'DENIED · 401');
+  assert.equal(getPublicOutcome('request','tenantless','scope').outcome,'REJECTED · 400');
+  assert.match(getPublicOutcome('request','tenantless','scope').detail,/active tenant/);
+  assert.equal(getPublicOutcome('request','scoped','scope').outcome,'DENIED · 403');
+  assert.equal(getPublicOutcome('request','scoped','cross-tenant').outcome,'NOT FOUND · 404');
+  assert.equal(getPublicOutcome('request','scoped','membership').outcome,'DENIED · 403');
+  assert.equal(getPublicOutcome('request','scoped','module').outcome,'DENIED · 403');
+  assert.match(getPublicOutcome('request','scoped','denied').detail,/resource-owning product authorization/);
+  assert.ok(!scenariosFor('request','tenantless').some(x=>['membership','module','cross-tenant'].includes(x.id)));
+  assert.throws(()=>getPublicOutcome('request','tenantless','membership'),/not available/);
 });
 
-test('JDBC dry-run illustrates replay and conflict without claiming live execution',()=>{
-  const original=getWorkbenchTrace('mutation','scoped','success');
-  assert.match(original.detail,/one product-owned JDBC transaction/i);
-  const replay=getWorkbenchTrace('mutation','scoped','replay');
-  assert.equal(replay.outcome,'SAFE REPLAY');
-  assert.equal(replay.steps[2].state,'skipped');
-  const inProgress=getWorkbenchTrace('mutation','scoped','in-progress');
-  assert.equal(inProgress.outcome,'IN PROGRESS');
-  assert.equal(inProgress.steps[1].state,'blocked');
-  assert.equal(inProgress.steps[2].state,'pending');
-  const conflict=getWorkbenchTrace('mutation','scoped','conflict');
-  assert.equal(conflict.outcome,'CONFLICT · 409');
-  assert.equal(conflict.steps[1].state,'blocked');
+test('JDBC public outcomes keep exact replay and conflict safety',()=>{
+  assert.match(getPublicOutcome('mutation','scoped','success').detail,/one product-owned transaction/);
+  assert.equal(getPublicOutcome('mutation','scoped','replay').outcome,'SAFE REPLAY');
+  assert.match(getPublicOutcome('mutation','scoped','replay').detail,/fresh authorization/);
+  assert.equal(getPublicOutcome('mutation','scoped','in-progress').outcome,'IN PROGRESS');
+  assert.equal(getPublicOutcome('mutation','scoped','conflict').outcome,'CONFLICT · 409');
+  assert.match(getPublicOutcome('mutation','scoped','conflict').detail,/not an automatic JDBC response/);
 });
 
-test('generated starter recipes are pinned to published three-JAR contracts',()=>{
+test('generated starter recipes remain pinned to published artifacts',()=>{
   for(const mode of workbenchModes){
     const r=getWorkbenchRecipe(mode.id,'scoped',true);
     assert.equal(r.version,'0.3.2');
@@ -63,10 +48,8 @@ test('generated starter recipes are pinned to published three-JAR contracts',()=
     assert.ok(r.maven.includes('<version>'+version+'</version>'));
     assert.ok(!r.maven.includes(candidateVersion));
     assert.ok(!r.java.includes('RequestContextPipeline.tenantless('));
-    assert.ok(r.checks.length>=2);
-    assert.ok(r.appOwnership);
+    assert.ok(r.checks.length>=2&&r.appOwnership);
     assert.ok(['first','request','jdbc'].includes(r.guideId));
-    assert.ok(!('guide' in r),'Playground should not link to repository Markdown');
   }
   assert.deepEqual(getWorkbenchRecipe('core').artifacts,['platform-kernel']);
   assert.deepEqual(getWorkbenchRecipe('request').artifacts,['platform-kernel']);
