@@ -446,6 +446,9 @@ try{
     ['#/docs/preview','#guide-heading'],
     ['#/playground','.wb-capability-grid'],
     ['#/playground?cap=files','.wb-phase-understand'],
+    ['#/playground?cap=identity','.wb-phase-understand'],
+    ['#/playground?cap=idempotency','.wb-phase-understand'],
+    ['#/playground?cap=module&mode=request&scope=scoped&scenario=cross-tenant','.wb-route-recovery'],
     ...referenceTopics.map(topic=>['#/reference/'+topic.id,'#reference-heading']),
     ...workbenchModes.flatMap(mode=>
       (mode.id==='request'?['scoped','tenantless']:['scoped'])
