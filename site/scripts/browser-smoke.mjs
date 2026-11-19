@@ -191,14 +191,8 @@ try{
   await wait('location.hash==="#/reference/architecture" && !!document.querySelector(".ownership-grid")','architecture reference failed');
   assert.equal(await evaluate('document.activeElement.id'),'reference-heading','reference route focuses its topic heading');
   assert.equal(await evaluate('document.querySelectorAll(".ownership-grid section").length'),4,'four separate ownership boundaries');
-  assert.equal(await evaluate('document.querySelectorAll(".reference-patterns details").length'),4,'deployment notes are consolidated in reference');
-  await click('.reference-patterns summary');
-  assert.equal(await evaluate('document.querySelector(".reference-patterns details").open'),true,'topology reference expands');
-  // Native <summary> must also toggle with Space from the keyboard.
-  await evaluate('document.querySelector(".reference-patterns summary").focus()');
-  await send('Input.dispatchKeyEvent',{type:'keyDown',key:' ',code:'Space',windowsVirtualKeyCode:32,nativeVirtualKeyCode:32});
-  await send('Input.dispatchKeyEvent',{type:'keyUp',key:' ',code:'Space',windowsVirtualKeyCode:32,nativeVirtualKeyCode:32});
-  await wait('!document.querySelector(".reference-patterns details").open','keyboard Space did not close Reference details');
+  assert.equal(await evaluate('document.querySelectorAll(".reference-patterns details").length'),0,'public Reference no longer exposes deployment topology showcases');
+  assert.ok((await evaluate(q('.reference-caution')+'.textContent')).includes('embedded'),'Reference remains focused on library integration ownership');
   await click('.reference-nav a[href="#/reference/capabilities"]');
   await wait('location.hash==="#/reference/capabilities"','capability reference failed');
   assert.equal(await evaluate('document.querySelectorAll(".capability-row").length'),capabilities.length,'all release capabilities accounted for');
@@ -206,16 +200,14 @@ try{
   await wait('location.hash==="#/reference/releases"','release reference failed');
   assert.ok((await evaluate(q('.reference-article')+'.innerText')).includes('NOT PUBLISHED'),'candidate not misrepresented as released');
   assert.equal(await evaluate('document.querySelector(".reference-preview-doc a").getAttribute("href")'),'#/docs/preview','preview belongs on the documentation website');
-  assert.ok((await evaluate(q('.reference-article')+'.innerText')).includes('not available to install from Maven Central yet'),'preview stays explicitly unavailable');
+  assert.ok((await evaluate(q('.reference-article')+'.innerText')).includes('not available from Maven Central'),'preview stays explicitly unavailable');
   await click('.reference-preview-doc a');
   await wait('location.hash==="#/docs/preview" && !!document.querySelector(".preview-article")','candidate deep-link guide missing');
   assert.equal(await evaluate('document.activeElement.id'),'guide-heading','preview heading is focused');
   assert.ok((await evaluate(q('.preview-warning')+'.textContent')).includes('Not released'),'candidate must remain clearly unpublished');
-  assert.ok((await evaluate('document.querySelectorAll(".preview-table tbody tr").length'))>=5,'candidate changes are readable on-site');
-  await click('.preview-samples:first-of-type .guide-code-tabs button:nth-child(2)');
-  assert.ok((await evaluate(q('.preview-samples:first-of-type code')+'.textContent')).includes('testImplementation'),'candidate Gradle example is visible');
-  await click('.preview-samples:first-of-type .guide-copy');
-  await wait('document.querySelector(".preview-samples:first-of-type .guide-copy-status").textContent.length>0','preview code-copy feedback');
+  assert.equal(await evaluate('document.querySelectorAll(".preview-samples,.preview-table").length'),0,'release-status page must not bundle unreleased API examples or design tables');
+  assert.ok((await evaluate(q('.preview-article')+'.textContent')).includes('release status'),'preview deep link should explain release status');
+  assert.equal(await evaluate('Array.from(document.querySelectorAll(".preview-article a")).filter(a=>a.getAttribute("href")?.includes("/pull/")).length'),0,'public release-status page must not promote unreleased engineering changes');
   await evaluate('location.hash="#/docs/install"');
   await wait('location.hash==="#/docs/install" && !!document.querySelector(".guide-article:not(.preview-article)")','published docs route restored');
   assert.ok((await evaluate(q('.guide-code-shell code')+'.textContent')).includes('0.3.2'),'published installation remains 0.3.2');
@@ -270,7 +262,7 @@ try{
   assert.equal(await evaluate(q('.wb-code-pane code')+'.textContent'),publishedWiring.code,'request wiring must exactly reuse the published version-safe constructor');
   assert.ok((await evaluate(q('.wb-code-kind')+'.textContent')).includes('Integration excerpt'),'real token verifier and ports must remain application-owned');
 
-  // Check representative first-stop failures and safe remediation in the same
+  // Check representative published errors and safe recovery in the same
   // wizard rather than sending the reader back to an unrelated simulator.
   await evaluate('location.hash="#/playground?cap=identity&mode=request&scope=scoped&scenario=unverified"');
   await wait('!!document.querySelector(".wb-request-recovery")','unverified denial mapping missing');
@@ -323,7 +315,7 @@ try{
   // explore and implementation phases, without changing the chosen capability.
   await click('.wb-capability-card:nth-child(6)');
   await wait('location.hash.includes("cap=events") && document.querySelector("#wb-wizard-panel-title")?.textContent.includes("Understand Events")','capability choose must advance to understanding');
-  assert.ok((await evaluate(q('.wb-phase-understand')+'.textContent')).includes('JdbcReliabilityTransaction'),'understanding describes the real released contract');
+  assert.ok((await evaluate(q('.wb-phase-understand')+'.textContent')).includes('audit/event intents atomic'),'understanding describes the published reliability guarantee without exposing implementation sequence');
   assert.ok((await evaluate(q('.wb-phase-understand')+'.textContent')).includes('What stays with your product'),'ownership visible in same guide');
   await click('.wb-wizard-next');
   await wait('!!document.querySelector(".wb-phase-prepare")','wizard must progress to prerequisites');
@@ -455,7 +447,7 @@ try{
   await evaluate('location.hash="#/docs/install"');
   await wait('document.activeElement?.id==="guide-heading"','restore install guide after reading-flow test');
 
-  // The existing JDBC guide must explain every decision and support keyboard flow to the one Playground.
+  // The JDBC guide must explain every supported result and retain keyboard-linked usage examples.
   await evaluate('location.hash="#/docs/jdbc"');
   await wait('document.querySelectorAll("#jdbc-decision-heading").length===1','JDBC decision guide absent');
   assert.equal(await evaluate('document.querySelectorAll("#jdbc-decision-heading ~ .request-failures-scroll tbody tr").length'),4,'all four JDBC outcomes must be shown');

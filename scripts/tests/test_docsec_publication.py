@@ -27,6 +27,17 @@ class PublicationGateTests(unittest.TestCase):
         self.assertEqual(len(mod.violations("bundle", mod.RETIRED_UI_STRINGS[0], website_bundle=True)), 1)
         self.assertFalse(mod.violations("source", mod.RETIRED_UI_STRINGS[0]))
 
+    def test_non_usage_site_content_is_detected_without_printing_sensitive_text(self):
+        for marker in mod.NON_USAGE_SITE_STRINGS:
+            findings = mod.violations("site/src/public-guide", marker, site_content=True)
+            self.assertEqual(len(findings), 1)
+            self.assertNotIn(marker.decode("utf-8"), findings[0])
+            self.assertEqual(len(mod.violations("site/dist/app.js", marker, website_bundle=True)), 1)
+        self.assertEqual(
+            mod.violations("site/src/docs", b"verify tenant authorization and handle 403", site_content=True),
+            [],
+        )
+
     def test_private_document_extension_rejected_in_jars(self):
         with TemporaryDirectory() as tmp:
             archive = Path(tmp) / "test.jar"

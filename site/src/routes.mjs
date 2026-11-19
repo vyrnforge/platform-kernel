@@ -94,7 +94,7 @@ export function resolveRoute(hash=''){
       const index=Number(params.get('sample'));
       const sampleIndex=guide&&params.has('sample')&&Number.isInteger(index)&&index>=0&&index<guide.samples.length?index:null;
       const searchQuery=params.has('q')?params.get('q').slice(0,120):null;
-      return {page:'docs',id:path,title:path==='preview'?'v0.4.0 developer preview · NOT RELEASED':guide.title,
+      return {page:'docs',id:path,title:path==='preview'?'v0.4.0 release status · NOT RELEASED':guide.title,
         section:path==='preview'?'overview':section,sampleIndex,searchQuery,canonical:normalized};
     }
   }

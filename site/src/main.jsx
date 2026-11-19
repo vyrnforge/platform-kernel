@@ -51,7 +51,7 @@ function Home(){
       </div>
     </div></section>
     <section className="home-secondary section" aria-labelledby="where-heading"><div className="wrap home-secondary-layout">
-      <div><span className="eyebrow">ONE FOUNDATION / CLEAR OWNERSHIP</span><h2 id="where-heading">What belongs where?</h2><p>Kernel handles common mechanics. IAM or a trusted provider establishes identity. File Storage manages file bytes. Each business application remains the system of record for its domain.</p><a href="#/reference/architecture" className="inline-link">Explore architecture boundaries <span aria-hidden="true">→</span></a></div>
+      <div><span className="eyebrow">ONE FOUNDATION / CLEAR OWNERSHIP</span><h2 id="where-heading">What belongs where?</h2><p>Kernel handles common mechanics. IAM or a trusted provider establishes identity. File Storage manages file bytes. Each business application remains the system of record for its domain.</p><a href="#/reference/architecture" className="inline-link">See integration ownership <span aria-hidden="true">→</span></a></div>
       <div className="boundary-summary">
         <div><strong>Your application</strong><span>Domain data · permission policy · transactions</span></div>
         <div><strong>Platform Kernel</strong><span>Context · contracts · optional reliability</span></div>

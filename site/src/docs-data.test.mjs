@@ -71,20 +71,21 @@ test('published request guide matches scoped and tenantless Kernel failure seman
   assert.equal(request.endpointChoices.length,2);
   assert.equal(request.failureCases.length,8);
   const expected=[
-    ['unverified','scoped','AUTHENTICATION_FAILED','401',0],
-    ['scope-tenantless','tenantless','INVALID_CONTEXT','400',1],
-    ['scope-scoped','scoped','TENANT_REQUIRED','403',1],
-    ['cross-tenant','scoped','TENANT_CONTEXT_MISMATCH','404',1],
-    ['membership','scoped','TENANT_MEMBERSHIP_REQUIRED','403',2],
-    ['module','scoped','MODULE_DISABLED','403',3],
-    ['denied','scoped','DOMAIN_ACCESS_DENIED','403',4],
-    ['tenantless-denied','tenantless','DOMAIN_ACCESS_DENIED','403',4]
+    ['unverified','scoped','AUTHENTICATION_FAILED','401'],
+    ['scope-tenantless','tenantless','INVALID_CONTEXT','400'],
+    ['scope-scoped','scoped','TENANT_REQUIRED','403'],
+    ['cross-tenant','scoped','TENANT_CONTEXT_MISMATCH','404'],
+    ['membership','scoped','TENANT_MEMBERSHIP_REQUIRED','403'],
+    ['module','scoped','MODULE_DISABLED','403'],
+    ['denied','scoped','DOMAIN_ACCESS_DENIED','403'],
+    ['tenantless-denied','tenantless','DOMAIN_ACCESS_DENIED','403']
   ];
-  for(const [id,scope,code,status,blockedStep] of expected){
+  for(const [id,scope,code,status] of expected){
     const entry=request.failureCases.find(x=>x.id===id);
     assert.ok(entry, id+' missing from request guide');
     assert.equal(entry.failure,code);
     assert.equal(entry.http,status);
+    assert.equal('gate' in entry,false,'public request docs must not expose execution-stage names');
     assert.ok(scenariosFor('request',scope).some(x=>x.id===(entry.scenario||entry.id)));
     const result=getPublicOutcome('request',scope,entry.scenario||entry.id);
     assert.ok(result.outcome.includes(status),id+' public outcome status drift');
@@ -101,6 +102,9 @@ test('published request guide matches scoped and tenantless Kernel failure seman
     assert.ok(wiring.code.includes(port),port+' required');
   }
   assert.ok(searchDeveloperGuides('TENANT_CONTEXT_MISMATCH').some(x=>x.id==='request'));
+  assert.doesNotMatch(request.summary+' '+request.verify,/first (?:stopped|blocked|denied) gate/i);
+  assert.ok(request.endpointChoices.every(x=>!x.guards.includes('→')),'scope prerequisites must not read as internal pipeline order');
+
   assert.ok(searchDeveloperGuides('current module key').some(x=>x.id==='request'));
   assert.doesNotMatch(wiring.code,/RequestContextPipeline\\.tenantless\(/);
 });

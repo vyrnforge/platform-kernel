@@ -1,95 +1,33 @@
-# Platform Kernel documentation site
+# Platform Kernel developer website
 
-> DOCSEC-02 (19 November 2026): The public site teaches **usage and supported outcomes**. It does not expose internal execution ordering. Public API, tenancy, authentication, replay, audit and outbox guarantees remain visible, source-pinned to v0.3.2. See [disclosure policy](../docs/security/publication-boundaries.md).
+This website is a **usage guide for the released embedded Java library**, not an internal design or architecture simulator.
 
-A focused React 19 / esbuild site for the **published Platform Kernel v0.3.2** Java 21 library. It is a documentation entry point, not another Kernel runtime or dashboard.
+The canonical public guides are at https://vyrnforge.github.io/platform-kernel/. They explain how to add the published `io.github.vyrnforge` dependencies to a Java 21+ product, call supported APIs, handle failures and verify the product's integration. The public source/Javadocs remain inspectable; hiding website narration is not a confidentiality boundary.
 
-## Fluid layout
+## Public routes
 
-All four website destinations use the viewport width with responsive side gutters instead of a fixed 1180px container. Documentation and Reference articles, Playground public-outcome/code panels, and Home grids expand fluidly. Long-form prose retains a readable line measure; tables/code scroll within their own surfaces rather than forcing horizontal page overflow. Chromium regression checks the actual rendered shell at 1440/1920/2560px as well as narrow/mobile widths. No runtime, artifact or release changes are part of this layout.
+| Route | Purpose |
+| --- | --- |
+| `#/` | Library value, published dependency and first-program entry |
+| `#/docs/install` and guides | Version-pinned Maven/Gradle/Java usage, trusted request API, optional JDBC, consumer checks and troubleshooting |
+| `#/playground` | Browser-only **illustrative public outcomes**, consumer responsibilities and released code; does not run IAM, SQL or a JVM |
+| `#/reference/architecture` | Library capability contracts, application/IAM/File Storage ownership and published version status |
 
-## Information architecture
+Keep the four existing navigation destinations, search, safe legacy deep-link recovery and keyboard/focus behavior. The `#/docs/preview` legacy route is retained as a **v0.4.0 release-status-only** page; it does not publish unreleased API samples or internal design detail. Only v0.3.2 is installable in the current published guidance.
 
-The root [README](../README.md) now explains the same public integration responsibilities without publishing an internal execution-order diagram. Keep public contract error and reliability semantics linked to the on-site request/JDBC guides rather than recreating a hidden flow simulator.
+**Public usage requires correct security and reliability boundaries.** Never remove credential verification, trusted tenant context, application-owned domain permissions, safe HTTP 400/401/403/404 results, replay reauthorization, JDBC atomic product data and required intents, and at-least-once outbox/deduplication/recovery requirements merely to make a guide shorter. Those are supported consumer contracts, not implementation-only algorithms.
 
-Four separate destinations use hash routes, so deep links and browser Back/Forward work on GitHub Pages:
+Generic deployment topology galleries, internal execution gate ordering and unpublished API design snippets are outside the public website. Approved implementation-only notes belong in verified private engineering documentation, never in `site/src` or shipped `dist/app.js`. The public Apache-2.0 Java source and old Git history are still inspectable.
 
-| Destination | Route | Purpose |
-| --- | --- | --- |
-| Home | #/ | One dependency preview, a three-step start and an ownership summary. |
-| Documentation | #/docs/install, /first, /request, /jdbc, /assure | Task-oriented, source-pinned usage examples; full-text guide search, syntax-highlighted code tabs, run commands and verification. |
-| Playground | #/playground | One browser-only public-contract integration helper with shareable scenario URLs: core, trusted API and optional JDBC; expected outcomes, consumer checks and ownership, not internal execution traces. |
-| Reference | #/reference/architecture, /capabilities, /releases | Ownership, deployment, full capability inventory and release evidence. |
+## Source and developer checks
 
-There is no secondary marketing catalog, Journey Selector, Flow Studio, duplicate integration hero, slideshow or inline documentation mega-section. Legacy fragments (#docs, #workbench, #start, #capabilities, #architecture) map to the matching new destination.
+- `src/docs-data.mjs`: five released developer guides, runnable/copyable snippets, error and recovery contracts and contextual search.
+- `src/public-outcomes.mjs`, `src/workbench-data.mjs`, `src/IntegrationWorkbench.jsx`: expected outcomes for core, request and JDBC usage; no execution-stage simulator.
+- `src/preview-data.mjs`, `src/PreviewGuide.jsx`: unreleased version status only, without candidate implementation code.
+- `src/Reference.jsx`, `src/data.mjs`: supported capability, ownership and version information.
 
-## Source layout
+From `site/` run `npm ci`, `npm test`, `npm run build`, `node scripts/site-quality.mjs` and `node scripts/browser-smoke.mjs` where Chrome is available. From the repository root, `python3 scripts/check-docsec-publication.py --source --site` checks generated assets for bounded prohibited-content and credential patterns. The CI/Page workflows also verify public artifact provenance and source-pinned, published-JAR onboarding on relevant changes.
 
-- src/main.jsx — four destinations, shared header/footer and concise homepage.
-- src/routes.mjs — route parsing and legacy fragment mappings.
-- src/DeveloperDocs.jsx, src/developer-docs.css and src/docs-data.mjs — the five published-release guides.
-- src/IntegrationWorkbench.jsx, src/public-outcomes.mjs, src/kernel-workbench.css and src/workbench-data.mjs — the public-contract outcome guide with safe scenario deep links and canonical published Maven/Java samples. Internal gate-by-gate execution models are not shipped to browsers.
-- src/Reference.jsx — consolidated capability, architecture and release reference.
-- src/PreviewGuide.jsx and src/preview-data.mjs — the source-reviewed v0.4.0 candidate guide delivered as an in-site Documentation route, not an external GitHub Markdown manual.
-- src/data.mjs — release/source metadata and boundaries. Released source pinned to c86eb33a46fae2843c75181c6b395cd0dc6710fe.
-- src/style.css and scripts/browser-smoke.mjs — responsive UI and Chromium end-to-end checks.
+The current version and deployment must be proven from the exact build/Pages run, not asserted based on a passing local build. Scripted Chromium checks cover representative navigation, links, scenarios, keyboard paths and viewport widths, **not** independent NVDA/VoiceOver, actual browser 200%/400% zoom or WCAG certification. Human post-release acceptance is tracked in GitHub UX issues #76, #77, #82 and #83.
 
-**Pre-release documentation:** the existing Reference → Versions panel links to the [v0.4.0 developer preview](https://vyrnforge.github.io/platform-kernel/#/docs/preview), marked NOT RELEASED. Pre-release guides are drafted and reviewed before publication; published installation defaults, code examples and source pins stay on v0.3.2. After verified publication, update them through a separate reviewed docs/site change.
-
-**Version discipline:** v0.4.0 candidate APIs, including RequestContextPipeline.tenantless(...) and the optional JacksonRecordCodec(applicationMapper) constructor, must not appear as published v0.3.2 examples. Integration excerpts require application-provided ports and wiring. The playground is NOT a live JVM, token verifier or database and does not prove production conformance. Testkit is test-scoped. Applications own business data, policy, transactions and deployment; IAM/IdP and File Storage remain external authorities.
-
-## Local development
-
-Use Node.js 22+.
-
-    cd site
-    npm ci
-    npm test
-    npm run dev
-    # http://127.0.0.1:4173
-    npm run build
-    node scripts/browser-smoke.mjs  # Chromium/Chrome required; serves dist/
-
-The bundle uses local files and needs no external CDN/backend. GitHub Pages CI builds/tests the PR and runs Chromium smoke. Deploy only when a change is merged to main.
-
-Chromium smoke covers route/focus/keyboard navigation, code rendering, contextual guide search and narrow/zoom-equivalent responsive widths; it is not a full manual 200% browser-zoom, screen-reader or WCAG audit. The separate change-scoped published-onboarding workflow downloads v0.3.2 artifacts and compiles/runs the first Java program plus source-excerpt checks against Maven Central (not a real product integration). Keep site claims pinned to published Maven Central evidence rather than an unpublished candidate.
-
-## Trace usability and verification
-
-The one Playground is a deterministic **simulation**, not a running JVM, IAM verifier, JDBC transaction or authorization test. The trace separates a check that actually ran from a check intentionally not required (e.g. membership on tenantless) and one never reached after denial. Browser URLs preserve mode, scope and scenario, so guides can link to a relevant failure case. Negative paths for cross-tenant 404, missing membership, disabled module, denied domain policy, replay and in-progress retries match published v0.3.2 contract semantics. Ownership remains with product applications. Screen-reader testing and actual 200% browser zoom still require manual validation.
-
-## Accessibility baseline (issue #77)
-
-See [the QA accessibility task and evidence matrix](qa/accessibility-baseline.md) for source findings, focused Chromium regressions, and separately outstanding actual browser zoom and screen-reader tasks. WCAG 2.2 AA is a *proposed* site quality target, not a certification. This work does not alter the published Java library.
-
-## Published v0.3.2 first-program verification — Issue #78
-
-The documentation first-run examples (Java 21 source, Maven dependency fragment and Gradle Kotlin DSL fragment) are maintained in `src/docs-data.mjs`. A narrow [published onboarding consumer](../.github/workflows/onboarding-consumer.yml) workflow is triggered only for guide/source changes and independently downloads the **released** core JAR from anonymous Maven Central, compares its SHA-1 checksum, records a computed SHA-256, compiles and runs the exact site Java class, and compiles minimal Maven/Gradle consumers. It does not run the full Java/PostgreSQL/release-staging suite. No 0.4.0 APIs or candidate builds may enter this proof.
-
-See [QA onboarding task notes](qa/onboarding-first-program.md) for evidence, blocked local verification and remaining human testing.
-
-## Published request integration boundary — Issue #79
-
-The existing Documentation → Resolve a trusted request guide contains a source-reviewed v0.3.2 four-port pipeline wiring excerpt, a tenantless-vs-scoped decision, and a failure/recovery matrix linked to the **single** simulated Playground. Authentication verification belongs to IAM/IdP or the application; Kernel supplies shared scope, membership and entitlement guards; the owning application supplies domain authorization and tenant-filtered SQL. HTTP failure mapping and safe correlation are distinguished from raw credential/token verification. Regression tests check 400/401/403/404 outcomes against Playground models and site navigation. See [QA task matrix](qa/request-identity-journey.md); real IAM/consumer acceptance remains separate under issue #41.
-
-## Durable mutation UX — Issue #80
-
-The existing [optional JDBC guide](#/docs/jdbc) and [consumer verification guide](#/docs/assure) now explain published v0.3.2 ACQUIRED/REPLAY/IN_PROGRESS/CONFLICT decisions, no-duplicate-SQL rules, rollback/uncertain commit, at-least-once outbox and DEAD reconciliation. The existing single Playground links to these on-site documents; it is a deterministic learning simulation, not a PostgreSQL or IAM execution engine. Durable verification lists the source-published CC-14–CC-22 and CC-27 IDs and still needs independent application evidence under issue #41.
-
-## Documentation findability and release labels — Issue #81
-
-Site documentation remains the canonical interactive guide surface. Sidebar search returns **one best matching section per guide** with contextual text and an optional sample index, using validated hash routes `#/docs/<guide>?section=<section>&q=<query>&sample=<index>`. Deep links focus the target section and preserve search context in browser Back/Forward; troubleshooting/recovery disclosures open when linked. The four destinations and one Playground remain unchanged. The no-JavaScript HTML fallback links to the static project README only, not a separately maintained developer guide catalog.
-
-`site/package.json` is `private: true` and deliberately uses a **0.0.0 unpublishable-site placeholder version**, independent of the current *published Java library v0.3.2* and unpublished *v0.4.0 candidate*. `site/src/data.mjs` remains the single source of runtime/documentation release labels. Changing a release label requires an independently approved and verified publication, source/API review, and a separate documentation cutover; changing the private npm package version alone is never a Java release.
-
-## Playground interaction and accessibility — issue #82
-
-The single `IntegrationWorkbench.jsx` keeps native mode/scope/scenario buttons, five task phases, safe expected outcomes, Previous/Next, optional testkit controls and published code tabs. It no longer exposes the internal decision inspector. A compact `role=status` summary announces one selected scenario/outcome/gate change rather than reading the entire inspector on every decision. The inspector is a separately labeled reading region and selected stage buttons use `aria-current=step` and `aria-controls`; status names Passed, Stopped here, Not required and Not reached are explicit and never depend on color. Unknown/unavailable shared-link query combinations safely fall back to supported cases with a visible explanation. Browser Back/Forward restores mode/scope/scenario and resets stage selection predictably; detailed browser checks belong to the Pages workflow.
-
-No additional scenarios, Flow Studio, backend, Java APIs, or actual IAM/JDBC execution were added. See [Playground interaction QA matrix](qa/playground-interaction-journey.md) for source/test evidence versus outstanding actual NVDA/VoiceOver, keyboard-only Firefox, and 200%/400% zoom testing.
-
-## Sustained site quality — issue #83
-
-The existing Pages workflow now runs `node scripts/site-quality.mjs` after `npm test && npm run build`. This validates source-local Markdown links, representative version/route state, the published-vs-candidate distinction, and exact raw/gzip sizes and SHA-256 of the build assets without third-party network dependencies. The existing Chromium smoke also performs a full supported site-route/scenario matrix, basic semantic accessible-name/control consistency checks, representative contrast, reduced-motion CSS and an advisory browser navigation/DOM snapshot. This is **not** a full WCAG audit or a Lighthouse field-performance result.
-
-On `main`, only **after** a successful GitHub Pages deployment, `scripts/verify-deployment.mjs` checks the public HTTPS page and exact app.js/app.css digests from the same CI build, with bounded CDN-propagation retries. PRs do not deploy. CI logs and summaries provide reproducible evidence; public production status must not be claimed from a green PR build. External websites are inventoried but not made flaky PR gates. Gzip ceilings remain **advisory pending an observed and reviewed baseline**, and actual screen-reader, browser zoom and human user acceptance stay open under [the QA issue #83 matrix](qa/quality-gates-issue-83.md).
+See [public disclosure policy](../docs/security/publication-boundaries.md), [published runtime README](../README.md), and [QA task handoff](qa/playground-interaction-journey.md) for evidence responsibilities. `site/package.json` is intentionally private at version `0.0.0`; it is not the Java library release version.

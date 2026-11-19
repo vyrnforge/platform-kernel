@@ -30,8 +30,22 @@ RETIRED_UI_STRINGS = (
     b"Stop at the first failure; subsequent gates were never called.",
 )
 
+# Restrict *public website content* to supported usage and behavior.
+# These are targeted regression checks, not exhaustive content classification.
+NON_USAGE_SITE_STRINGS = (
+    b"first blocked gate",
+    b"first stopped gate",
+    b"first denied gate",
+    b"Scenario / first gate",
+    b"What happens for each idempotency decision?",
+    b"Deployment patterns",
+    b"RequestContextPipeline.tenantless(identityAdapter, domainAuthorizationHook)",
+    b"new JacksonRecordCodec(appMapper)",
+)
 
-def violations(label: str, data: bytes, *, website_bundle: bool = False) -> list[str]:
+
+
+def violations(label: str, data: bytes, *, website_bundle: bool = False, site_content: bool = False) -> list[str]:
     problems = []
     if any(marker in data for marker in MARKERS):
         problems.append(f"{label}: classified-content marker")
@@ -39,6 +53,8 @@ def violations(label: str, data: bytes, *, website_bundle: bool = False) -> list
         problems.append(f"{label}: possible credential literal (redacted)")
     if website_bundle and any(item in data for item in RETIRED_UI_STRINGS):
         problems.append(f"{label}: internal execution-trace description")
+    if (website_bundle or site_content) and any(item in data for item in NON_USAGE_SITE_STRINGS):
+        problems.append(f"{label}: non-usage documentation content (redacted)")
     return problems
 
 
@@ -50,7 +66,10 @@ def scan_source() -> tuple[list[str], int]:
         for path in folder.rglob("*"):
             if path.is_file() and path.suffix in {".jsx", ".js", ".mjs", ".html", ".css", ".md"}:
                 count += 1
-                issues.extend(violations(str(path.relative_to(ROOT)), path.read_bytes()))
+                is_public_content = folder.name == "src" and ".test." not in path.name
+                issues.extend(violations(
+                    str(path.relative_to(ROOT)), path.read_bytes(), site_content=is_public_content
+                ))
     for name in ("README.md", "site/README.md", "SECURITY.md", "CONTRIBUTING.md"):
         path = ROOT / name
         count += 1

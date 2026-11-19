@@ -1,11 +1,10 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {capabilities,architectures,source,version,candidateVersion,candidateStatus,candidatePr,repo} from './data.mjs';
+import {capabilities,source,version,candidateVersion,candidateStatus,repo} from './data.mjs';
 
-test('all public capability and topology references are release-pinned',()=>{
+test('all public capability references are release-pinned',()=>{
   assert.equal(version,'0.3.2');
   assert.equal(capabilities.length,9);
-  assert.equal(architectures.length,4);
   for(const capability of capabilities){
     assert.match(source(capability.path),/c86eb33a46fae2843c75181c6b395cd0dc6710fe/);
     assert.match(capability.usagePath,/^docs\/.+\.md$/);
@@ -16,10 +15,11 @@ test('all public capability and topology references are release-pinned',()=>{
 test('published and candidate releases remain separately described',()=>{
   assert.equal(candidateVersion,'0.4.0');
   assert.equal(candidateStatus,'unpublished');
-  assert.equal(candidatePr,repo+'/pull/65');
+  assert.equal(repo,'https://github.com/vyrnforge/platform-kernel');
 });
 
-test('topologies retain domain independence and no required Kernel runtime',()=>{
-  assert.ok(architectures.every(a=>a.products.length>0&&a.note));
-  assert.ok(architectures.every(a=>!a.description.includes('mandatory kernel server')));
+test('capability descriptions communicate public usage instead of worker internals',()=>{
+  const summary=capabilities.map(x=>x.ships).join(' ');
+  assert.doesNotMatch(summary,/V3 claim tokens|locks the lease|stale workers/);
+  assert.match(summary,/safe replay/);
 });
