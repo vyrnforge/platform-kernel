@@ -4,6 +4,7 @@ import {capabilityGuides,capabilityGuide,inferCapability} from './capability-gui
 import {getWorkbenchTrace,getWorkbenchRecipe,scenariosFor} from './workbench-data.mjs';
 import {developerGuides} from './docs-data.mjs';
 import {tokenizeCode} from './code-tokens.mjs';
+import {selectCodeText} from './code-selection.mjs';
 import './kernel-workbench.css';
 
 const phases=[
@@ -38,6 +39,7 @@ export function IntegrationWorkbench({mode='core',scope='scoped',scenario='succe
   const [codeTab,setCodeTab]=useState('maven');
   const [copyStatus,setCopyStatus]=useState('');
   const focusReady=useRef(false);
+  const codePreRef=useRef(null);
 
   // Each route history visit starts its trace at decision 1, even on Back.
   const scenarioList=guide.mode?scenariosFor(guide.mode,scope).filter(s=>guide.scenarios.includes(s.id)):[];
@@ -129,13 +131,22 @@ export function IntegrationWorkbench({mode='core',scope='scoped',scenario='succe
     document.getElementById('wb-inspection-heading')?.focus({preventScroll:true});
     document.getElementById('wb-inspection-heading')?.scrollIntoView({block:'nearest',behavior:'instant'});
   }
+  function selectCode(){
+    const selected=selectCodeText(codePreRef.current);
+    setCopyStatus(selected?
+      'Code selected. Press Ctrl+C (Windows/Linux) or Command+C (macOS) to copy.':
+      'Text selection unavailable. Focus the example code block to select and copy manually.');
+  }
   async function copyCode(){
     try{
       if(!navigator.clipboard?.writeText)throw Error('Clipboard unavailable');
       await navigator.clipboard.writeText(code);
       setCopyStatus('Copied '+selectedCode.label+' to clipboard.');
     }catch{
-      setCopyStatus('Clipboard unavailable. Select the example text to copy manually.');
+      const selected=selectCodeText(codePreRef.current);
+      setCopyStatus(selected?
+        'Clipboard permission unavailable. Code selected; press Ctrl+C or Command+C to copy.':
+        'Clipboard permission unavailable. Use Select code or select the example manually.');
     }
   }
 
@@ -312,10 +323,10 @@ export function IntegrationWorkbench({mode='core',scope='scoped',scenario='succe
                   <div className="wb-code-tabs"><div role="group" aria-label="Published code type">
                     {codeChoices.map(item=><button type="button" key={item.id} aria-pressed={selectedCode.id===item.id}
                       className={selectedCode.id===item.id?'is-selected':''} onClick={()=>{setCodeTab(item.id);setCopyStatus('')}}>{item.label}</button>)}
-                    </div><button type="button" className="wb-copy" onClick={copyCode}>Copy code</button>
+                    </div><div className="wb-code-actions"><button type="button" className="wb-copy" onClick={copyCode}>Copy code</button><button type="button" className="wb-select-code" onClick={selectCode}>Select code</button></div>
                   </div>
                   <div className="wb-code-kind">{selectedCode.filename} · {selectedCode.kind} · v{version}</div>
-                  <pre tabIndex={0} aria-label={selectedCode.filename+' code, scroll horizontally if needed'}><code>{tokenizeCode(code,selectedCode.language).map((part,i)=>part.kind?<span key={i} className={'tok-'+part.kind}>{part.text}</span>:part.text)}</code></pre>
+                  <pre ref={codePreRef} tabIndex={0} aria-label={selectedCode.filename+' code, scroll horizontally if needed'}><code>{tokenizeCode(code,selectedCode.language).map((part,i)=>part.kind?<span key={i} className={'tok-'+part.kind}>{part.text}</span>:part.text)}</code></pre>
                   <p className="wb-copy-feedback" role="status">{copyStatus}</p>
                 </div>
                 <div className="wb-check-pane">
