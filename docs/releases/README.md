@@ -21,6 +21,15 @@ Dependabot covers Maven, GitHub Actions and site npm. The one-time signing boots
 
 ## Release checklist
 
+Before approving a version-changing PR, require the following DOCSEC classification evidence in addition to contract compatibility and release readiness. These are **human review decisions**, not automatic release permission:
+
+- [ ] Version-specific developer guides, migration notes and runnable examples are reviewed **before** publication; the default install still points to the latest verified released version (DEC-K033).
+- [ ] A Security owner has reviewed changed source, website, docs, Javadocs and package contents under [public documentation boundaries](../security/publication-boundaries.md). Record an eligible independent approval or an **explicit scoped governance exception**, never infer it from previous releases.
+- [ ] The DOCSEC source, built Pages assets and generated binary/source/Javadoc JAR checks pass at the **exact candidate SHA**; attach artifact hashes and CI links. Bounded signature scans do not certify absence of secrets.
+- [ ] Confirm private internal diagrams are excluded from the repository, public site bundles, ZIP/JAR contents, workflows and logs; verify destination ACL and owners. Respect existing Apache-2.0 public source visibility and historical copies.
+- [ ] Any historical exposure or manual accessibility/adopter-test gap has a documented reviewer, residual-risk disposition and owner decision. Do not self-certify independent QA.
+- [ ] Obtain **separate explicit Product Owner release/merge authorization**, and preserve protected checks; this checklist does not grant it.
+
 1. Update VERSION, all Maven module versions and changelog. Keep Java package names, released wire contracts and migration bytes compatible unless explicitly approved. Do not reuse a version.
 2. Open a release PR and require all protected checks. Squash merge with a verified commit and title beginning `release:`. A version-changing main push starts the release; non-release docs do not.
 3. Confirm the release builds the three binary libraries, source/Javadoc archives and four POMs, signs them and publishes to Central. Confirm public consumer resolution, byte-matched GitHub mirror and GitHub Release.
