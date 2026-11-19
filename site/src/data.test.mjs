@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {capabilities,source,version,candidateVersion,candidateStatus,candidatePr,repo} from './data.mjs';
+import {capabilities,source,version,candidateVersion,candidateStatus,repo} from './data.mjs';
 
 test('all public capability references are release-pinned',()=>{
   assert.equal(version,'0.3.2');
@@ -15,7 +15,7 @@ test('all public capability references are release-pinned',()=>{
 test('published and candidate releases remain separately described',()=>{
   assert.equal(candidateVersion,'0.4.0');
   assert.equal(candidateStatus,'unpublished');
-  assert.equal(candidatePr,repo+'/pull/65');
+  assert.equal(repo,'https://github.com/vyrnforge/platform-kernel');
 });
 
 test('capability descriptions communicate public usage instead of worker internals',()=>{
