@@ -238,33 +238,30 @@ try{
   await wait('!!document.querySelector(".request-failures")','return to request docs should work');
   // At mobile widths, error details scroll locally without whole-page overflow.
 
-  // Guided integration: one capability controls understand, preparation, trace
-  // and published implementation. Legacy docs deep links enter its Explore step.
+  // Guided integration: one capability controls prerequisites, public outcomes
+  // and released code. Legacy deep links enter the Check step.
   await evaluate('location.hash="#/docs/request"');
   await wait('!!document.querySelector(".guide-try-link")','on-site guide link missing');
   assert.equal(await evaluate('document.querySelector(".guide-try-link").getAttribute("href")'),'#/playground?mode=request&scope=scoped&scenario=success');
   await click('.guide-try-link');
-  await wait('location.hash.includes("mode=request") && document.querySelectorAll(".wb-trace-step").length===6','legacy request walkthrough deep link failed');
+  await wait('location.hash.includes("mode=request") && !!document.querySelector(".wb-result-card")','legacy request outcome link failed');
   assert.ok((await evaluate(q('#wb-wizard-panel-title')+'.textContent')).includes('Identity & tenancy'),'legacy request route must map to correct capability guide');
   assert.equal(await evaluate('document.querySelectorAll(".wb-wizard-step").length'),5,'wizard must expose five sequenced stages');
-  assert.ok((await evaluate(q('.wb-inspection')+'.innerText')).includes('What is checked?'),'decision inspector shows contract check');
-  assert.ok((await evaluate(q('.wb-inspection')+'.innerText')).includes('Who owns this?'),'decision inspector names owner');
-  assert.equal(await evaluate('document.querySelectorAll(".wb-status-announcement[role=status]").length'),1,'exactly one simulated trace status');
+  assert.ok((await evaluate(q('.wb-result-facts')+'.innerText')).includes('Responsible owner'),'public outcome retains clear application responsibility');
+  assert.ok((await evaluate(q('.wb-result-facts')+'.innerText')).includes('Consumer verification'),'public outcome states consumer tests');
+  assert.equal(await evaluate('document.querySelectorAll(".wb-status-announcement[role=status]").length'),1,'exactly one concise public outcome status');
 
   // A domain-specific failure is part of the HTTP guide, not a generic mode switch.
   await evaluate('location.hash="#/playground?cap=http&mode=request&scope=scoped&scenario=cross-tenant"');
   await wait('document.querySelector(".wb-outcome")?.textContent.includes("404")','HTTP cross-tenant route failed');
   assert.ok((await evaluate(q('#wb-wizard-panel-title')+'.textContent')).includes('API standards'),'HTTP route must open its corresponding capability');
-  assert.equal(await evaluate('document.querySelectorAll(".wb-track li[data-state=blocked]").length'),1,'first failing gate must be unambiguous');
-  assert.ok((await evaluate(q('.wb-result-facts')+'.textContent')).includes('Establish request scope'),'HTTP example stops at correct gate');
+  assert.equal(await evaluate('document.querySelectorAll(".wb-track,.wb-inspection").length'),0,'public page must not expose an internal gate inspector');
+  assert.ok((await evaluate(q('.wb-result-facts')+'.textContent')).includes('Application resource owner'),'cross-tenant outcome must name the resource owner');
   assert.ok((await evaluate(q('.wb-request-recovery')+'.textContent')).includes('TENANT_CONTEXT_MISMATCH'),'cross-tenant denial uses published KernelFailure');
   assert.ok((await evaluate(q('.wb-request-recovery')+'.textContent')).includes('HTTP 404'),'cross-tenant response stays existence-safe');
   assert.ok((await evaluate(q('.wb-request-recovery')+'.textContent')).includes('authoritative product storage'),'cross-tenant recovery retains authoritative product ownership');
   assert.equal(await evaluate('document.querySelector(".wb-request-recovery a").getAttribute("href")'),'#/docs/request?section=failures','failure recovery links to existing published request guide');
-  await click('.wb-result-primary');
-  await wait('document.activeElement?.id==="wb-inspection-heading" && document.querySelector(".wb-inspection-tag")?.textContent.includes("2 OF 6")','inspector jump must focus blocking decision');
-  await click('.wb-trace-actions button:first-child');
-  assert.ok((await evaluate(q('.wb-inspection-tag')+'.textContent')).includes('1 OF 6'),'previous decision works');
+  assert.equal(await evaluate('document.querySelector(".wb-result-primary").getAttribute("href")'),'#/docs/request','public result must link to published on-site usage guidance');
   await click('.wb-wizard-step:nth-child(5)');
   await wait('!!document.querySelector(".wb-code-tabs [role=group] button:last-child")','request implementation tabs unavailable');
   assert.equal(await evaluate('document.querySelectorAll(".wb-code-tabs [role=group] button").length'),3,'request needs Maven + endpoint excerpt + four-port wiring');
@@ -335,7 +332,7 @@ try{
   assert.ok((await evaluate(q('.wb-prepare-progress')+'.textContent')).includes('1/3'),'readiness is local self-attestation');
   await click('.wb-wizard-next');
   await wait('!!document.querySelector(".wb-phase-explore")','wizard must progress to how it works');
-  assert.equal(await evaluate('document.querySelectorAll(".wb-process-list li").length'),3,'events sequence must be capability-specific');
+  assert.equal(await evaluate('document.querySelectorAll(".wb-process-list li").length'),2,'events public verification requirements must be capability-specific');
   assert.ok((await evaluate(q('.wb-outcome')+'.textContent')).includes('ATOMIC'),'events should use its relevant published JDBC pattern');
   assert.equal(await evaluate('document.querySelectorAll(".wb-wizard-step[aria-current=step]").length'),1,'wizard current-step state duplicated');
   await click('.wb-wizard-next');
@@ -402,30 +399,25 @@ try{
   await evaluate('delete navigator.clipboard');
   assert.ok((await evaluate(q('.wb-first-run a')+'.getAttribute("href")'))==='#/docs/first','runnable first-program guide link missing');
 
-  // History, selected trace reset and one nonverbose status remain meaningful.
+  // History and one concise outcome status remain meaningful without a trace inspector.
   await evaluate('location.hash="#/playground?mode=request&scope=scoped&scenario=membership"');
-  await wait('document.querySelector(".wb-status-announcement")?.textContent.includes("Identity & tenancy")','membership deep link must enter trace');
-  assert.equal(await evaluate('document.querySelector(".wb-inspection").hasAttribute("aria-live")'),false,'verbose inspector must not be live');
-  assert.equal(await evaluate('document.querySelectorAll(".wb-status-announcement[role=status]").length'),1,'exactly one trace status');
-  await evaluate('document.querySelector(".wb-track li:nth-child(3) button").focus()');
-  await send('Input.dispatchKeyEvent',{type:'keyDown',key:'Enter',code:'Enter',windowsVirtualKeyCode:13,nativeVirtualKeyCode:13,text:'\r',unmodifiedText:'\r'});
-  await send('Input.dispatchKeyEvent',{type:'keyUp',key:'Enter',code:'Enter',windowsVirtualKeyCode:13,nativeVirtualKeyCode:13});
-  await wait('document.querySelector(".wb-inspection-tag")?.textContent.includes("3 OF 6")','keyboard activation of denial gate failed');
-  assert.ok((await evaluate(q('.wb-status-announcement')+'.textContent')).includes('Stopped here'),'status must include stop state');
+  await wait('document.querySelector(".wb-status-announcement")?.textContent.includes("Identity & tenancy")','membership deep link must enter public outcome');
+  assert.equal(await evaluate('document.querySelectorAll(".wb-status-announcement[role=status]").length'),1,'exactly one public outcome status');
+  assert.ok((await evaluate(q('.wb-status-announcement')+'.textContent')).includes('DENIED'),'status must expose safe denied outcome');
   await click('.wb-scenario:first-child');
-  await wait('location.hash.includes("scenario=success") && document.querySelector(".wb-inspection-tag")?.textContent.includes("1 OF 6")','scenario change should reset selection');
+  await wait('location.hash.includes("scenario=success") && document.querySelector(".wb-outcome")?.textContent.includes("REQUEST ALLOWED")','scenario change must update result');
   await evaluate('history.back()');
-  await wait('location.hash.includes("scenario=membership") && document.querySelector(".wb-inspection-tag")?.textContent.includes("1 OF 6")','Back should restore URL and first gate');
+  await wait('location.hash.includes("scenario=membership") && document.querySelector(".wb-outcome")?.textContent.includes("403")','Back must restore denied outcome');
   await evaluate('history.forward()');
-  await wait('location.hash.includes("scenario=success")','Forward should restore scenario');
+  await wait('location.hash.includes("scenario=success")','Forward must restore scenario');
 
   await evaluate('location.hash="#/playground?mode=request&scope=tenantless&scenario=membership"');
   await wait('!!document.querySelector(".wb-route-recovery")','invalid scenario link must explain recovery');
   assert.ok((await evaluate(q('.wb-route-recovery')+'.textContent')).includes('Scenario unavailable'),'invalid link explanation missing');
-  assert.ok((await evaluate(q('.wb-status-announcement')+'.textContent')).includes('REQUEST ALLOWED'),'fallback must be a valid trace');
+  assert.ok((await evaluate(q('.wb-status-announcement')+'.textContent')).includes('REQUEST ALLOWED'),'fallback must be a valid public outcome');
   await evaluate('location.hash="#/playground?mode=mutation&scope=scoped&scenario=replay"');
   await wait('document.querySelector(".wb-outcome")?.textContent.includes("SAFE REPLAY")','mutation replay URL not restored');
-  assert.equal(await evaluate('document.querySelectorAll(".wb-track li[data-state=skipped]").length'),3,'replay must skip duplicate SQL and intents');
+  assert.ok((await evaluate(q('.wb-result-detail')+'.textContent')).includes('without repeating domain SQL'),'public replay contract must forbid duplicate mutation');
   await click('.wb-wizard-step:nth-child(5)');
   assert.equal(await evaluate('document.querySelector(".wb-code-pane pre").getAttribute("tabindex")'),'0','code stays keyboard scrollable');
   await click('.wb-copy');
@@ -475,7 +467,7 @@ try{
   await click('.request-failures a[href*="scenario=in-progress"]');
   await wait('location.hash.includes("scenario=in-progress")','in-progress scenario deep link failed');
   assert.ok((await evaluate(q('.wb-outcome')+'.textContent')).includes('IN PROGRESS'),'concurrent retry must not read as REPLAY');
-  assert.equal(await evaluate('document.querySelectorAll(".wb-track li[data-state=blocked]").length'),1,'in-progress must stop at acquire');
+  assert.ok((await evaluate(q('.wb-result-detail')+'.textContent')).includes('does not start another mutation'),'in-progress must forbid duplicate writes');
   await click('.wb-wizard-step:nth-child(5)');
   await wait('!!document.querySelector(".wb-check-pane a")','implementation phase must expose matching JDBC guide');
   await click('.wb-check-pane a');
@@ -615,7 +607,7 @@ try{
     ['#/docs/request',['.guide-breadcrumb','.guide-excerpt-note','.docs-search-count']],
     ['#/reference/architecture',['.side-kicker','.reference-aside-note']],
     ['#/playground',['.wb-capability-card-top','.wb-capability-card-state']],
-    ['#/playground?mode=request&scope=scoped&scenario=success',['.wb-process-list small','.wb-trace-state','.wb-decision-detail p']]
+    ['#/playground?mode=request&scope=scoped&scenario=success',['.wb-process-list p','.wb-result-detail']]
   ]){
     await evaluate('location.hash='+JSON.stringify(hash));
     await wait('!!document.querySelector('+JSON.stringify(selectors[0])+')','contrast target route '+hash);
@@ -768,7 +760,7 @@ try{
   await send('Emulation.setEmulatedMedia',{features:[{name:'prefers-reduced-motion',value:'reduce'}]});
   assert.equal(await evaluate('matchMedia("(prefers-reduced-motion: reduce)").matches'),true,'reduced-motion preference present');
   assert.deepEqual(errors,[],'browser JavaScript exceptions');
-  console.log('Browser smoke: four destinations, source-aware docs search, deep-linked decision flows, keyboard/code, and 1440/1920/2560 desktop plus 720/640/390/320px reflow passed');
+  console.log('Browser smoke: four destinations, source-aware docs search, deep-linked public outcomes, keyboard/code, and 1440/1920/2560 desktop plus 720/640/390/320px reflow passed');
 } finally {
   ws?.close();chrome.kill('SIGTERM');server.close();await sleep(200);await rm(profile,{recursive:true,force:true}).catch(()=>{});
 }
