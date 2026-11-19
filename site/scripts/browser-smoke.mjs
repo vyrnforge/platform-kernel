@@ -69,6 +69,21 @@ try{
   assert.ok((await evaluate(q('.guide-code-shell code')+'.textContent')).includes('mavenCentral()'),'Gradle tab changes example');
   await click('.guide-copy');
   await wait('document.querySelector(".guide-copy-status").textContent.length>0','copy action must report success or a usable fallback');
+  assert.ok(!!(await evaluate('document.querySelector(".guide-select-code")?.textContent.includes("Select code")')),'Docs must expose a keyboard manual-selection fallback');
+  // Simulate a real asynchronous Clipboard API permission denial; the visible
+  // sample must become selected for an ordinary user keyboard copy.
+  await evaluate('Object.defineProperty(navigator,"clipboard",{configurable:true,value:{writeText:()=>Promise.reject(new Error("permission denied"))}})');
+  await click('.guide-copy');
+  await wait('document.querySelector(".guide-copy-status")?.textContent.includes("Clipboard permission unavailable")','Docs must explain denied clipboard');
+  assert.equal(await evaluate('window.getSelection()?.toString()'),await evaluate(q('.guide-code-shell code')+'.textContent'),'Docs denial must select the complete exact sample');
+  assert.equal(await evaluate('document.activeElement?.matches(".guide-code-shell pre")'),true,'manual sample selection must focus the keyboard-scrollable pre');
+  // Also activate the explicit selection action with keyboard Enter, not mouse.
+  await evaluate('document.querySelector(".guide-select-code").focus()');
+  await send('Input.dispatchKeyEvent',{type:'keyDown',key:'Enter',code:'Enter',windowsVirtualKeyCode:13,nativeVirtualKeyCode:13,text:'\r',unmodifiedText:'\r'});
+  await send('Input.dispatchKeyEvent',{type:'keyUp',key:'Enter',code:'Enter',windowsVirtualKeyCode:13,nativeVirtualKeyCode:13});
+  await wait('document.querySelector(".guide-copy-status")?.textContent.startsWith("Code selected")','keyboard Select code button failed');
+  assert.equal(await evaluate('window.getSelection()?.toString()'),await evaluate(q('.guide-code-shell code')+'.textContent'),'keyboard selection must preserve all syntax-highlighted text');
+  await evaluate('delete navigator.clipboard');
   await click('.guide-pager a:last-child');
   await wait('location.hash==="#/docs/first" && document.querySelector("#guide-heading").textContent.includes("first Java")','next guide deep link failed');
   assert.ok((await evaluate(q('.guide-code-shell code')+'.textContent')).includes('UuidV7.generate'),'real first Java API visible');
@@ -93,9 +108,14 @@ try{
   // React controlled search: use the native setter to simulate the browser input path.
   const setSearch=async text=>evaluate('(()=>{const el=document.querySelector("#guide-search");const setter=Object.getOwnPropertyDescriptor(HTMLInputElement.prototype,"value").set;setter.call(el,'+JSON.stringify(text)+');el.dispatchEvent(new Event("input",{bubbles:true}));return true})()');
   await setSearch('retriable');
-  await wait('[...document.querySelectorAll(".docs-guide-group a")].some(a=>a.getAttribute("href")?.startsWith("#/docs/jdbc"))','search must find the relevant JDBC guide');
+  // A visible JDBC link exists even before filtering, so checking link
+  // presence alone races the React controlled-input update. Require both the
+  // current search value and a genuinely filtered result before typing again.
+  await wait('document.querySelector("#guide-search")?.value==="retriable" && document.querySelectorAll(".docs-guide-group a").length<5 && [...document.querySelectorAll(".docs-guide-group a")].some(a=>a.getAttribute("href")?.startsWith("#/docs/jdbc"))',
+    'search must actually filter to the relevant JDBC guide');
   await setSearch('classpath separator');
-  await wait('document.querySelectorAll(".docs-guide-group a").length===1','search did not index troubleshooting content');
+  await wait('document.querySelector("#guide-search")?.value==="classpath separator" && document.querySelectorAll(".docs-guide-group a").length===1',
+    'search did not index troubleshooting content');
   // Search can rerender as a previous guide effect settles. Find and focus
   // the *current* button in the same CDP evaluation, not across two calls.
   // Repeat twice to exercise the search/clear mount-unmount transition.
@@ -356,7 +376,17 @@ try{
   assert.ok((await evaluate(q('.wb-code-pane code')+'.textContent')).includes("java -cp '.;."),'Windows classpath must use semicolon');
   await click('.wb-copy');
   await wait('document.querySelector(".wb-copy-feedback")?.textContent.length>0','first-run copy needs accessible result or fallback');
-  assert.ok((await evaluate(q('.wb-copy-feedback')+'.textContent')).match(/Copied|Clipboard unavailable/),'first-run copy failure needs usable fallback');
+  assert.ok((await evaluate(q('.wb-copy-feedback')+'.textContent')).match(/Copied|Clipboard permission unavailable/),'first-run copy failure needs usable fallback');
+  assert.ok(await evaluate('!!document.querySelector(".wb-select-code")'),'wizard must offer explicit Select code fallback');
+  await evaluate('Object.defineProperty(navigator,"clipboard",{configurable:true,value:{writeText:()=>Promise.reject(new Error("permission denied"))}})');
+  await click('.wb-copy');
+  await wait('document.querySelector(".wb-copy-feedback")?.textContent.includes("Clipboard permission unavailable")','wizard clipboard denial missing');
+  assert.equal(await evaluate('window.getSelection()?.toString()'),await evaluate(q('.wb-code-pane code')+'.textContent'),'wizard clipboard denial must select the exact Windows commands');
+  assert.equal(await evaluate('document.activeElement?.matches(".wb-code-pane pre")'),true,'wizard manual selection must focus code block');
+  await click('.wb-select-code');
+  await wait('document.querySelector(".wb-copy-feedback")?.textContent.startsWith("Code selected")','wizard Select code fallback unavailable');
+  assert.equal(await evaluate('window.getSelection()?.toString()'),await evaluate(q('.wb-code-pane code')+'.textContent'),'wizard explicit selection must cover complete code');
+  await evaluate('delete navigator.clipboard');
   assert.ok((await evaluate(q('.wb-first-run a')+'.getAttribute("href")'))==='#/docs/first','runnable first-program guide link missing');
 
   // History, selected trace reset and one nonverbose status remain meaningful.
@@ -387,7 +417,7 @@ try{
   assert.equal(await evaluate('document.querySelector(".wb-code-pane pre").getAttribute("tabindex")'),'0','code stays keyboard scrollable');
   await click('.wb-copy');
   await wait('document.querySelector(".wb-copy-feedback").textContent.length>0','clipboard feedback missing');
-  assert.ok((await evaluate(q('.wb-copy-feedback')+'.textContent')).match(/Copied|Clipboard unavailable/),'copy denial must have manual fallback');
+  assert.ok((await evaluate(q('.wb-copy-feedback')+'.textContent')).match(/Copied|Clipboard permission unavailable/),'copy denial must have manual fallback');
 
   // Long-guide reading flow uses only existing section routes and accessible
   // headings: no second sidebar or another Docs destination.
