@@ -384,3 +384,9 @@
 .wb-request-recovery .wb-request-safe-ids{color:#775e42}
 .wb-request-recovery a{display:inline-block;font-size:12px;font-weight:800;color:#7b4d21;margin-top:11px;text-decoration:underline;text-underline-offset:3px}
 @media(max-width:610px){.wb-request-recovery{padding:13px 12px}.wb-request-recovery dl{grid-template-columns:1fr}}
+
+/* Keep code actions reachable when a browser or policy denies async clipboard. */
+.wb-code-tabs>.wb-code-actions{display:flex;flex:0 1 auto;min-width:0;flex-wrap:wrap;justify-content:flex-end;gap:5px;margin-left:auto}
+.wb-code-tabs button.wb-select-code{border-color:#71849c;color:#f2f7ff;background:#273f5c;white-space:nowrap}
+.wb-phase-implement .wb-code-tabs>.wb-code-actions{flex:0 1 auto}
+@media(max-width:610px){.wb-code-tabs>.wb-code-actions{justify-content:flex-start;margin-left:0}}
