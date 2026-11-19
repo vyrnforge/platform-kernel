@@ -99,3 +99,35 @@ test('invalid Playground URLs recover visibly without running nonexistent scenar
   assert.equal(unsupportedScope.scenario,'replay');
   assert.match(unsupportedScope.recovery,/Unsupported endpoint scope/);
 });
+
+test('capability links resolve to the actual guide and supported scenario',()=>{
+  const shared=resolveRoute('#/playground?cap=identity');
+  assert.deepEqual([shared.mode,shared.scope,shared.capabilityId,shared.scenario],
+    ['request','scoped','identity','membership']);
+  assert.equal(shared.recovery,null);
+  const replay=resolveRoute('#/playground?cap=idempotency');
+  assert.deepEqual([replay.mode,replay.capabilityId,replay.scenario],['mutation','idempotency','replay']);
+  assert.equal(replay.recovery,null);
+
+  const mismatched=resolveRoute('#/playground?cap=module&mode=request&scope=scoped&scenario=cross-tenant');
+  assert.equal(mismatched.capabilityId,'module');
+  assert.equal(mismatched.scenario,'module');
+  assert.match(mismatched.recovery,/Scenario unavailable for this capability/);
+
+  const tenantlessMismatch=resolveRoute('#/playground?cap=module&mode=request&scope=tenantless&scenario=module');
+  assert.equal(tenantlessMismatch.scenario,'success');
+  assert.match(tenantlessMismatch.recovery,/Scenario unavailable for this pattern and scope/);
+
+  const legacyDomainDenial=resolveRoute('#/playground?mode=request&scope=tenantless&scenario=denied');
+  assert.equal(legacyDomainDenial.capabilityId,'http');
+  assert.equal(legacyDomainDenial.scenario,'denied');
+  assert.equal(legacyDomainDenial.recovery,null);
+
+  const contract=resolveRoute('#/playground?cap=files');
+  assert.equal(contract.capabilityId,'files');
+  assert.equal(contract.mode,'core');
+  assert.equal(contract.recovery,null);
+  const incompatible=resolveRoute('#/playground?cap=files&mode=request&scenario=success');
+  assert.equal(incompatible.capabilityId,'identity');
+  assert.match(incompatible.recovery,/Capability and integration pattern do not match/);
+});

@@ -44,23 +44,40 @@ export function resolveRoute(hash=''){
   if(normalized==='#/playground'||normalized.startsWith('#/playground?')){
     const query=normalized.includes('?')?normalized.split('?').slice(1).join('?'):'';
     const params=new URLSearchParams(query);
+    const requestedCapability=params.get('cap');
+    const selectedCapability=capabilityGuide(requestedCapability);
     const requestedMode=params.get('mode');
-    const mode=workbenchModes.some(item=>item.id===requestedMode)?requestedMode:'core';
+    // An explicitly shared capability can stand alone. Use its published
+    // integration pattern rather than silently displaying the Core guide.
+    const mode=workbenchModes.some(item=>item.id===requestedMode)?requestedMode:
+      !requestedMode&&selectedCapability?.mode?selectedCapability.mode:'core';
     const requestedScope=params.get('scope');
     const scope=mode==='request'&&requestedScope==='tenantless'?'tenantless':'scoped';
     const available=scenariosFor(mode,scope);
-    const wantedScenario=params.get('scenario')||'success';
-    const scenario=available.some(item=>item.id===wantedScenario)?wantedScenario:'success';
+    const compatibleGuide=selectedCapability&&(
+      selectedCapability.mode===mode||
+      selectedCapability.mode===null&&!requestedMode
+    )?selectedCapability:null;
+    const wantedScenario=params.get('scenario')||compatibleGuide?.scenario||'success';
+    const scenarioExists=available.some(item=>item.id===wantedScenario);
+    const supportedByGuide=!compatibleGuide?.scenarios||
+      compatibleGuide.scenarios.includes(wantedScenario);
+    // An otherwise valid request/mutation scenario can still be unrelated to
+    // the chosen capability. Never show a different scenario silently.
+    const preferred=compatibleGuide?.scenario||'success';
+    const validPreferred=available.some(item=>item.id===preferred)&&
+      (!compatibleGuide?.scenarios||compatibleGuide.scenarios.includes(preferred));
+    const scenario=scenarioExists&&supportedByGuide?wantedScenario:
+      scenarioExists&&validPreferred?preferred:'success';
+    const capabilityId=compatibleGuide?.id||inferCapability(mode,scenario);
     const corrections=[];
     if(requestedMode&&!workbenchModes.some(item=>item.id===requestedMode))corrections.push('Unknown application pattern');
     if(requestedScope&&(requestedScope!=='scoped'&&requestedScope!=='tenantless'||mode!=='request'&&requestedScope!=='scoped'))corrections.push('Unsupported endpoint scope');
-    if(params.has('scenario')&&wantedScenario!==scenario)corrections.push('Scenario unavailable for this pattern and scope');
-    const requestedCapability=params.get('cap');
-    const selectedCapability=capabilityGuide(requestedCapability);
-    const capabilityId=selectedCapability&&(!selectedCapability.mode||selectedCapability.mode===mode)?
-      selectedCapability.id:inferCapability(mode,scenario);
+    if(params.has('scenario')&&wantedScenario!==scenario)corrections.push(
+      scenarioExists?'Scenario unavailable for this capability':'Scenario unavailable for this pattern and scope'
+    );
     if(requestedCapability&&!selectedCapability)corrections.push('Unknown capability guide');
-    if(selectedCapability?.mode&&selectedCapability.mode!==mode)corrections.push('Capability and integration pattern do not match');
+    if(selectedCapability&&!compatibleGuide)corrections.push('Capability and integration pattern do not match');
     const recovery=corrections.length?corrections.join('; ')+'. Showing '+available.find(item=>item.id===scenario).title+'. Choose a supported option or return to your guide.':null;
     return {page:'playground',title:'Playground',mode,scope,scenario,capabilityId,recovery,canonical:normalized};
   }
