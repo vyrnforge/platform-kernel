@@ -491,7 +491,7 @@ try{
     }else if(i>1){
       await click('.wb-wizard-step:nth-child('+(i+1)+')');
     }
-    await wait('document.querySelectorAll(".wb-wizard-step[aria-current=step]").length===1 && !!document.querySelector("#wb-wizard-panel-title")',
+    await wait('document.querySelectorAll(".wb-wizard-step[aria-current=step]").length===1 && document.querySelector(".wb-wizard-step:nth-child('+(i+1)+')")?.getAttribute("aria-current")==="step" && !!document.querySelector("#wb-wizard-panel-title")',
       'wizard step is not a meaningful accessible state '+axSteps[i]);
     await checkAXTree('wizard '+axSteps[i]);
   }
