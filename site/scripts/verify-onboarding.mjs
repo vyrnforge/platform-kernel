@@ -23,28 +23,26 @@ function run(cmd,args,dir,env=process.env){
   catch(e){throw Error(cmd+' failed:\n'+(e.stdout?.toString()||'')+'\n'+(e.stderr?.toString()||'')+'\n'+e);}
 }
 async function centralGet(url){
-  // Maven Central's public CDN can briefly return 404 even for an immutable
-  // published artifact; an independent Windows consumer verified the same JAR
-  // while a Linux CI request saw 404. Retry only bounded public-CDN failures,
-  // never change registry, version, checksum policy or accepted artifact bytes.
+  // Bounded CDN retries keep the immutable public artifact and strict checksum
+  // checks. A transient 404 was observed on Linux while the same Central JAR
+  // succeeded on Windows; a persistent missing artifact must still fail.
   const transient=new Set([404,408,429,500,502,503,504]);
   let lastError;
   for(let attempt=1;attempt<=4;attempt++){
+    let res;
     try{
-      const res=await fetch(url,{signal:AbortSignal.timeout(60000),redirect:'follow'});
+      res=await fetch(url,{signal:AbortSignal.timeout(60000),redirect:'follow'});
+    }catch(error){lastError=error;}
+    if(res){
       const resolved=new URL(res.url);
       assert.equal(resolved.protocol,'https:');
       assert.equal(resolved.hostname,'repo.maven.apache.org','no mirror or private repository permitted');
       if(res.ok)return res;
       lastError=new Error('Maven Central request failed: '+url+' '+res.status);
       if(!transient.has(res.status))throw lastError;
-    }catch(error){
-      if(error===lastError&&lastError.message.startsWith('Maven Central request failed:')&&
-          !transient.has(Number(lastError.message.split(' ').at(-1))))throw error;
-      lastError=error;
     }
     if(attempt===4)throw lastError;
-    console.warn('Published artifact Central fetch retry '+attempt+'/3: '+url+' — '+lastError.message);
+    console.warn('Retrying public Central fetch '+attempt+'/3: '+lastError.message);
     await new Promise(resolve=>setTimeout(resolve,500*2**(attempt-1)));
   }
   throw lastError;
