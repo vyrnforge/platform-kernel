@@ -1,0 +1,32 @@
+name: CAPAUD-04 published File Storage consumer
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'scripts/verify-file-storage-published-consumer.sh'
+      - '.github/workflows/capaud-current-consumer.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  released-core-consumer:
+    name: verify published v0.3.2 on pinned File Storage
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout Kernel verification script
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Set up Java 21
+        uses: actions/setup-java@77dd5b2ce225ea11469928ac317850245a74ae78 # v6.2.0
+        with:
+          distribution: temurin
+          java-version: '21'
+      - name: Verify shell syntax
+        run: bash -n scripts/verify-file-storage-published-consumer.sh
+      - name: Verify immutable artifact and exact consumer source and tests
+        run: bash scripts/verify-file-storage-published-consumer.sh
