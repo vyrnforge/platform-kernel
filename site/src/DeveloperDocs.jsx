@@ -125,20 +125,20 @@ export function DeveloperDocs({guideId='install',section='overview',selectedSamp
           <p>One verified identity can use either path, but a tenantless endpoint is never anonymous or a bypass for tenant-owned records. These are published v{version} rules.</p>
           <div className="request-scope-grid">{guide.endpointChoices.map(item=><section key={item.id}>
             <h4>{item.name}</h4><p><strong>When:</strong> {item.when}</p><p><strong>Policy:</strong> <code>{item.policy}</code></p><p><strong>Checks:</strong> {item.guards}</p><p><strong>Application owns:</strong> {item.ownership}</p>
-            <a href={'#/playground?mode=request&scope='+item.id+'&scenario='+item.scenario}>Inspect {item.name.toLowerCase()} flow →</a>
+            <a href={'#/playground?mode=request&scope='+item.id+'&scenario='+item.scenario}>See {item.name.toLowerCase()} usage example →</a>
           </section>)}</div>
         </section>}
         {guide.id==='request'&&<section className="request-decisions" aria-labelledby="request-denials-heading">
           <h3 id="request-denials-heading" tabIndex={-1}>Failure and recovery reference</h3>
-          <p>Find the first blocked gate. Subsequent checks are <strong>not reached</strong>; for valid tenantless requests membership and entitlement are <strong>not required</strong>. The HTTP statuses below are the released Kernel HTTP mapper's mappings; application verification failures may be handled before Kernel.</p>
+          <p>Use the published error codes and HTTP mappings to handle denied requests safely. Tenantless endpoints do not require tenant membership or module entitlement, but still require authentication and domain authorization. Application verification failures may be handled before Kernel.</p>
           <div className="request-failures-scroll" role="region" tabIndex={0} aria-label="Request failure and recovery table; scroll horizontally if needed">
             <table className="request-failures">
-              <thead><tr><th scope="col">Scenario / first gate</th><th scope="col">Kernel failure / HTTP</th><th scope="col">Owner and recovery</th><th scope="col">Walkthrough</th></tr></thead>
+              <thead><tr><th scope="col">Request condition</th><th scope="col">Kernel failure / HTTP</th><th scope="col">Owner and recovery</th><th scope="col">Usage example</th></tr></thead>
               <tbody>{guide.failureCases.map(item=><tr key={item.id}>
-                <th scope="row"><strong>{item.trigger}</strong><span>{item.gate} · {item.scope==='scoped'?'tenant-scoped':'tenantless'}</span></th>
+                <th scope="row"><strong>{item.trigger}</strong><span>{item.scope==='scoped'?'tenant-scoped':'tenantless'} endpoint</span></th>
                 <td><code>{item.failure}</code><span className="request-http">{item.http} HTTP</span></td>
                 <td><strong>{item.owner}</strong><p>{item.recovery}</p></td>
-                <td><a href={'#/playground?mode=request&scope='+item.scope+'&scenario='+(item.scenario||item.id)}>View failure →</a></td>
+                <td><a href={'#/playground?mode=request&scope='+item.scope+'&scenario='+(item.scenario||item.id)}>See outcome →</a></td>
               </tr>)}</tbody>
             </table>
           </div>
@@ -146,16 +146,16 @@ export function DeveloperDocs({guideId='install',section='overview',selectedSamp
         </section>}
 
         {guide.id==='jdbc'&&<section className="request-decisions" aria-labelledby="jdbc-decision-heading">
-          <h3 id="jdbc-decision-heading" tabIndex={-1}>What happens for each idempotency decision?</h3>
+          <h3 id="jdbc-decision-heading" tabIndex={-1}>Handle each idempotency result</h3>
           <p>These are the released JDBC adapter's <strong>decision types</strong>, not automatic HTTP responses. Your application must authenticate and authorize every attempt <strong>before</strong> calling <code>begin</code>. Only ACQUIRED executes a new mutation.</p>
           <div className="request-failures-scroll" role="region" tabIndex={0} aria-label="Idempotency decisions table; scroll horizontally if needed">
             <table className="request-failures">
-              <thead><tr><th scope="col">Decision</th><th scope="col">Effect / no new work</th><th scope="col">Owner and next step</th><th scope="col">Inspect</th></tr></thead>
+              <thead><tr><th scope="col">Decision</th><th scope="col">Effect / no new work</th><th scope="col">Owner and next step</th><th scope="col">Usage example</th></tr></thead>
               <tbody>{guide.decisionStates.map(item=><tr key={item.id}>
                 <th scope="row"><strong>{item.type}</strong><span>Published v{version}</span></th>
                 <td>{item.effect}</td>
                 <td><strong>{item.owner}</strong><p>{item.next}</p><p>{item.recovery}</p></td>
-                <td><a href={'#/playground?mode=mutation&scenario='+item.id}>View simulated {item.type} →</a></td>
+                <td><a href={'#/playground?mode=mutation&scenario='+item.id}>See {item.type} example →</a></td>
               </tr>)}</tbody>
             </table>
           </div>
@@ -173,7 +173,7 @@ export function DeveloperDocs({guideId='install',section='overview',selectedSamp
               <tbody>{guide.conformanceCases.map(item=><tr key={item.id}><th scope="row"><strong>{item.id}</strong><span>{item.title}</span></th><td>{item.evidence}</td></tr>)}</tbody>
             </table>
           </div>
-          <p className="request-diagnostics"><strong>Review the flow:</strong> <a href="#/docs/jdbc">Return to the optional JDBC decision and recovery guide</a>. Product acceptance still requires independent conformance under issue #41.</p>
+          <p className="request-diagnostics"><strong>Review usage:</strong> <a href="#/docs/jdbc">Return to the optional JDBC decision and recovery guide</a>. Product acceptance still requires independent conformance under issue #41.</p>
         </section>}
         <section className="guide-section" aria-label="Published library example">
           <div className="guide-code-heading"><h3 id="guide-example-heading" tabIndex={-1}>Example</h3><span>{sample.kind}</span></div>
@@ -189,7 +189,7 @@ export function DeveloperDocs({guideId='install',section='overview',selectedSamp
           <section><h3 id="guide-verification-heading" tabIndex={-1}>Check your integration</h3><p>{guide.verify}</p></section>
           <section><h3 id="guide-ownership-heading" tabIndex={-1}>Ownership boundary</h3><p>{guide.ownership}</p></section>
         </div>
-        <div className="guide-resource-links">{guide.id==='request'||guide.id==='jdbc'||guide.id==='first'?<a className="guide-try-link" href={guide.id==='request'?'#/playground?mode=request&scope=scoped&scenario=success':guide.id==='jdbc'?'#/playground?mode=mutation&scenario=replay':'#/playground?mode=core&scenario=success'}>Walk through this flow in the Playground →</a>:null}<a href={source(guide.source)} target="_blank" rel="noopener noreferrer">Published v{version} source ↗</a></div>
+        <div className="guide-resource-links">{guide.id==='request'||guide.id==='jdbc'||guide.id==='first'?<a className="guide-try-link" href={guide.id==='request'?'#/playground?mode=request&scope=scoped&scenario=success':guide.id==='jdbc'?'#/playground?mode=mutation&scenario=replay':'#/playground?mode=core&scenario=success'}>Review a usage example in the Playground →</a>:null}<a href={source(guide.source)} target="_blank" rel="noopener noreferrer">Published v{version} source ↗</a></div>
         <p className="guide-note">The practical integration guide is on this website; the GitHub link above points only to immutable released source for verification.</p>
         <nav className="guide-pager" aria-label="Previous and next guides">
           {index>0?<a href={'#/docs/'+developerGuides[index-1].id}><span>← Previous</span><strong>{developerGuides[index-1].title}</strong></a>:<span/>}
