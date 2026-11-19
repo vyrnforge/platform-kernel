@@ -385,6 +385,12 @@
 .wb-request-recovery a{display:inline-block;font-size:12px;font-weight:800;color:#7b4d21;margin-top:11px;text-decoration:underline;text-underline-offset:3px}
 @media(max-width:610px){.wb-request-recovery{padding:13px 12px}.wb-request-recovery dl{grid-template-columns:1fr}}
 
+/* UX-06: step navigation focuses the panel heading. The previous fixed 112px
+   scroll margin placed it underneath the wrapped sticky site header at
+   320px and barely below it at 390/720px. Preserve visible keyboard focus. */
+@media(max-width:850px){.wb-wizard-panel-heading h3{scroll-margin-top:145px}}
+@media(max-width:360px){.wb-wizard-panel-heading h3{scroll-margin-top:175px}}
+
 /* Keep code actions reachable when a browser or policy denies async clipboard. */
 .wb-code-tabs>.wb-code-actions{display:flex;flex:0 1 auto;min-width:0;flex-wrap:wrap;justify-content:flex-end;gap:5px;margin-left:auto}
 .wb-code-tabs button.wb-select-code{border-color:#71849c;color:#f2f7ff;background:#273f5c;white-space:nowrap}
