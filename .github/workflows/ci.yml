@@ -38,6 +38,9 @@ jobs:
           python3 -m unittest discover -s scripts/tests -p test_docsec_publication.py -v
           python3 scripts/check-docsec-publication.py --source
 
+      - name: Inspect published v0.3.2 binary, source and Javadoc archives
+        run: python3 scripts/audit-released-v032.py
+
       - name: Determine library scope
         id: scope
         env:
