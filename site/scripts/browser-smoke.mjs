@@ -255,6 +255,28 @@ try{
   await wait('document.querySelector(".wb-outcome")?.textContent.includes("REQUEST ALLOWED")','valid tenantless request route not restored');
   assert.equal(await evaluate('document.querySelector(".wb-request-recovery")===null'),true,'allowed tenantless operation must not invent failure');
 
+  // Shareable capability URLs must restore the *same* guide and outcome,
+  // never silently drift to a different simulation on a valid mode link.
+  await evaluate('location.hash="#/playground?cap=identity"');
+  await wait('!!document.querySelector(".wb-phase-understand") && document.querySelector(".wb-wizard-context strong")?.textContent==="Identity & tenancy"','capability-only Identity URL should show Identity Understand step');
+  assert.equal(await evaluate('document.querySelector(".wb-route-recovery")===null'),true,'capability-only Identity URL should not invent recovery');
+  await evaluate('location.hash="#/playground?cap=idempotency"');
+  await wait('document.querySelector(".wb-wizard-context strong")?.textContent==="Idempotency" && !!document.querySelector(".wb-phase-understand")','capability-only Idempotency URL should show its own Understand step');
+
+  await evaluate('location.hash="#/playground?cap=module&mode=request&scope=scoped&scenario=cross-tenant"');
+  await wait('document.querySelector(".wb-route-recovery")?.textContent.includes("Scenario unavailable for this capability")','capability mismatch needs explicit recovery');
+  assert.ok((await evaluate(q('.wb-wizard-context strong')+'.textContent')).includes('Module & feature controls'),'mismatched scenario must stay in selected capability');
+  assert.ok((await evaluate(q('#wb-result-title')+'.textContent')).includes('Module'),'module fallback outcome should be visible');
+  assert.equal(await evaluate('document.querySelectorAll(".wb-scenario[aria-pressed=true]").length'),1,'recovered capability must have one visible selected scenario');
+  assert.ok((await evaluate(q('.wb-scenario[aria-pressed=true]')+'.textContent')).includes('Module'),'recovered scenario choice must match result');
+
+  await evaluate('location.hash="#/playground?mode=request&scope=tenantless&scenario=denied"');
+  await wait('document.querySelector(".wb-wizard-context strong")?.textContent==="API standards" && document.querySelector(".wb-request-recovery")?.textContent.includes("DOMAIN_ACCESS_DENIED")','legacy domain-denied link must use API guide and preserve denial');
+  assert.equal(await evaluate('document.querySelector(".wb-route-recovery")===null'),true,'valid legacy denial must not be silently remapped');
+  await evaluate('location.hash="#/playground?cap=files&mode=request&scenario=success"');
+  await wait('document.querySelector(".wb-route-recovery")?.textContent.includes("Capability and integration pattern do not match")','incompatible contract-only capability needs visible recovery');
+  assert.ok((await evaluate(q('.wb-wizard-context strong')+'.textContent')).includes('Identity & tenancy'),'invalid contract/mode pair should recover to supported request guide');
+
   // A new Playground visit opens a single capability-selection stage.
   await click('.primary-nav a[href="#/playground"]');
   await wait('location.hash==="#/playground" && !!document.querySelector(".wb-capability-grid")','wizard root failed');
