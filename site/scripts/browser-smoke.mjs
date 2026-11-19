@@ -266,9 +266,9 @@ try{
   await evaluate('location.hash="#/playground?cap=module&mode=request&scope=scoped&scenario=cross-tenant"');
   await wait('document.querySelector(".wb-route-recovery")?.textContent.includes("Scenario unavailable for this capability")','capability mismatch needs explicit recovery');
   assert.ok((await evaluate(q('.wb-wizard-context strong')+'.textContent')).includes('Module & feature controls'),'mismatched scenario must stay in selected capability');
-  assert.ok((await evaluate(q('#wb-result-title')+'.textContent')).includes('Module'),'module fallback outcome should be visible');
+  assert.ok((await evaluate(q('#wb-result-title')+'.textContent')).includes('Disabled module'),'module fallback outcome should be visible');
   assert.equal(await evaluate('document.querySelectorAll(".wb-scenario[aria-pressed=true]").length'),1,'recovered capability must have one visible selected scenario');
-  assert.ok((await evaluate(q('.wb-scenario[aria-pressed=true]')+'.textContent')).includes('Module'),'recovered scenario choice must match result');
+  assert.ok((await evaluate(q('.wb-scenario[aria-pressed=true]')+'.textContent')).includes('Disabled module'),'recovered scenario choice must match result');
 
   await evaluate('location.hash="#/playground?mode=request&scope=tenantless&scenario=denied"');
   await wait('document.querySelector(".wb-wizard-context strong")?.textContent==="API standards" && document.querySelector(".wb-request-recovery")?.textContent.includes("DOMAIN_ACCESS_DENIED")','legacy domain-denied link must use API guide and preserve denial');
