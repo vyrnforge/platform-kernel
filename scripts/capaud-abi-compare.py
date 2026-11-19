@@ -7,7 +7,6 @@ Do not confuse JVM signature compatibility with behavior/serialization compatibi
 """
 from __future__ import annotations
 
-import difflib
 import hashlib
 import json
 import os
@@ -69,12 +68,12 @@ def declarations(jar: Path, cls: str) -> tuple[bool, tuple[str, ...]]:
     )
     if result.returncode:
         raise RuntimeError(f"javap failed: {jar.name} {cls}: {result.stderr[:300]}")
-    lines = [re.sub(r"\\s+", " ", s.strip())
+    lines = [re.sub(r"\s+", " ", s.strip())
              for s in result.stdout.splitlines()
              if s.strip() and not s.startswith("Compiled from ")]
     if not lines:
         raise RuntimeError(f"javap returned no declarations for {cls}")
-    first = next((x for x in lines if re.search(r"\\b(class|record|interface|enum)\\b", x)), "")
+    first = next((x for x in lines if re.search(r"\b(class|record|interface|enum)\b", x)), "")
     # Include public/protected nested and top-level types. Package-private internals
     # are also parsed to catch inspectability problems but excluded from exported ABI.
     exported = first.startswith(("public ", "protected "))
