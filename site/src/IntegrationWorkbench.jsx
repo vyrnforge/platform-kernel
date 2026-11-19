@@ -2,6 +2,7 @@ import React,{useState,useEffect,useRef} from 'react';
 import {version,source,capabilities} from './data.mjs';
 import {capabilityGuides,capabilityGuide,inferCapability} from './capability-guides.mjs';
 import {getWorkbenchTrace,getWorkbenchRecipe,scenariosFor} from './workbench-data.mjs';
+import {developerGuides} from './docs-data.mjs';
 import {tokenizeCode} from './code-tokens.mjs';
 import './kernel-workbench.css';
 
@@ -51,8 +52,26 @@ export function IntegrationWorkbench({mode='core',scope='scoped',scenario='succe
     trace.steps.findIndex(x=>x.state==='blocked'):guide.id==='idempotency'&&activeScenario==='replay'?1:trace.steps.length-1):0;
   const spotlight=trace?.steps[spotlightIndex];
   const readyCount=guide.prepare.filter((_,i)=>readiness[guide.id+':'+i]).length;
-  const effectiveCodeTab=guide.mode?codeTab:'maven';
-  const code=effectiveCodeTab==='java'?recipe.java:recipe.maven;
+  // Keep the first runnable program and OS commands identical to the tested
+  // published website guide; never fork these samples into wizard-owned text.
+  const firstProgram=developerGuides.find(item=>item.id==='first');
+  const runnableCore=guide.id==='ids';
+  const codeChoices=[
+    {id:'maven',label:'pom.xml',filename:'pom.xml (fragment)',kind:'Maven dependency fragment · existing project',language:'xml',code:recipe.maven},
+    ...(guide.mode?[{
+      id:'java',label:runnableCore?'Java 21 · complete':'Java excerpt',
+      filename:runnableCore?'FirstKernelProgram.java':'Java integration excerpt',
+      kind:runnableCore?'Complete runnable Java 21 program':recipe.javaKind,
+      language:'java',code:runnableCore?firstProgram.samples.find(item=>item.label==='Java 21').code:recipe.java
+    }]:[]),
+    ...(runnableCore?firstProgram.samples.filter(item=>item.label==='Run'||item.label==='Windows').map(item=>({
+      id:item.label==='Run'?'unix':'windows',
+      label:item.label==='Run'?'macOS / Linux':'Windows',
+      filename:item.filename,kind:item.kind,language:item.language,code:item.code
+    })):[])
+  ];
+  const selectedCode=codeChoices.find(item=>item.id===codeTab)||codeChoices[0];
+  const code=selectedCode.code;
   const panelTitle=phase===0?'Which Kernel capability do you want to integrate?':
     phase===1?'Understand '+guide.title:
     phase===2?'Prepare for '+guide.title:
@@ -101,7 +120,7 @@ export function IntegrationWorkbench({mode='core',scope='scoped',scenario='succe
     try{
       if(!navigator.clipboard?.writeText)throw Error('Clipboard unavailable');
       await navigator.clipboard.writeText(code);
-      setCopyStatus('Copied '+(effectiveCodeTab==='maven'?'Maven dependencies':'Java example')+' to clipboard.');
+      setCopyStatus('Copied '+selectedCode.label+' to clipboard.');
     }catch{
       setCopyStatus('Clipboard unavailable. Select the example text to copy manually.');
     }
@@ -247,25 +266,40 @@ export function IntegrationWorkbench({mode='core',scope='scoped',scenario='succe
           </div>}
 
           {phase===4&&<div className="wb-phase-implement">
-            <p className="wb-wizard-lead">Use only the published v{version} artifacts. Maven entries are dependency fragments; Java excerpts require application-owned ports and wiring.</p>
+            <p className="wb-wizard-lead">Use only the published v{version} artifacts. Maven entries are dependency fragments; integration excerpts require application-owned ports and wiring.</p>
+            {runnableCore&&<section className="wb-first-run" aria-labelledby="wb-first-run-title">
+              <span className="wb-overline">FIRST PUBLISHED-JAR RESULT · NO SERVER REQUIRED</span>
+              <h4 id="wb-first-run-title">Run your first complete Java 21 program</h4>
+              <ol>
+                <li>Check <code>java -version</code> and <code>javac -version</code> (JDK 21 or newer).</li>
+                <li>Select <strong>Java 21 · complete</strong> below. Save the exact code as <code>FirstKernelProgram.java</code>.</li>
+                <li>Select <strong>macOS / Linux</strong> or <strong>Windows</strong>. Run the commands from the same directory as the saved file.</li>
+                <li>Verify exactly two lowercase UUIDv7 values, one per line. Both change on every run.</li>
+              </ol>
+              <p>These commands download the released core JAR from Maven Central; Maven/Gradle projects can instead use the existing-project dependency fragment. No IAM, JDBC, database, or hosted Kernel service is needed.</p>
+              <a href="#/docs/first">Full first-program guide, expected output and troubleshooting →</a>
+            </section>}
             <div className="wb-export" id="workbench-output">
               <div className="wb-export-head"><div><span className="wb-overline">PUBLISHED LIBRARY / INTEGRATION RECIPE</span><h4 id="wb-code-heading" tabIndex={-1}>{recipe.artifacts.join(' + ')}</h4></div><span className="wb-published">v{version} / RELEASED</span></div>
               <div className="wb-export-grid">
                 <div className="wb-code-pane">
                   <div className="wb-code-tabs"><div role="group" aria-label="Published code type">
-                    <button type="button" aria-pressed={effectiveCodeTab==='maven'} className={effectiveCodeTab==='maven'?'is-selected':''} onClick={()=>{setCodeTab('maven');setCopyStatus('')}}>pom.xml</button>
-                    {guide.mode&&<button type="button" aria-pressed={effectiveCodeTab==='java'} className={effectiveCodeTab==='java'?'is-selected':''} onClick={()=>{setCodeTab('java');setCopyStatus('')}}>Java example</button>}
+                    {codeChoices.map(item=><button type="button" key={item.id} aria-pressed={selectedCode.id===item.id}
+                      className={selectedCode.id===item.id?'is-selected':''} onClick={()=>{setCodeTab(item.id);setCopyStatus('')}}>{item.label}</button>)}
                     </div><button type="button" className="wb-copy" onClick={copyCode}>Copy code</button>
                   </div>
-                  <div className="wb-code-kind">{effectiveCodeTab==='maven'?'Maven dependency fragments · published v'+version:recipe.javaKind}</div>
-                  <pre tabIndex={0} aria-label="Published code, scroll horizontally if needed"><code>{tokenizeCode(code,effectiveCodeTab==='maven'?'xml':'java').map((part,i)=>part.kind?<span key={i} className={'tok-'+part.kind}>{part.text}</span>:part.text)}</code></pre>
+                  <div className="wb-code-kind">{selectedCode.filename} · {selectedCode.kind} · v{version}</div>
+                  <pre tabIndex={0} aria-label={selectedCode.filename+' code, scroll horizontally if needed'}><code>{tokenizeCode(code,selectedCode.language).map((part,i)=>part.kind?<span key={i} className={'tok-'+part.kind}>{part.text}</span>:part.text)}</code></pre>
                   <p className="wb-copy-feedback" role="status">{copyStatus}</p>
                 </div>
                 <div className="wb-check-pane">
                   <span className="wb-overline">CHECK IN YOUR APPLICATION</span>
                   <ul>{guide.verify.map(item=><li key={item}>{item}</li>)}</ul>
                   <p><strong>Application supplies</strong>{capability.needs}</p>
-                  {guide.mode&&<p><strong>Example scope</strong>The Java snippet shows the {guide.mode==='request'?'request':guide.mode==='mutation'?'JDBC':'core'} integration pattern, not execution of a chosen scenario.</p>}
+                  {guide.mode&&<p><strong>Example scope</strong>{runnableCore?
+                    'The complete FirstKernelProgram.java is runnable against the published JAR. The browser does not execute it.':
+                    'The Java snippet is an integration excerpt for the '+(guide.mode==='request'?'request':'JDBC')+' pattern, not a complete executable application or execution of the selected scenario.'}</p>}
+                  {runnableCore&&<p><strong>Expected output</strong>{firstProgram.expectedOutput}</p>}
                   {!guide.mode&&<p><strong>Contract-only evidence</strong>{guide.limitation}</p>}
                   <a href={'#/docs/'+guide.guideId}>Read the matching on-site guide →</a>
                 </div>
