@@ -23,12 +23,31 @@ function run(cmd,args,dir,env=process.env){
   catch(e){throw Error(cmd+' failed:\n'+(e.stdout?.toString()||'')+'\n'+(e.stderr?.toString()||'')+'\n'+e);}
 }
 async function centralGet(url){
-  const res=await fetch(url,{signal:AbortSignal.timeout(60000),redirect:'follow'});
-  assert.ok(res.ok,'Maven Central request failed: '+url+' '+res.status);
-  const resolved=new URL(res.url);
-  assert.equal(resolved.protocol,'https:');
-  assert.equal(resolved.hostname,'repo.maven.apache.org','no mirror or private repository permitted');
-  return res;
+  // Maven Central's public CDN can briefly return 404 even for an immutable
+  // published artifact; an independent Windows consumer verified the same JAR
+  // while a Linux CI request saw 404. Retry only bounded public-CDN failures,
+  // never change registry, version, checksum policy or accepted artifact bytes.
+  const transient=new Set([404,408,429,500,502,503,504]);
+  let lastError;
+  for(let attempt=1;attempt<=4;attempt++){
+    try{
+      const res=await fetch(url,{signal:AbortSignal.timeout(60000),redirect:'follow'});
+      const resolved=new URL(res.url);
+      assert.equal(resolved.protocol,'https:');
+      assert.equal(resolved.hostname,'repo.maven.apache.org','no mirror or private repository permitted');
+      if(res.ok)return res;
+      lastError=new Error('Maven Central request failed: '+url+' '+res.status);
+      if(!transient.has(res.status))throw lastError;
+    }catch(error){
+      if(error===lastError&&lastError.message.startsWith('Maven Central request failed:')&&
+          !transient.has(Number(lastError.message.split(' ').at(-1))))throw error;
+      lastError=error;
+    }
+    if(attempt===4)throw lastError;
+    console.warn('Published artifact Central fetch retry '+attempt+'/3: '+url+' — '+lastError.message);
+    await new Promise(resolve=>setTimeout(resolve,500*2**(attempt-1)));
+  }
+  throw lastError;
 }
 const root=await mkdtemp(join(tmpdir(),'kernel-v032-first-program-'));
 try {
