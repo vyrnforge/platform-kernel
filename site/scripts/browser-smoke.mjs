@@ -200,7 +200,7 @@ try{
   await wait('location.hash==="#/reference/releases"','release reference failed');
   assert.ok((await evaluate(q('.reference-article')+'.innerText')).includes('NOT PUBLISHED'),'candidate not misrepresented as released');
   assert.equal(await evaluate('document.querySelector(".reference-preview-doc a").getAttribute("href")'),'#/docs/preview','preview belongs on the documentation website');
-  assert.ok((await evaluate(q('.reference-article')+'.innerText')).includes('not available to install from Maven Central yet'),'preview stays explicitly unavailable');
+  assert.ok((await evaluate(q('.reference-article')+'.innerText')).includes('not available from Maven Central'),'preview stays explicitly unavailable');
   await click('.reference-preview-doc a');
   await wait('location.hash==="#/docs/preview" && !!document.querySelector(".preview-article")','candidate deep-link guide missing');
   assert.equal(await evaluate('document.activeElement.id'),'guide-heading','preview heading is focused');
