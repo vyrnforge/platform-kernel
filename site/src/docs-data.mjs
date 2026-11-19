@@ -95,7 +95,7 @@ export const developerGuides = [
     "id": "request",
     "group": "Integrate",
     "title": "Resolve a trusted request",
-    "summary": "Choose tenantless or tenant-scoped requests, validate identity at the application boundary, and diagnose the first denied gate.",
+    "summary": "Integrate verified identity with tenantless or tenant-scoped endpoints, handle safe errors, and keep product authorization local.",
     "prerequisite": "Java 21+ and the published platform-kernel:0.3.2 core JAR; a real IAM/IdP verifier and an application-owned authorization policy. Scoped endpoints additionally require authoritative tenant membership and current module entitlements.",
     "when": "An authenticated endpoint needs a normalized actor, tenant guard and explicit resource authorization.",
     "steps": [
@@ -128,7 +128,7 @@ export const developerGuides = [
         "code": "import io.vyrnforge.platform.kernel.identity.ValidatedIdentityAdapter;\nimport io.vyrnforge.platform.kernel.identity.ValidatedIdentityCredential;\nimport io.vyrnforge.platform.kernel.pipeline.RequestContextPipeline;\nimport io.vyrnforge.platform.kernel.ports.TenantMembershipPort;\nimport io.vyrnforge.platform.kernel.ports.ModuleEntitlementPort;\nimport io.vyrnforge.platform.kernel.ports.DomainAuthorizationHook;\n\n// These three ports must come from your application's authoritative services.\nRequestContextPipeline<ValidatedIdentityCredential> pipeline =\n    new RequestContextPipeline<>(\n        new ValidatedIdentityAdapter(),\n        tenantMembershipPort,    // TenantMembershipPort\n        moduleEntitlementPort,   // ModuleEntitlementPort\n        domainAuthorizationHook  // DomainAuthorizationHook\n    );"
       }
     ],
-    "verify": "Run both positive paths and all negative cases in the table below. Compare KernelFailure codes, mapped HTTP statuses and first stopped gate; confirm subsequent checks are not reached. Verify actual product SQL/data isolation and safe request/correlation metadata with your real verifier and adapters.",
+    "verify": "Run valid and denied requests using your real identity verifier and application ports. Verify documented KernelFailure codes and HTTP responses, product-owned resource authorization, tenant-filtered data access, and safe request/correlation metadata.",
     "ownership": "Native IAM or an external IdP verifies identity; Kernel embeds normalized context, scope/membership/entitlement guards and safe HTTP mapping; the application owns membership/entitlement truth, business-resource policy, tenant-scoped SQL, transport and diagnostics. A module or feature flag is never a record permission.",
     "guide": "docs/integration/identity-boundary.md",
     "source": "verification/GeneralUsageExample.java",
@@ -145,7 +145,7 @@ export const developerGuides = [
         "name": "Authenticated tenantless",
         "when": "Non-tenant-owned profile or global operation",
         "policy": "TenantContext.none() + EndpointPolicy.tenantless(action)",
-        "guards": "Trusted identity → scope (no active tenant/tenant-owned resource) → application domain authorization",
+        "guards": "Verified identity, no active tenant or tenant-owned resource, and application resource authorization",
         "ownership": "Application verifies actor and resource policy; no membership or module-entitlement lookup.",
         "scenario": "success"
       },
@@ -154,7 +154,7 @@ export const developerGuides = [
         "name": "Tenant-scoped",
         "when": "Product data belonging to an explicitly selected tenant",
         "policy": "TenantContext.tenant(tenantId) + EndpointPolicy.tenantModule(moduleKey, action)",
-        "guards": "Trusted identity → active/resource tenant → membership → module entitlement → application domain authorization",
+        "guards": "Verified identity, active/resource tenant agreement, authoritative membership and entitlement, and application resource authorization",
         "ownership": "Application supplies membership/entitlement data and authoritative resource tenant, plus tenant-filtered product SQL.",
         "scenario": "success"
       }
@@ -164,7 +164,6 @@ export const developerGuides = [
         "id": "unverified",
         "scope": "scoped",
         "trigger": "Unverified or absent trusted actor",
-        "gate": "Credential verification / identity",
         "failure": "AUTHENTICATION_FAILED",
         "http": "401",
         "owner": "Application / IAM / IdP",
@@ -175,7 +174,6 @@ export const developerGuides = [
         "scope": "tenantless",
         "scenario": "scope",
         "trigger": "Active tenant on tenantless policy",
-        "gate": "Request scope",
         "failure": "INVALID_CONTEXT",
         "http": "400",
         "owner": "Kernel guard; application fixes endpoint use",
@@ -186,7 +184,6 @@ export const developerGuides = [
         "scope": "scoped",
         "scenario": "scope",
         "trigger": "No active tenant on tenant-scoped policy",
-        "gate": "Request scope",
         "failure": "TENANT_REQUIRED",
         "http": "403",
         "owner": "Kernel guard; application selects tenant",
@@ -196,7 +193,6 @@ export const developerGuides = [
         "id": "cross-tenant",
         "scope": "scoped",
         "trigger": "Resource belongs to another tenant",
-        "gate": "Resource tenant guard",
         "failure": "TENANT_CONTEXT_MISMATCH",
         "http": "404",
         "owner": "Kernel guard + product resource lookup",
@@ -206,7 +202,6 @@ export const developerGuides = [
         "id": "membership",
         "scope": "scoped",
         "trigger": "Actor has no tenant membership",
-        "gate": "Membership port",
         "failure": "TENANT_MEMBERSHIP_REQUIRED",
         "http": "403",
         "owner": "Application membership authority",
@@ -216,7 +211,6 @@ export const developerGuides = [
         "id": "module",
         "scope": "scoped",
         "trigger": "Required module is not effectively enabled",
-        "gate": "Module entitlement",
         "failure": "MODULE_DISABLED",
         "http": "403",
         "owner": "Application entitlement authority",
@@ -226,7 +220,6 @@ export const developerGuides = [
         "id": "denied",
         "scope": "scoped",
         "trigger": "Actor lacks permission on this resource",
-        "gate": "Domain authorization",
         "failure": "DOMAIN_ACCESS_DENIED",
         "http": "403",
         "owner": "Owning application",
@@ -237,29 +230,28 @@ export const developerGuides = [
         "scope": "tenantless",
         "scenario": "denied",
         "trigger": "Global operation denied by domain policy",
-        "gate": "Domain authorization",
         "failure": "DOMAIN_ACCESS_DENIED",
         "http": "403",
         "owner": "Owning application",
         "recovery": "Tenantless remains authenticated and domain-authorized. No entitlement lookup or automatic allow."
       }
     ],
-    "diagnostics": "Use stable safe PLATFORM_* error codes, request_id and correlation_id from the HTTP response/observability boundary to locate the failed check. Keep all tokens, credential headers, personal claims and resource payloads out of logs or error details; map independent application/domain errors separately."
+    "diagnostics": "Use stable safe PLATFORM_* error codes, request_id and correlation_id to diagnose denied requests. Keep all tokens, credential headers, personal claims and resource payloads out of logs or error details; map independent application/domain errors separately."
   },
   {
     "id": "jdbc",
     "group": "Integrate",
     "title": "Make a retriable write durable",
-    "summary": "Choose optional JDBC for durable retriable writes; understand each acquire result, atomic boundaries, delivery and recovery.",
+    "summary": "Use the optional JDBC adapter for retriable writes, safe replay, transactional intents and failure recovery.",
     "prerequisite": "Java 21+, published platform-kernel-jdbc:0.3.2 only when a tenant-scoped durable mutation needs it, product-owned PostgreSQL DataSource and applicable packaged V1–V3 Flyway migrations. Application authorization is required on every attempt, including REPLAY.",
-    "when": "A tenant-scoped write may be retried after timeout/lost response and must atomically commit product data, required audit/event intents and a replayable safe result. Skip JDBC for plain identifiers, correlation or read-only integration.",
+    "when": "Use the optional adapter when a retried write must avoid duplicate effects and persist product data with required event/audit intents. Skip JDBC for identifiers, correlation or read-only integration.",
     "steps": [
       "Decide whether the operation actually needs durable idempotency: use core alone for ordinary utility/request-context work; add optional platform-kernel-jdbc only for product-owned PostgreSQL retriable mutations.",
       "Apply the packaged V1–V3 schema through the product's own controlled Flyway history/migration process. Do not run parallel writers or mixed publisher versions while planning V3/upgrade/rollback.",
       "Verify credential, tenant, membership, module and resource authorization on EVERY attempt before begin(request). Include effective actor, target and payload semantics in the fingerprint, bound to tenant, operation, key and expiry.",
       "Call JdbcIdempotencyPort.begin(request) and handle the returned ACQUIRED, REPLAY, IN_PROGRESS or CONFLICT decision. ONLY ACQUIRED may execute product SQL; REPLAY may return only a currently authorized safe result.",
       "Use JdbcReliabilityTransaction.executeIdempotent for ACQUIRED: domain SQL on its supplied Connection, required event/audit intents through supplied ports, and replay result in one commit. Never open a second connection, manually commit/rollback, or call external services inside the callback.",
-      "Operate outbox dispatch separately with bounded retries and at-least-once receivers. Product consumers deduplicate by event ID; operators reconcile stale/lost claims, exhausted DEAD events, uncertain commits, backups and migrations."
+      "Run your product's event publisher and deduplicate deliveries by event ID. Monitor failed deliveries and reconcile uncertain outcomes before retrying or re-driving events."
     ],
     "samples": [
       {
@@ -277,17 +269,17 @@ export const developerGuides = [
         "filename": "MutationHandler.java (excerpt)"
       }
     ],
-    "verify": "Use published consumer conformance CC-14–CC-22 and CC-27 with actual product SQL, an application-owned PostgreSQL database and audit/outbox behavior. Test first commit, replay, concurrent retry, conflicting fingerprint, expiry/revocation, rollback, crash/lost response, deduplication, stale/DEAD claims, restore and migration compatibility. Simulated Playground results do not certify the consumer.",
+    "verify": "Test published consumer cases CC-14–CC-22 and CC-27 against your application's actual PostgreSQL transaction, authorization, replay, outbox delivery and recovery paths. Check duplicate effects, rollback, uncertain responses, delivery deduplication and upgrades. Simulated Playground results do not certify the consumer.",
     "ownership": "Your product owns current authorization, data and SQL, single JDBC Connection, DataSource, Flyway history, reliable event publisher transport, deduplication, audit evidence and operational recovery. Kernel provides optional lease/transaction/intent/outbox mechanics; not a broker or managed database.",
     "guide": "docs/integration/jdbc-safe-mutation.md",
     "source": "kernel-persistence-jdbc/",
-    "provides": "Published v0.3.2 optional PostgreSQL/JDBC lease-backed idempotency, executeIdempotent atomic application SQL plus audit/event intents and result, claim-fenced outbox rows. No automatic worker, migration runner, exactly-once transport or product policy.",
+    "provides": "Published v0.3.2 optional JDBC idempotency and atomic product data/event/audit intents, with durable outbox support. No hosted database, automatic publisher, migration runner, exactly-once transport or product policy.",
     "mistakes": [
       "Never use a second Connection, connection.commit()/rollback(), external network request or independent execute + complete pair inside the durable retriable mutation. Only executeIdempotent on the supplied connection provides the documented atomic path.",
       "Do not replay an old result without re-checking current caller authorization; never persist/replay signed URLs, secrets or expired access material. Retention expiry allows re-execution under the product's policy.",
       "IN_PROGRESS does not mean REPLAY: another lease is active. Return safe retry guidance rather than starting a second write. CONFLICT is different effective request semantics; HTTP 409 is only an illustrative application mapping.",
       "Rollback/connection loss can leave an IN_PROGRESS lease until abort/expiry. Do not blindly abort after an uncertain commit; reconcile against authoritative product data first.",
-      "Outbox is at-least-once, not exactly-once; stale worker claim completions are fenced, but a DEAD event might already have been sent. Reconcile receiver evidence before re-drive.",
+      "Outbox delivery is at least once; receivers must deduplicate. Before retrying failed delivery, check the receiver because the event may already have been delivered.",
       "Application-owned Flyway migration history controls V1–V3. Drain old publishers and audit/intent writers before incompatible upgrades and plan restore/rollback; never assume the library runs migrations."
     ],
     "decisionStates": [
@@ -313,7 +305,7 @@ export const developerGuides = [
         "effect": "No new domain SQL or intent; an active matching lease is still processing.",
         "owner": "Product API/retry policy",
         "next": "Give bounded safe retry guidance; do not start another mutation.",
-        "recovery": "If lease is stale, reconcile operation and expiry before recovery."
+        "recovery": "Reconcile the operation's state and expiration before any recovery action."
       },
       {
         "id": "conflict",
@@ -327,19 +319,19 @@ export const developerGuides = [
     "recoveryPaths": [
       {
         "case": "Rollback or thrown callback",
-        "explanation": "The product mutation and required intents roll back together. An acquired lease may remain IN_PROGRESS until abort or expiry.",
+        "explanation": "Product data and required intents roll back together. Check the operation state before retrying.",
         "verify": "CC-17 / CC-18",
         "owner": "Product SQL and retry operator"
       },
       {
         "case": "Lost response or uncertain commit",
-        "explanation": "Reauthorize the caller, inspect committed state and lease/result; distinguish safe REPLAY from still IN_PROGRESS before aborting or retrying.",
+        "explanation": "Reauthorize the caller and inspect the committed operation state before deciding whether to return a replay result or retry.",
         "verify": "CC-14 / CC-16 / CC-18",
         "owner": "Product API and incident operator"
       },
       {
         "case": "Duplicate event or lost outbox claim",
-        "explanation": "Receivers deduplicate event IDs. A stale publisher cannot finish an expired claim, but delivery might already have happened.",
+        "explanation": "Receivers deduplicate event IDs. Delivery may already have occurred, so consult receiver evidence before retrying.",
         "verify": "CC-19 / CC-20",
         "owner": "Transport receiver / outbox operator"
       },
@@ -357,7 +349,7 @@ export const developerGuides = [
       },
       {
         "case": "Migration or backup restoration",
-        "explanation": "Use product-owned Flyway history, writer drain, backup/restore and recovery-point reconciliation; no automatic Kernel migration execution.",
+        "explanation": "Use product-owned Flyway history and verify backup, rollback and restored-state consistency. Kernel does not run migrations.",
         "verify": "CC-22 / CC-27",
         "owner": "Product DB owner"
       }
