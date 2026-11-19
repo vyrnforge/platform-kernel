@@ -142,6 +142,10 @@ export const capabilityIds=capabilityGuides.map(x=>x.id);
 export function capabilityGuide(id){return capabilityGuides.find(x=>x.id===id)||null;}
 export function inferCapability(mode='core',scenario='success'){
   if(mode==='mutation')return scenario==='success'?'events':'idempotency';
-  if(mode==='request')return scenario==='module'?'module':scenario==='cross-tenant'?'http':'identity';
+  // Legacy scenario links have no cap= parameter. Choose a guide that
+  // actually offers the requested scenario; tenantless domain denials are an
+  // API-boundary case, not a membership-only guide.
+  if(mode==='request')return scenario==='module'?'module':
+    scenario==='cross-tenant'||scenario==='denied'?'http':'identity';
   return 'ids';
 }
