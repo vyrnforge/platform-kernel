@@ -1,5 +1,5 @@
 import React from 'react';
-import {repo,source,version,candidateVersion,candidatePr,capabilities,releaseRun} from './data.mjs';
+import {repo,source,version,candidateVersion,capabilities,releaseRun} from './data.mjs';
 import {referenceTopics} from './routes.mjs';
 
 const guideLinks={
@@ -66,7 +66,7 @@ export function Reference({topic='architecture'}){
           <p className="reference-lead">A green library pipeline and a browser demo do not certify your application's security or production readiness.</p>
           <div className="versions-grid">
             <section><span className="version-state released">PUBLISHED</span><h3>v{version}</h3><p>Java 21+ core JAR, optional JDBC adapter and test-scope testkit. Maven Central coordinates are <code>io.github.vyrnforge</code>. The examples on this site are pinned to this release.</p><a href={'https://central.sonatype.com/artifact/io.github.vyrnforge/platform-kernel/'+version} target="_blank" rel="noopener noreferrer">View on Maven Central ↗</a></section>
-            <section><span className="version-state preview">NOT PUBLISHED</span><h3>v{candidateVersion}</h3><p>Candidate changes remain under separate release governance. Do not copy unreleased convenience APIs into a v{version} project or assume adoption is approved.</p><a href={candidatePr} target="_blank" rel="noopener noreferrer">Review candidate PR ↗</a><div className="reference-preview-doc"><a href="#/docs/preview">Check upcoming version status →</a><p>Only release status is shown here. v{candidateVersion} is not available from Maven Central; public usage examples remain pinned to v{version}.</p></div></section>
+            <section><span className="version-state preview">NOT PUBLISHED</span><h3>v{candidateVersion}</h3><p>Candidate changes remain under separate release governance. Do not copy unreleased convenience APIs into a v{version} project or assume adoption is approved.</p><div className="reference-preview-doc"><a href="#/docs/preview">Check upcoming version status →</a><p>Only release status is shown here. v{candidateVersion} is not available from Maven Central; public usage examples remain pinned to v{version}.</p></div></section>
           </div>
           <h3 className="reference-subhead">Release and consumer evidence</h3>
           <p>The published version has automated release evidence, but real consumers must independently verify IAM/File Storage integration, tenant isolation, retry behavior, database migration compatibility, operations and rollback.</p>
