@@ -42,3 +42,13 @@
 - **Open ownership:** UX specifies journey and recovery; Frontend implements existing guide/Playground; Security/API owner verifies source semantics; QA owns actual AT/consumer proof. Runtime/consumer release acceptance remains in issues #54 and #41.
 
 No change to Java runtime, Maven artifacts, tenant model, IAM, File Storage, or v0.4.0 release process is authorized here.
+
+## Identity/request wizard alignment after runnable core onboarding — 19 November 2026
+
+Issue #79's foundational request guide and published v0.3.2 constructor were already implemented and merged in PR #86; this focused follow-up does **not** reimplement identity, add IAM adapters, or revise a release. The user requested the next onboarding improvement after merging PR #100, so the remaining gap is to bring the already documented failure recovery and compiled four-port wiring excerpt into the same capability-selected wizard.
+
+The existing `developerGuides.request.failureCases` is the **sole** source of the diagnostic failure code, HTTP response, responsible owner and remediation; the wizard's decision simulation remains explanatory. On a blocked request step, the user now sees an inline diagnosis for the selected scoped/tenantless scenario and a link to Docs → Request failures. The system does not verify actual credentials, issue a response or read product SQL. A successful request has no failure card.
+
+The identity/HTTP/module Implement step shows a **Wiring excerpt** tab reusing the canonical published request Guide sample exactly, alongside its existing Maven and scoped/tenantless endpoint excerpts. This is an incomplete integration example requiring a real IAM/IdP verifier, membership port, entitlement port and product-owned authorization hook, not a complete runnable application. The independent published v0.3.2 constructor compile proof already exists in the onboarding consumer workflow and remains its acceptance source.
+
+Automation should assert published failure code/HTTP/owner/recovery for cross-tenant 404, unverified 401, missing membership 403, tenantless-context 400 and tenantless domain denial 403, with no invented failure on a valid tenantless request; verify exact wiring excerpt/source parity, accessible native tab behavior, and a link back to the on-site request failure guide. Real verifier integration, tenant-filtered SQL, physical keyboard/NVDA/VoiceOver/200%-400% zoom, and human newcomer comprehension remain explicitly OPEN under #79, #77, #41 and #76.
