@@ -53,6 +53,11 @@ jobs:
             code="$(curl --silent --show-error --max-time 30 -o /dev/null -w '%{http_code}' "https://repo.maven.apache.org/maven2/io/github/vyrnforge/$artifact/$version/$artifact-$version.pom")"
             test "$code" = 404 || { echo "Central version exists or probe failed ($code); stop and reconcile"; exit 1; }
           done
+      - name: DOCSEC verify public-source disclosure policy before tagging
+        run: |
+          python3 -m unittest discover -s scripts/tests -p test_docsec_publication.py -v
+          python3 scripts/check-docsec-publication.py --source
+
       - name: Reserve exact source tag before publication
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -67,6 +72,9 @@ jobs:
           mvn --batch-mode --no-transfer-progress --strict-checksums -Prelease-docs clean verify
           python3 scripts/check-distribution.py --release-docs
           python3 scripts/stage-release.py "$RUNNER_TEMP/release-stage"
+      - name: DOCSEC inspect exact release JAR, source and Javadoc contents
+        run: python3 scripts/check-docsec-publication.py --jars
+
       - name: Sign release bundle
         env:
           GPG_PRIVATE_KEY: ${{ secrets.GPG_PRIVATE_KEY }}

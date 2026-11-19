@@ -39,6 +39,9 @@ jobs:
       - name: Link, version and bundle quality gates
         working-directory: site
         run: node scripts/site-quality.mjs
+      - name: Verify built public site disclosure boundaries
+        run: python3 scripts/check-docsec-publication.py --source --site
+
       - name: Compute exact build asset provenance
         id: digests
         shell: bash

@@ -1,80 +1,58 @@
-# Playground interaction and accessibility — issue #82
+# Playground — public-contract integration acceptance handoff
 
-**Status:** Website source review and focused browser automation, not human AT certification or live Kernel execution. **Published source:** v0.3.2, source commit `c86eb33a46fae2843c75181c6b395cd0dc6710fe`. **Website baseline:** protected main merge `9179bd7c58fdb94c2d45ce3c55a6cd206b3c8492`. Applicable Constitution, Architecture, API/Events, Security/NFR and Decision Log were consulted before implementation.
+**Revised:** 19 November 2026 · **Owners:** Frontend / QA / UX & Accessibility / Security
+**Policy:** [DOCSEC-01–05](https://github.com/vyrnforge/platform-kernel/issues/110), DEC-K035.
+**Published baseline:** Java 21, v0.3.2. v0.4.0 remains candidate/UNPUBLISHED.
 
-## Confirmed source observations and minimal replacement
+## Intent
 
-| ID | Source observation | Replacement/retained pattern | Verification |
-| --- | --- | --- | --- |
-| P01 | Entire multi-paragraph `.wb-inspection` was `aria-live=polite`, and separate badge `.wb-outcome` had `role=status`. Stage and scenario changes could cause redundant/long announcements. Actual AT repetition frequency is **not observed**. | Remove inspector live region and badge status role. Add one short, atomic `role=status` announcing selected pattern, scenario, outcome and current stage/status. Keep inspector an ordinary labeled `section`, available to AT by normal navigation. Clipboard has its own independent status only when used. | Static/Chromium single-status semantics; NVDA+Chrome and VoiceOver+Safari **manual pending** |
-| P02 | `useEffect` reset the active step *after* route changes. The inspector could briefly show the old step for a new scenario before resetting. | Derive first selected stage synchronously from a unique browser-history visit ID (not the reusable scenario string); local stage choice remains local, URL remains source for scenario. Back/Forward to a previous URL also resets to stage 1 without remounting controls. | Browser Back/Forward, route switch, inspector status |
-| P03 | Unknown mode, unsupported endpoint scope or unavailable scenario silently defaulted to a supported trace with no explanation. | Retain existing safe core/scoped/success fallbacks and display a static, reasoned recovery message for malformed/unavailable shared links. Do not invent a simulation of an unsupported scenario. | Route unit test and Chromium invalid-link check |
-| P04 | Native buttons, checkbox, `aria-pressed`, `aria-current=step`, explicit state text and local scrollable code were already implemented. | Preserve them, add `aria-controls` to stage navigation and a labeled inspector heading, preserve deliberate focus on input controls; no new control, flow or dependency. | Existing plus focused browser smoke; manual AT pending |
+The one Playground route helps developers select a Kernel capability, understand product ownership, prepare a consumer, **check an expected published outcome**, and copy an actual released example. It is a browser-only guide. It must not claim to execute IAM/JDBC/domain logic or display an internal implementation decision trace.
 
-## Retest script
+The five visible task phases remain Choose, Understand, Prepare, Check, Implement. All nine capability selections remain reachable, and unsupported old query combinations must explain their safe fallback. Four website destinations and the existing Documentation search and Release Reference remain. Check that browser Back/Forward and direct URLs retain the selected capability, scope and scenario.
 
-| Journey | Test steps | Expected state / focus and recovery | Evidence status |
-| --- | --- | --- | --- |
-| A | Deep link to tenant-scoped membership denial, Tab through mode/scope/scenario and all decision buttons, press Enter on third gate | Selected gate shows Stopped here, `aria-current=step`, inspector is readable separately, concise one-time scenario/stage status. Focus remains on invoked button | Headless Chromium test, actual NVDA+Chrome manual pending |
-| B | From a failed gate change scenario to success using keyboard | New route immediately resets to gate 1, current mode/scenario/outcome announced once, focus stays on scenario control | Headless Chromium test; AT announcement count manual pending |
-| C | Navigate Back and Forward across scenario changes | URL, outcome, selected first gate and follow-up links are valid. No stale stage is shown | Headless Chromium test |
-| D | Open invalid request: tenantless membership denial; open unknown mode/scope URL | Valid supported scenario selected and correction visible, without claiming invalid live Kernel action | Route Node and Chromium tests |
-| E | Use Previous/Next, change code tab, check optional testkit, copy code (allow/deny), read guide | Native buttons/checkbox and text statuses; code scrollable; clipboard denied gives manual select guidance and guide stays on-site | Existing Chromium smoke plus new clipboard feedback check; denied-permission and AT manual pending |
-| F | Inspect passed, blocked, skipped, not-reached stage states across tenantless/request/JDBC | Distinct labels in text; no color-only cue or false claim that `Not required` equals `Not reached` | Existing source and contract tests |
-| G | At 320/390/640/720 and 1440/1920/2560 widths navigate Playground and code pane | No page-level horizontal overflow, code owns its own scroll; ordered DOM reading remains intact | Existing Chromium emulation; **actual browser 200%/400% zoom** manual pending |
-| H | Real production consumer, tenant validation and idempotency | **Not executable in Playground**; test separately in product and issue #41 | Product acceptance pending |
+## Contract-level scenarios to verify
 
-## Human QA evidence protocol
+| Public task | Expected visible result | Required consumer responsibility |
+| --- | --- | --- |
+| Core first run | CORE READY and a runnable, published Java 21 example | Propagate IDs/correlation through the application |
+| Unverified identity | DENIED 401 | IAM/IdP/app must verify credentials before trusted identity |
+| Scoped without tenant | DENIED 403 | Establish one trusted active tenant |
+| Tenantless with active tenant | REJECTED 400 | Enforce explicitly tenantless endpoint policy |
+| Cross-tenant reference | NOT FOUND 404 | Owning product prevents cross-tenant data exposure |
+| Missing membership or disabled module | DENIED 403 | Authoritative membership/entitlement ports; domain auth is still separate |
+| Domain permission denied | DENIED 403 | Owning product denies the resource action |
+| Durable new mutation | ATOMIC INTENT COMMIT | One product-owned transaction for domain data and required intents |
+| Completed retry | SAFE REPLAY | Fresh authorization; no duplicate domain SQL or new intents |
+| Concurrent retry | IN PROGRESS | Do not start another mutation; provide safe retry guidance |
+| Different fingerprint/same key | CONFLICT 409 illustration | Reject conflicting intent; HTTP status is product-owned |
 
-Run Chrome/Firefox keyboard-only, NVDA+Chrome, VoiceOver+Safari and actual browser zoom at 200%/400%; independently record any repeated announcements, focus loss, reading order, code scroll trap and error recovery. Capture `scenario URL | OS/browser/AT | actual zoom | input step | expected focus/status | observed announcement | first failure | fix | retest | reviewer`. For user learning outcomes, observe at least one unfamiliar Java developer following the Playground into the real on-site guide and comparing simulation versus actual consumer responsibilities. Do not claim a measured success rate without observed sessions.
+The actual published request and JDBC documentation, not the browser, remains authoritative for error details and implementation examples. Do not remove request identity, tenant, authorization, audit/outbox or replay safety warnings to simplify a page. The bundled source should not contain retired internal trace explanations.
 
-**Boundaries:** one existing simulated Playground, no server, identity verifier, JDBC transaction or extra scenario. Core, optional JDBC and testkit remain v0.3.2; preview v0.4.0 PR #65 is unpublished. This work neither certifies WCAG 2.2 AA nor closes real product consumer conformance (#41). Owner approval required before merge/deploy. Issue #82 stays open for outstanding manual QA until owner disposition.
+## Automated checks (cannot certify WCAG)
 
+- `npm test`, `npm run build`, `node scripts/site-quality.mjs`, `python3 ../scripts/check-docsec-publication.py --source --site`.
+- `node scripts/browser-smoke.mjs`: four destinations, navigation, deep links, public outcome scenarios, keyboard/code selection, clipboard denial/recovery, routes, rendered contrasts/reflow and Docs.
+- `node scripts/verify-onboarding.mjs`: released Java 21, Maven/Gradle consumer artifact resolution on supported runner. Windows PowerShell check is separate.
+- `mvn -Prelease-docs clean verify` and `python3 scripts/check-docsec-publication.py --jars` when publication-ready library contents are built, or explain exactly which scope was skipped.
 
-## Elegance and responsive journey follow-up — draft implementation (18 November 2026)
-Scope: existing Playground only; no extra simulation, Java/JDBC execution, shared framework or new top-level route. This is proposed website UI improvement; manual AT acceptance remains separate.
+Record PR SHA, run ID, digest and deviations. A green source/static scan does not classify future diagrams by itself. A green Chrome accessibility tree is **not** independent human WCAG or screen-reader acceptance.
 
-The scenario configuration now offers a compact preview and an explicit **View result** action. A single **Result at a glance** panel precedes the ordered decision trace, showing the established outcome, the actual blocked or highlighted gate, its responsible owner and the existing explanatory detail. Two keyboard-operable actions jump to the inspector (selecting the decisive gate) and published example heading. The code handoff reminds users that the displayed snippet covers the pattern rather than executing each scenario. Existing status announcement, recovery, Back/Forward and code copy semantics remain unchanged.
+## Manual acceptance — remains pending until performed
 
-The mobile layout compacts three mode choices and scenario options without hiding available choices; reflow and focus checks must remain part of the existing Pages/Chromium workflow. New automation checks the single result panel, failure/owner summary, inspector focus after jumping, published-example focus and selected-scenario verification. Human tests still required on real 200%/400% zoom, NVDA+Chrome, VoiceOver+Safari, Firefox keyboard-only and actual newcomer tasks. No WCAG sign-off is inferred.
+- Windows Firefox keyboard-only: Enter/Space buttons, focus after route/phase changes, browser history and error recovery; avoid keyboard traps.
+- NVDA + Chrome and VoiceOver + Safari: heading sequence, scenario choice, status announcement, expected outcome and code tabs. Record OS/AT/browser versions.
+- Real browser 200% and 400% zoom: correct content order, no hidden critical instructions, no noncode horizontal overflow; take screenshots.
+- At least two genuinely unfamiliar Java adopters and two integration developers: start from Home, run first published program, then identify who owns identity, domain authorization and JDBC retry safety. Record first failure, completion and task time; do not impersonate independent participants.
+- Security/API/JDBC reviewer: confirm source-exact public contract and absence of specifically classified internal content, not just keyword-based scan.
 
+## Evidence register
 
-## Capability-first correction following owner feedback (18 November 2026)
-The owner reported the merged result-first UI obscured the actual library capability range relative to the earlier site. This is an information-architecture failure, not proof that existing trace semantics are incorrect.
+| Criterion | Revision or artifact | Environment + test | Outcome | Evidence link | Reviewer |
+| --- | --- | --- | --- | --- | --- |
+| DOCSEC-AC02 onboarding and outcomes | Pending revised PR | Real developer session | MISSING | — | Human QA |
+| DOCSEC-AC03 public disclosure | Pending revised PR build | Site source + bundle + JAR scan | MISSING | — | Security |
+| DOCSEC-AC04 retained contract semantics | Pending revised PR | Security/API/JDBC review | MISSING | — | Qualified reviewer |
+| DOCSEC-AC06 accessible task flow | Pending revised PR | Firefox, NVDA, VoiceOver, zoom | MISSING | — | Human QA |
+| DOCSEC-AC07 checked artifact | Pending revised PR | Node/Chrome/CI + Java consumer | MISSING | — | QA |
 
-Focused replacement: use the canonical published `site/src/data.mjs` nine-capability inventory to provide a compact interactive capability explorer **before** the three technical journeys. Each capability discloses its shipped v0.3.2 contract and product-owned prerequisites, and links to an existing relevant trace or the Reference when no browser walkthrough exists. The FileReference entry is explicitly contract-only; observability/health and testkit carry scope clarifications. The duplicated configuration-side result preview is removed. Existing request/JDBC stages, failure labels, code/version constraints, rollback safety, URL history, accessibility announcements and single client-side simulation are preserved.
-
-Acceptance: exactly nine cards bound to existing published data; one selected detail; selected concrete class/contract and responsibility visible; capability-to-trace focus/route; contract-only reference; no unapproved capability, additional backend or runtime execution. Retest at narrow and desktop widths, including no whole-page overflow. Manual newcomer capability-discovery, physical zoom, NVDA/VoiceOver and keyboard sessions remain OPEN and must not be inferred from Chromium CI.
-
-Visual-review follow-up before merge: at mobile widths the selectable nine-card grid places its common detail below several rows. New card action intentionally focuses/scrolls to the selected detail heading (tabIndex=-1), and the detail has an explicit Browse other capabilities action returning focus to the atlas heading. Browser smoke tests both focus destinations; real assistive technology and 200%/400% actual zoom remain pending.
-
-
-## Unified capability-to-implementation wizard — owner UX correction (18 November 2026)
-
-**Problem:** The capability atlas from PR #97 and the earlier three-mode walkthrough were different experiences stacked on one page. A selected capability did not consistently determine its next explanation, prerequisites, scenario and code. The owner explicitly requested one step-by-step guided integration journey showing what the capability provides, how it works, what must be prepared and what to verify.
-
-**New interaction contract:** One five-stage native-button wizard: 1 Choose (nine published v0.3.2 capabilities) → 2 Understand (what ships vs product responsibilities) → 3 Prepare (capability-specific self-attested checklist, not a preflight scan) → 4 Explore (actual capability-specific integration sequence and the existing deterministic trace only when relevant) → 5 Implement (correct released artifacts, source, integration guide and consumer verification). Users can move backward/forward, switch capability, and select relevant negative scenarios without changing capability or showing an unrelated generic example. Existing request/JDBC URLs still open their relevant guide's Explore stage. Selected capability is shareable via an additive cap query parameter. Unknown or conflicting params recover with an explicit message.
-
-**Capability evidence:** Source of truth for "ships" remains the existing published capabilities inventory in data.mjs. New capability-guides.mjs only supplies adoption steps, preparation and honest scenario mapping. For observability/health, FileReference and testkit the Explore stage shows contract-specific application integration steps **without** a fabricated browser Kernel execution; Implement shows the correct Maven fragments and links, not unrelated generic Java code. Testkit stays test scoped. IAM, authorization, databases, file bytes, event delivery and telemetry remain application/external responsibilities.
-
-**Tests:** Browser must verify nine selectable capabilities, step navigation, capability-consistent Understand → Prepare → Explore → Implement, self-attestation disclaimers, correctly pinned JDBC/sample and test-scope dependencies, guide-only scope, legacy deep links, safe URL recovery, keyboard-selected decision/focus, clipboard feedback, route reflow/reduced motion. There is exactly one visible phase at a time and no second independent capability atlas. The implementation must not claim real product integration or a WCAG certificate.
-
-**Still open:** real device zoom 200%/400%, NVDA+Chrome, VoiceOver+Safari, Windows/Firefox keyboard-only, newcomer success/failure observations, broader product/IAM/JDBC consumer acceptance. Keep UX #76, #77, #82, #83 open. PR merge and deployment need separate owner authorization; Java published v0.3.2 and unpublished v0.4.0 remain unchanged.
-
-## Shared capability links and scenario recovery — 19 November 2026
-
-**Confirmed UX behavior before fix (#76/#82):** a manually shared `#/playground?cap=identity` URL defaulted to the Core pattern, which silently replaced the requested identity guide with IDs & contracts. A valid mode-level scenario outside the named capability's subset (for example, `cap=module&mode=request&scope=scoped&scenario=cross-tenant`) rendered a different scenario without warning. A legacy tenantless domain-denial URL could select the membership-only Identity guide and show a success trace instead of its documented product-authorization denial. These are capability/state coherence defects, not missing Kernel runtime features.
-
-**Scoped expected behavior:** When a valid capability link omits mode, infer the matching published core/request/mutation pattern and the capability's default scenario; contract-only capabilities remain documentation-led. If an explicit capability and mode disagree, show a correction and an available guide. If the mode supports a scenario but the selected capability does not, preserve the capability and show the documented default with an explicit *Scenario unavailable for this capability* notice. If mode/scope itself does not support the scenario, use the existing *pattern and scope* recovery notice. A legacy tenantless `denied` link must map to the API guide and preserve the domain authorization denial rather than silently presenting allowed access. Do not execute IAM, SQL or real authorization in the browser.
-
-**Automation coverage:** Extend `routes.test.mjs` with valid and invalid capability-only / scoped / tenantless links, and the current Chromium interaction + AX/link matrix with the shared identity/idempotency URLs, mismatched module scenario, historic denied URL, and explicitly incompatible FileReference/mode URL. Assert that the visible scenario, selected button, responsible capability, and recovery agree. Preserve the existing five-stage wizard, four top-level destinations, published v0.3.2 code, simulation notice, Back/Forward and programmatic focus semantics.
-
-**Human acceptance still open:** Actual Windows/Firefox keyboard behavior, real 200%/400% browser zoom, NVDA+Chrome, VoiceOver+Safari, newcomer task comprehension and clipboard denial. Unit/Chromium green cannot mark #76/#77/#82/#83 WCAG-conformant or human-tested.
-
-## Focused wizard stage heading under sticky header — 19 November 2026
-
-**Observed against exact deployed JS/CSS artifact:** The unified five-step Playground intentionally focuses `#wb-wizard-panel-title` on phase changes. Its fixed `scroll-margin-top:112px` is insufficient for the wrapping sticky site header. In local Chromium CSS-width emulation, at 320px the focused heading's top was about **112px** while the header extended to about **144px**; at 390 and 720px, its top remained around 112px, leaving only ~5px or ~1px below the header. This obscures part of the focus/heading or nearly hides the visible focus indicator. These are rendered geometry observations, not a human AT test.
-
-**Scoped expected behavior:** Keep the existing single wizard, phase focus behavior and navigation controls. Below 850px set the wizard panel heading scroll-margin to 145px, and below 360px to 175px. Local Chromium exact-artifact CSS-patch checks showed focused headings around 175/145/145px at 320/390/720px respectively, clear of the sticky headers, with unchanged selected phase. In required browser smoke, for each 720/640/390/320px viewport select Idempotency and traverse Prepare/Explore/Implement/Understand; assert current phase, actual focused heading, at least 12px clearance below header and focused heading topmost at its hit-test point.
-
-**Acceptance boundary:** Keyboard focus visibility validated in automated Chrome rendering only. Actual Windows/Firefox keyboard operation, screen-reader announcements, native 200%/400% zoom, user comprehension and WCAG 2.2 AA full assessment remain OPEN under #77/#76/#82. No browser simulation is a real IAM/JDBC runtime test.
+Historical detailed-gate walkthrough instructions from earlier revisions were explicitly superseded by DEC-K035. They remain in immutable public Git history and are not evidence that the new UI has been accepted.

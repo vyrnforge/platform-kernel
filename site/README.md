@@ -1,12 +1,16 @@
 # Platform Kernel documentation site
 
+> DOCSEC-02 (19 November 2026): The public site teaches **usage and supported outcomes**. It does not expose internal execution ordering. Public API, tenancy, authentication, replay, audit and outbox guarantees remain visible, source-pinned to v0.3.2. See [disclosure policy](../docs/security/publication-boundaries.md).
+
 A focused React 19 / esbuild site for the **published Platform Kernel v0.3.2** Java 21 library. It is a documentation entry point, not another Kernel runtime or dashboard.
 
 ## Fluid layout
 
-All four website destinations use the viewport width with responsive side gutters instead of a fixed 1180px container. Documentation and Reference articles, Playground inspector/code panels, and Home grids expand fluidly. Long-form prose retains a readable line measure; tables/code scroll within their own surfaces rather than forcing horizontal page overflow. Chromium regression checks the actual rendered shell at 1440/1920/2560px as well as narrow/mobile widths. No runtime, artifact or release changes are part of this layout.
+All four website destinations use the viewport width with responsive side gutters instead of a fixed 1180px container. Documentation and Reference articles, Playground public-outcome/code panels, and Home grids expand fluidly. Long-form prose retains a readable line measure; tables/code scroll within their own surfaces rather than forcing horizontal page overflow. Chromium regression checks the actual rendered shell at 1440/1920/2560px as well as narrow/mobile widths. No runtime, artifact or release changes are part of this layout.
 
 ## Information architecture
+
+The root [README](../README.md) now explains the same public integration responsibilities without publishing an internal execution-order diagram. Keep public contract error and reliability semantics linked to the on-site request/JDBC guides rather than recreating a hidden flow simulator.
 
 Four separate destinations use hash routes, so deep links and browser Back/Forward work on GitHub Pages:
 
@@ -14,7 +18,7 @@ Four separate destinations use hash routes, so deep links and browser Back/Forwa
 | --- | --- | --- |
 | Home | #/ | One dependency preview, a three-step start and an ownership summary. |
 | Documentation | #/docs/install, /first, /request, /jdbc, /assure | Task-oriented, source-pinned usage examples; full-text guide search, syntax-highlighted code tabs, run commands and verification. |
-| Playground | #/playground | One browser-only integration learning model with shareable selected flow URLs: core, trusted API and optional JDBC; exact decisions, first-stop failure and application ownership. |
+| Playground | #/playground | One browser-only public-contract integration helper with shareable scenario URLs: core, trusted API and optional JDBC; expected outcomes, consumer checks and ownership, not internal execution traces. |
 | Reference | #/reference/architecture, /capabilities, /releases | Ownership, deployment, full capability inventory and release evidence. |
 
 There is no secondary marketing catalog, Journey Selector, Flow Studio, duplicate integration hero, slideshow or inline documentation mega-section. Legacy fragments (#docs, #workbench, #start, #capabilities, #architecture) map to the matching new destination.
@@ -24,7 +28,7 @@ There is no secondary marketing catalog, Journey Selector, Flow Studio, duplicat
 - src/main.jsx — four destinations, shared header/footer and concise homepage.
 - src/routes.mjs — route parsing and legacy fragment mappings.
 - src/DeveloperDocs.jsx, src/developer-docs.css and src/docs-data.mjs — the five published-release guides.
-- src/IntegrationWorkbench.jsx, src/kernel-workbench.css and src/workbench-data.mjs — the single source-aligned decision trace (verification, scope, membership, module, domain policy, retries/outbox), with deep-linkable scenarios, on-site next steps and Maven/Java starting points.
+- src/IntegrationWorkbench.jsx, src/public-outcomes.mjs, src/kernel-workbench.css and src/workbench-data.mjs — the public-contract outcome guide with safe scenario deep links and canonical published Maven/Java samples. Internal gate-by-gate execution models are not shipped to browsers.
 - src/Reference.jsx — consolidated capability, architecture and release reference.
 - src/PreviewGuide.jsx and src/preview-data.mjs — the source-reviewed v0.4.0 candidate guide delivered as an in-site Documentation route, not an external GitHub Markdown manual.
 - src/data.mjs — release/source metadata and boundaries. Released source pinned to c86eb33a46fae2843c75181c6b395cd0dc6710fe.
@@ -80,7 +84,7 @@ Site documentation remains the canonical interactive guide surface. Sidebar sear
 
 ## Playground interaction and accessibility — issue #82
 
-The single `IntegrationWorkbench.jsx` keeps native mode/scope/scenario buttons, stage selection, Previous/Next, optional testkit checkbox and published code tabs. A compact `role=status` summary announces one selected scenario/outcome/gate change rather than reading the entire inspector on every decision. The inspector is a separately labeled reading region and selected stage buttons use `aria-current=step` and `aria-controls`; status names Passed, Stopped here, Not required and Not reached are explicit and never depend on color. Unknown/unavailable shared-link query combinations safely fall back to supported cases with a visible explanation. Browser Back/Forward restores mode/scope/scenario and resets stage selection predictably; detailed browser checks belong to the Pages workflow.
+The single `IntegrationWorkbench.jsx` keeps native mode/scope/scenario buttons, five task phases, safe expected outcomes, Previous/Next, optional testkit controls and published code tabs. It no longer exposes the internal decision inspector. A compact `role=status` summary announces one selected scenario/outcome/gate change rather than reading the entire inspector on every decision. The inspector is a separately labeled reading region and selected stage buttons use `aria-current=step` and `aria-controls`; status names Passed, Stopped here, Not required and Not reached are explicit and never depend on color. Unknown/unavailable shared-link query combinations safely fall back to supported cases with a visible explanation. Browser Back/Forward restores mode/scope/scenario and resets stage selection predictably; detailed browser checks belong to the Pages workflow.
 
 No additional scenarios, Flow Studio, backend, Java APIs, or actual IAM/JDBC execution were added. See [Playground interaction QA matrix](qa/playground-interaction-journey.md) for source/test evidence versus outstanding actual NVDA/VoiceOver, keyboard-only Firefox, and 200%/400% zoom testing.
 

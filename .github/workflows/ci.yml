@@ -33,6 +33,14 @@ jobs:
       - name: Test change-scope routing
         run: python3 -m unittest discover -s scripts/tests -p test_ci_scope.py -v
 
+      - name: Verify public disclosure source gate
+        run: |
+          python3 -m unittest discover -s scripts/tests -p test_docsec_publication.py -v
+          python3 scripts/check-docsec-publication.py --source
+
+      - name: Inspect published v0.3.2 binary, source and Javadoc archives
+        run: python3 scripts/audit-released-v032.py
+
       - name: Determine library scope
         id: scope
         env:
@@ -93,6 +101,10 @@ jobs:
       - name: Verify three physical JARs and packaged consumer
         if: steps.scope.outputs.library == 'true'
         run: python3 scripts/check-distribution.py --release-docs
+
+      - name: Inspect generated runtime, source and Javadoc JARs for restricted content
+        if: steps.scope.outputs.library == 'true'
+        run: python3 scripts/check-docsec-publication.py --jars
 
       - name: Real File Storage candidate compatibility
         if: steps.scope.outputs.library == 'true'

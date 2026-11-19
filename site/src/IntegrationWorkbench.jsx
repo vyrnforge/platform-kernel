@@ -1,7 +1,8 @@
 import React,{useState,useEffect,useRef} from 'react';
 import {version,source,capabilities} from './data.mjs';
 import {capabilityGuides,capabilityGuide,inferCapability} from './capability-guides.mjs';
-import {getWorkbenchTrace,getWorkbenchRecipe,scenariosFor} from './workbench-data.mjs';
+import {getWorkbenchRecipe,scenariosFor} from './workbench-data.mjs';
+import {getPublicOutcome} from './public-outcomes.mjs';
 import {developerGuides} from './docs-data.mjs';
 import {tokenizeCode} from './code-tokens.mjs';
 import {selectCodeText} from './code-selection.mjs';
@@ -11,10 +12,9 @@ const phases=[
   {title:'Choose',hint:'Pick a capability'},
   {title:'Understand',hint:'What it provides'},
   {title:'Prepare',hint:'What you need'},
-  {title:'Explore',hint:'How it works'},
+  {title:'Check',hint:'Outcomes & ownership'},
   {title:'Implement',hint:'Use and verify'}
 ];
-const stepLabels={done:'Passed',blocked:'Stopped here',skipped:'Not required',pending:'Not reached'};
 const readyHash=(guide,scope,scenario)=>{
   const params=new URLSearchParams({cap:guide.id});
   if(guide.mode){
@@ -34,32 +34,24 @@ export function IntegrationWorkbench({mode='core',scope='scoped',scenario='succe
   };
   const [phaseState,setPhaseState]=useState(()=>({key:visitId,phase:initialPhase()}));
   const phase=phaseState.key===visitId?phaseState.phase:initialPhase();
-  const [selection,setSelection]=useState({key:'',step:0});
   const [readiness,setReadiness]=useState({});
   const [codeTab,setCodeTab]=useState('maven');
   const [copyStatus,setCopyStatus]=useState('');
   const focusReady=useRef(false);
   const codePreRef=useRef(null);
 
-  // Each route history visit starts its trace at decision 1, even on Back.
+  // Only public contract outcomes are bundled; no hidden gate-by-gate trace.
   const scenarioList=guide.mode?scenariosFor(guide.mode,scope).filter(s=>guide.scenarios.includes(s.id)):[];
   const activeScenario=scenarioList.some(s=>s.id===scenario)?scenario:(scenarioList[0]?.id||'success');
-  const trace=guide.mode?getWorkbenchTrace(guide.mode,scope,activeScenario):null;
+  const result=guide.mode?getPublicOutcome(guide.mode,scope,activeScenario):null;
+  const blocked=result?/^(DENIED|REJECTED|NOT FOUND|CONFLICT)/.test(result.outcome):false;
   const recipe=getWorkbenchRecipe(guide.mode||'core',scope,guide.testkit===true);
-  const currentStep=trace?Math.min(selection.key===visitId?selection.step:0,trace.steps.length-1):0;
-  const selectTraceStep=n=>setSelection({key:visitId,step:Math.max(0,Math.min(n,trace.steps.length-1))});
-  const inspected=trace?.steps[currentStep];
-  const blocked=trace?.steps.some(x=>x.state==='blocked');
-  const spotlightIndex=trace?Math.max(0,trace.steps.findIndex(x=>x.state==='blocked')>=0?
-    trace.steps.findIndex(x=>x.state==='blocked'):guide.id==='idempotency'&&activeScenario==='replay'?1:trace.steps.length-1):0;
-  const spotlight=trace?.steps[spotlightIndex];
   const readyCount=guide.prepare.filter((_,i)=>readiness[guide.id+':'+i]).length;
   // Keep the first runnable program and OS commands identical to the tested
   // published website guide; never fork these samples into wizard-owned text.
   const firstProgram=developerGuides.find(item=>item.id==='first');
-  // Use the same published request failure matrix as the Documentation guide.
-  // Failure/HTTP mappings are only explanatory; the browser never validates IAM
-  // credentials or queries a consuming product's records.
+  // The published failure matrix remains the single source for HTTP diagnosis.
+  // Browser scenarios do not validate credentials or access product data.
   const requestGuide=developerGuides.find(item=>item.id==='request');
   const failureInfo=guide.mode==='request'&&blocked?
     requestGuide.failureCases.find(item=>
@@ -90,7 +82,7 @@ export function IntegrationWorkbench({mode='core',scope='scoped',scenario='succe
   const panelTitle=phase===0?'Which Kernel capability do you want to integrate?':
     phase===1?'Understand '+guide.title:
     phase===2?'Prepare for '+guide.title:
-    phase===3?'How '+guide.title+' works':
+    phase===3?'Expected outcomes for '+guide.title:
     'Implement and verify '+guide.title;
 
   // Do not focus on initial route entry; the site router already focuses the
@@ -126,11 +118,6 @@ export function IntegrationWorkbench({mode='core',scope='scoped',scenario='succe
     const candidate=options.some(s=>s.id===activeScenario)?activeScenario:'success';
     updateRoute(readyHash(guide,next,candidate),3);
   }
-  function inspectSpotlight(){
-    selectTraceStep(spotlightIndex);
-    document.getElementById('wb-inspection-heading')?.focus({preventScroll:true});
-    document.getElementById('wb-inspection-heading')?.scrollIntoView({block:'nearest',behavior:'instant'});
-  }
   function selectCode(){
     const selected=selectCodeText(codePreRef.current);
     setCopyStatus(selected?
@@ -155,7 +142,7 @@ export function IntegrationWorkbench({mode='core',scope='scoped',scenario='succe
       <div className="wb-intro wb-wizard-intro">
         <span className="wb-kicker">GUIDED INTEGRATION / PUBLISHED v{version}</span>
         <h2 id="workbench-title" tabIndex={-1}>From capability <em>to integration.</em></h2>
-        <p className="lead">One guided path: discover what the library provides, prepare your application, inspect the relevant behavior, and leave with the released code and checks.</p>
+        <p className="lead">Choose a capability, review what your application must supply, check published outcomes, and use released code. No internal execution diagram or live service simulation.</p>
       </div>
       <div className="wb-frame wb-wizard">
         <div className="wb-toolbar">
@@ -223,13 +210,14 @@ export function IntegrationWorkbench({mode='core',scope='scoped',scenario='succe
           </div>}
 
           {phase===3&&<div className="wb-phase-explore">
-            <p className="wb-wizard-lead">Follow the capability-specific integration sequence. The browser explains the contracts; it never executes real Java, identity verification, SQL or file operations.</p>
-            <ol className="wb-process-list">
-              {guide.process.map((item,i)=><li key={item.name}><span className="wb-process-number">{String(i+1).padStart(2,'0')}</span><div><h4>{item.name}</h4><small>{item.owner}</small><p>{item.detail}</p></div></li>)}
-            </ol>
+            <p className="wb-wizard-lead">Use these publicly documented outcomes to check your integration. The browser never executes Java, IAM verification, SQL or file operations, and it does not expose an internal execution trace.</p>
+            <h4>What your consumer must verify</h4>
+            <ul className="wb-process-list" aria-label="Consumer verification requirements">
+              {guide.verify.map((item,i)=><li key={item}><span className="wb-process-number">{String(i+1).padStart(2,'0')}</span><div><p>{item}</p></div></li>)}
+            </ul>
             {guide.mode?<>
               <div className="wb-walkthrough-header">
-                <div><span className="wb-overline">SCENARIO / DETERMINISTIC SIMULATION</span><h4>Explore a {guide.title.toLowerCase()} scenario</h4></div>
+                <div><span className="wb-overline">PUBLISHED CONTRACT / ILLUSTRATIVE RESULT</span><h4>Check a {guide.title.toLowerCase()} outcome</h4></div>
                 <span className="wb-mode-tag">{guide.mode==='mutation'?'Optional JDBC':guide.mode==='request'?'Request boundary':'Core library'}</span>
               </div>
               {guide.mode==='request'&&<div className="wb-scope-picker">
@@ -246,59 +234,33 @@ export function IntegrationWorkbench({mode='core',scope='scoped',scenario='succe
                 </button>)}
               </div>
               <section className="wb-result-card" aria-labelledby="wb-result-title">
-                <div className="wb-result-topline"><span className="wb-overline">SIMULATED OUTCOME</span><span>Illustrative · not executed</span></div>
+                <div className="wb-result-topline"><span className="wb-overline">EXPECTED CONTRACT OUTCOME</span><span>Illustrative · not executed</span></div>
                 <div className="wb-trace-heading">
                   <h4 id="wb-result-title" tabIndex={-1}>{scenarioList.find(x=>x.id===activeScenario)?.title}</h4>
-                  <span className={'wb-outcome'+(blocked?' is-blocked':'')+(trace.outcome==='IN PROGRESS'?' is-pending':'')}>{trace.outcome}</span>
+                  <span className={'wb-outcome'+(blocked?' is-blocked':'')+(result.outcome==='IN PROGRESS'?' is-pending':'')}>{result.outcome}</span>
                 </div>
-                <p className="wb-result-detail">{trace.detail}</p>
+                <p className="wb-result-detail">{result.detail}</p>
                 <div className="wb-result-facts">
-                  <div><span>{blocked?'Stopped at':'Focus decision'}</span><strong>{spotlight.name}</strong></div>
-                  <div><span>Responsible owner</span><strong>{spotlight.owner}</strong></div>
+                  <div><span>Responsible owner</span><strong>{result.owner}</strong></div>
+                  <div><span>Consumer verification</span><strong>{result.verify}</strong></div>
                 </div>
                 {failureInfo&&<aside className="wb-request-recovery" aria-label="Failure diagnosis and safe recovery">
                   <div className="wb-request-recovery-head">
                     <strong>Diagnosis: {failureInfo.failure}</strong>
                     <span>HTTP {failureInfo.http}</span>
                   </div>
-                  <dl>
-                    <div><dt>Stopped at</dt><dd>{failureInfo.gate}</dd></div>
-                    <div><dt>Responsible owner</dt><dd>{failureInfo.owner}</dd></div>
-                  </dl>
+                  <p><strong>Responsible owner:</strong> {failureInfo.owner}</p>
                   <p><strong>How to recover:</strong> {failureInfo.recovery}</p>
-                  <p className="wb-request-safe-ids">Use safe request_id and correlation_id to trace this denial. Never log tokens, raw claims or sensitive resource payloads.</p>
+                  <p className="wb-request-safe-ids">Use safe request_id and correlation_id for diagnosis. Never log tokens, raw claims or sensitive resource payloads.</p>
                   <a href="#/docs/request?section=failures">Review published failure mapping and recovery →</a>
                 </aside>}
                 <div className="wb-result-actions">
-                  <button type="button" className="wb-result-primary" onClick={inspectSpotlight}>Inspect this decision <span aria-hidden="true">→</span></button>
+                  <a className="wb-result-primary" href={'#/docs/'+guide.guideId}>Read the published guide →</a>
                   <button type="button" onClick={()=>setPhase(4)}>Get implementation steps <span aria-hidden="true">→</span></button>
                 </div>
               </section>
-              <p className="wb-status-announcement visually-hidden" role="status" aria-atomic="true">{guide.title}. {trace.outcome}. Decision {currentStep+1} of {trace.steps.length}: {inspected.name}, {stepLabels[inspected.state]}.</p>
-              <p className="wb-flow-summary">{trace.steps.length} ordered decisions. Select a decision to see its source-grounded owner, check and result.</p>
-              <div className="wb-trace-layout">
-                <ol className="wb-track" aria-label="Ordered request decisions">
-                  {trace.steps.map((item,i)=><li key={item.name} data-state={item.state}>
-                    <button type="button" className={'wb-trace-step'+(i===currentStep?' is-current':'')}
-                      aria-current={i===currentStep?'step':undefined} aria-controls="wb-inspection"
-                      aria-label={'Step '+(i+1)+': '+item.name+', '+stepLabels[item.state]} onClick={()=>selectTraceStep(i)}>
-                      <span className="wb-trace-number">{String(i+1).padStart(2,'0')}</span><span className="wb-trace-name">{item.name}</span><span className="wb-trace-state">{stepLabels[item.state]}</span>
-                    </button>
-                  </li>)}
-                </ol>
-                <section className="wb-inspection" id="wb-inspection" aria-labelledby="wb-inspection-heading">
-                  <span className="wb-inspection-tag">DECISION {currentStep+1} OF {trace.steps.length}</span>
-                  <span className={'wb-inspection-state is-'+inspected.state}>{stepLabels[inspected.state]}</span>
-                  <h4 id="wb-inspection-heading" tabIndex={-1}>{inspected.name}</h4>
-                  <div className="wb-decision-detail"><strong>What is checked?</strong><p>{inspected.check}</p></div>
-                  <div className="wb-decision-detail"><strong>Why this result?</strong><p>{inspected.description}</p></div>
-                  <div className="wb-decision-detail"><strong>Who owns this?</strong><p>{inspected.owner}</p></div>
-                  <div className="wb-trace-actions">
-                    <button type="button" disabled={currentStep===0} onClick={()=>selectTraceStep(currentStep-1)}>← Previous</button>
-                    <button type="button" className="wb-next" disabled={currentStep===trace.steps.length-1} onClick={()=>selectTraceStep(currentStep+1)}>Next decision →</button>
-                  </div>
-                </section>
-              </div>
+              <p className="wb-status-announcement visually-hidden" role="status" aria-atomic="true">{guide.title}. {result.outcome}. {result.verify}</p>
+              <p className="wb-flow-summary">Contract outcomes explain required consumer behavior, not Kernel's internal execution order. Verify the published APIs against your own environment.</p>
             </>:<div className="wb-guide-only"><strong>Contract-led walkthrough</strong><p>{guide.limitation}</p><a href={source(capability.path)} target="_blank" rel="noopener noreferrer">Inspect the published contract <span aria-hidden="true">↗</span></a></div>}
           </div>}
 

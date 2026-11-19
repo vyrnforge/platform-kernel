@@ -33,19 +33,15 @@ See the [published Maven and Gradle installation guide](https://vyrnforge.github
 
 Start with the [first runnable Java program](https://vyrnforge.github.io/platform-kernel/#/docs/first), including a verified example using only the published main JAR.
 
-## How it works
+## Integration responsibilities
 
-```text
-Example tenant-scoped HTTP request -> trusted identity -> tenant context
-  -> membership -> module entitlement -> application authorization -> handler
-  -> correlation / safe response metadata
-```
+The embedded Kernel offers reusable contracts and mechanics; it does **not** authenticate credentials or authorize domain resources on its own. The consuming application or IAM/IdP first verifies identity, then applies the correct tenant scope, authoritative membership, module entitlement and product-owned resource policy. The public [request integration guide](https://vyrnforge.github.io/platform-kernel/#/docs/request) explains expected denials (400/401/403/existence-safe 404) without exposing an internal decision-execution diagram.
 
-The kernel consumes a trusted identity projection from your authentication middleware; the product owns resource authorization and data. For durable retriable writes, use `JdbcReliabilityTransaction.executeIdempotent`: domain mutation, required event/audit intents and replay result commit together. The outbox is at-least-once compatible, not exactly-once. Products supply the event transport, telemetry backend and production stores.
+For retriable database writes, the optional JDBC adapter supports an application-owned transaction that commits the domain mutation, required event/audit intents and safe replay result together. Consumers must distinguish ACQUIRED, REPLAY, IN_PROGRESS and CONFLICT, reauthorize every attempt and handle at-least-once outbox delivery with deduplication and recovery. See the [published JDBC integration guide](https://vyrnforge.github.io/platform-kernel/#/docs/jdbc). Products supply their own event transport, telemetry backend and production stores.
 
 ## Developer guides — on the website
 
-The [developer documentation](https://vyrnforge.github.io/platform-kernel/#/docs/install) is the primary location for adoption guides, runnable examples and troubleshooting. Use [installation](https://vyrnforge.github.io/platform-kernel/#/docs/install), [first Java program](https://vyrnforge.github.io/platform-kernel/#/docs/first), [trusted requests and tenancy](https://vyrnforge.github.io/platform-kernel/#/docs/request), [optional JDBC reliability](https://vyrnforge.github.io/platform-kernel/#/docs/jdbc) and [consumer verification](https://vyrnforge.github.io/platform-kernel/#/docs/assure). The [Reference](https://vyrnforge.github.io/platform-kernel/#/reference/architecture) explains boundaries and versions; the [single Playground](https://vyrnforge.github.io/platform-kernel/#/playground) is an illustrative simulation, not a live JVM.
+The [developer documentation](https://vyrnforge.github.io/platform-kernel/#/docs/install) is the primary location for adoption guides, runnable examples and troubleshooting. Use [installation](https://vyrnforge.github.io/platform-kernel/#/docs/install), [first Java program](https://vyrnforge.github.io/platform-kernel/#/docs/first), [trusted requests and tenancy](https://vyrnforge.github.io/platform-kernel/#/docs/request), [optional JDBC reliability](https://vyrnforge.github.io/platform-kernel/#/docs/jdbc) and [consumer verification](https://vyrnforge.github.io/platform-kernel/#/docs/assure). The [Reference](https://vyrnforge.github.io/platform-kernel/#/reference/architecture) explains boundaries and versions; the [single Playground](https://vyrnforge.github.io/platform-kernel/#/playground) shows expected public contract outcomes and consumer checks; it is not a live JVM or internal execution simulator.
 
 The repository's `docs/` tree holds maintainer contracts, change history and operational specifications. These are supporting source/evidence references, not a competing developer guide website. See [contract semantics](docs/contracts/reliability-semantics.md) and [release operations](docs/releases/README.md) when deeper implementation or maintenance context is needed.
 
