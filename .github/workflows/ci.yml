@@ -110,6 +110,12 @@ jobs:
         if: steps.scope.outputs.library == 'true'
         run: bash scripts/verify-file-storage-consumer.sh
 
+      # Additional source-pinned CURRENT consumer proof, separate from the older
+      # historical checkout above and the immutable released 0.3.2 proof.
+      - name: Current File Storage against isolated development candidate
+        if: steps.scope.outputs.library == 'true'
+        run: bash scripts/verify-file-storage-current-candidate.sh
+
       - name: Stage Maven publication inventory (no credentials)
         if: steps.scope.outputs.library == 'true'
         run: python3 scripts/stage-release.py "$RUNNER_TEMP/release-stage"
