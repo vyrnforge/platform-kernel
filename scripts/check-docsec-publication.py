@@ -45,10 +45,16 @@ def violations(label: str, data: bytes, *, website_bundle: bool = False) -> list
 def scan_source() -> tuple[list[str], int]:
     issues: list[str] = []
     count = 0
-    for path in (ROOT / "site" / "src").rglob("*"):
-        if path.is_file() and path.suffix in {".jsx", ".js", ".mjs", ".html", ".css"}:
-            count += 1
-            issues.extend(violations(str(path.relative_to(ROOT)), path.read_bytes()))
+    roots = (ROOT / "site" / "src", ROOT / "docs")
+    for folder in roots:
+        for path in folder.rglob("*"):
+            if path.is_file() and path.suffix in {".jsx", ".js", ".mjs", ".html", ".css", ".md"}:
+                count += 1
+                issues.extend(violations(str(path.relative_to(ROOT)), path.read_bytes()))
+    for name in ("README.md", "site/README.md", "SECURITY.md", "CONTRIBUTING.md"):
+        path = ROOT / name
+        count += 1
+        issues.extend(violations(name, path.read_bytes()))
     return issues, count
 
 
@@ -86,7 +92,7 @@ def inspect_jar(path: Path) -> tuple[list[str], int]:
     return errors, inspected
 
 
-def scan_jars() -> tuple[list[str], dict[str, str], int]:
+def scan_jars(version: str) -> tuple[list[str], dict[str, str], int]:
     errors: list[str] = []
     digests: dict[str, str] = {}
     count = 0
@@ -97,7 +103,7 @@ def scan_jars() -> tuple[list[str], dict[str, str], int]:
     )
     for directory, artifact in modules:
         for suffix in (".jar", "-sources.jar", "-javadoc.jar"):
-            name = f"{artifact}-0.3.2{suffix}"
+            name = f"{artifact}-{version}{suffix}"
             path = ROOT / directory / "target" / name
             if not path.is_file():
                 errors.append(f"{directory}/target/{name}: expected release-docs package missing")
@@ -115,6 +121,7 @@ def main() -> int:
     parser.add_argument("--source", action="store_true")
     parser.add_argument("--site", action="store_true")
     parser.add_argument("--jars", action="store_true")
+    parser.add_argument("--version", default=None, help="validated release version; defaults to VERSION")
     args = parser.parse_args()
     if not any((args.source, args.site, args.jars)):
         parser.error("select at least one of --source, --site, --jars")
@@ -129,7 +136,10 @@ def main() -> int:
         errors.extend(found)
         report["site_sha256"] = digests
     if args.jars:
-        found, digests, n = scan_jars()
+        version = args.version or (ROOT / "VERSION").read_text().strip()
+        if not re.fullmatch(r"[0-9]+\.[0-9]+\.[0-9]+", version):
+            parser.error("invalid release version")
+        found, digests, n = scan_jars(version)
         errors.extend(found)
         report["jar_sha256"] = digests
         report["jar_text_entries_inspected"] = n
