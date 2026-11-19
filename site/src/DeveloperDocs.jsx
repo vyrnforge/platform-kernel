@@ -2,6 +2,7 @@ import React,{useEffect,useMemo,useRef,useState} from 'react';
 import {source,version} from './data.mjs';
 import {developerGuides,searchDeveloperGuideMatches} from './docs-data.mjs';
 import {tokenizeCode} from './code-tokens.mjs';
+import {selectCodeText} from './code-selection.mjs';
 import {PreviewGuide} from './PreviewGuide.jsx';
 import {searchPreview} from './preview-data.mjs';
 import './developer-docs.css';
@@ -44,6 +45,7 @@ const readingPath={
 export function DeveloperDocs({guideId='install',section='overview',selectedSampleIndex=null,searchQuery=null}){
   const [query,setQuery]=useState(searchQuery||'');
   const searchInputRef=useRef(null);
+  const codePreRef=useRef(null);
   const [sampleIndex,setSampleIndex]=useState(0);
   const [copyStatus,setCopyStatus]=useState('');
   const isPreview=guideId==='preview';
@@ -55,12 +57,23 @@ export function DeveloperDocs({guideId='install',section='overview',selectedSamp
   const previewVisible=useMemo(()=>searchPreview(query),[query]);
   useEffect(()=>{setSampleIndex(Number.isInteger(selectedSampleIndex)?selectedSampleIndex:0);setCopyStatus('')},[guideId,selectedSampleIndex]);
   useEffect(()=>{setQuery(searchQuery||'')},[guideId,searchQuery]);
+  function selectSample(){
+    const selected=selectCodeText(codePreRef.current);
+    setCopyStatus(selected?
+      'Code selected. Press Ctrl+C (Windows/Linux) or Command+C (macOS) to copy.':
+      'Text selection unavailable. Focus the code block to select and copy manually.');
+  }
   async function copySample(){
     try{
       if(!navigator.clipboard?.writeText)throw Error('Clipboard unavailable');
       await navigator.clipboard.writeText(sample.code);
       setCopyStatus('Code copied.');
-    }catch{setCopyStatus('Clipboard unavailable. Select the code block to copy manually.')}
+    }catch{
+      const selected=selectCodeText(codePreRef.current);
+      setCopyStatus(selected?
+        'Clipboard permission unavailable. Code selected; press Ctrl+C or Command+C to copy.':
+        'Clipboard permission unavailable. Use Select code or select the code block manually.');
+    }
   }
   return <div className="docs-page content-surface">
     <div className="wrap docs-page-heading"><span className="eyebrow">DEVELOPER DOCUMENTATION / v{version} PUBLISHED · v0.4.0 PREVIEW</span><h1 id="page-title" tabIndex={-1}>Learn by building.</h1><p>Task-based guides for the real v{version} Java library. Each recipe states what the Kernel provides and what your application must implement.</p></div>
@@ -165,8 +178,8 @@ export function DeveloperDocs({guideId='install',section='overview',selectedSamp
         <section className="guide-section" aria-label="Published library example">
           <div className="guide-code-heading"><h3 id="guide-example-heading" tabIndex={-1}>Example</h3><span>{sample.kind}</span></div>
           <div className="guide-code-shell">
-            <div className="guide-code-toolbar"><div className="guide-code-tabs" role="group" aria-label="Choose example">{guide.samples.map((x,i)=><button key={x.label} type="button" aria-pressed={i===sampleIndex} onClick={()=>{setSampleIndex(i);setCopyStatus('')}}>{x.label}</button>)}</div><button type="button" className="guide-copy" onClick={copySample}>Copy code</button></div>
-            <div className="guide-code-caption">{sample.filename} · {sample.language.toUpperCase()}</div><pre tabIndex={0} aria-label={sample.filename+' code sample, scroll horizontally if needed'}><code>{tokenizeCode(sample.code,sample.language).map((part,i)=>part.kind?<span key={i} className={'tok-'+part.kind}>{part.text}</span>:part.text)}</code></pre><p role="status" className="guide-copy-status">{copyStatus}</p>
+            <div className="guide-code-toolbar"><div className="guide-code-tabs" role="group" aria-label="Choose example">{guide.samples.map((x,i)=><button key={x.label} type="button" aria-pressed={i===sampleIndex} onClick={()=>{setSampleIndex(i);setCopyStatus('')}}>{x.label}</button>)}</div><div className="guide-code-actions"><button type="button" className="guide-copy" onClick={copySample}>Copy code</button><button type="button" className="guide-select-code" onClick={selectSample}>Select code</button></div></div>
+            <div className="guide-code-caption">{sample.filename} · {sample.language.toUpperCase()}</div><pre ref={codePreRef} tabIndex={0} aria-label={sample.filename+' code sample, scroll horizontally if needed'}><code>{tokenizeCode(sample.code,sample.language).map((part,i)=>part.kind?<span key={i} className={'tok-'+part.kind}>{part.text}</span>:part.text)}</code></pre><p role="status" className="guide-copy-status">{copyStatus}</p>
           </div>
           {guide.expectedOutput&&<div className="guide-expected-output" role="note"><strong>Expected result</strong><p>{guide.expectedOutput}</p></div>}
           {sample.kind.includes('Integration excerpt')&&<p className="guide-excerpt-note">This excerpt is not a complete application: the identity verifier, adapters, ports, product SQL and authorization policies are supplied by your application.</p>}
