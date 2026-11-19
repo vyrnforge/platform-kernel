@@ -4,7 +4,6 @@ export const version='0.3.2';
 // The source-reviewed v0.4.0 candidate is not a published release.
 export const candidateVersion='0.4.0';
 export const candidateStatus='unpublished';
-export const candidatePr=repo+'/pull/65';
 export const releaseRun='43663775552';
 export const source=(path)=>repo+'/'+(path.endsWith('/')?'tree':'blob')+'/'+commit+'/'+path;
 export const capabilities=[
