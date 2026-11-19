@@ -422,13 +422,31 @@ try{
     ['#/','.home-hero'],
     ...developerGuides.map(guide=>['#/docs/'+guide.id,'#guide-heading']),
     ['#/docs/preview','#guide-heading'],
+    ['#/playground','.wb-capability-grid'],
+    ['#/playground?cap=files','.wb-phase-understand'],
     ...referenceTopics.map(topic=>['#/reference/'+topic.id,'#reference-heading']),
     ...workbenchModes.flatMap(mode=>
       (mode.id==='request'?['scoped','tenantless']:['scoped'])
         .flatMap(scope=>scenariosFor(mode.id,scope).map(s=>
           ['#/playground?mode='+mode.id+'&scope='+scope+'&scenario='+s.id,'.wb-frame'])))
   ];
-  let inspectedControls=0,checkedInternalLinks=0;
+  let inspectedControls=0,checkedInternalLinks=0,inspectedAXControls=0;
+  // Chrome computes accessible names through labels, relations and hidden text.
+  // This checks the actual AX tree without adding a second UI testing framework.
+  async function checkAXTree(label){
+    const ax=(await send('Accessibility.getFullAXTree')).nodes||[];
+    const exposed=ax.filter(node=>!node.ignored);
+    const roles=new Set(['button','link','checkbox','radioButton','textField','searchbox','comboBox','switch','tab']);
+    const actionable=exposed.filter(node=>roles.has(node.role?.value));
+    const unnamed=actionable.filter(node=>!String(node.name?.value??'').trim());
+    assert.deepEqual(unnamed.map(node=>({role:node.role?.value,backendDOMNodeId:node.backendDOMNodeId})),[],
+      'Computed accessible name missing in Chromium AX tree on '+label);
+    assert.equal(exposed.filter(node=>node.role?.value==='main').length,1,
+      'Expected exactly one main landmark on '+label);
+    assert.ok(exposed.some(node=>node.role?.value==='heading'&&String(node.name?.value??'').trim()),
+      'Expected a named heading on '+label);
+    inspectedAXControls+=actionable.length;
+  }
   for(const [hash,target] of matrix){
     await evaluate('location.hash='+JSON.stringify(hash));
     await wait('!!document.querySelector('+JSON.stringify(target)+')','quality route missing '+hash);
@@ -458,8 +476,34 @@ try{
     assert.ok(!audit.overflow,'Whole-page overflow on '+hash);
     assert.ok(audit.headings>0,'No content headings on '+hash);
     for(const href of audit.links)assert.notEqual(resolveRoute(href).page,'notfound','Broken rendered hash link '+href+' on '+hash);
+    await checkAXTree(hash);
     inspectedControls+=audit.controls;checkedInternalLinks+=audit.links.length;
   }
+  // The matrix covers historical scenario URLs and current capability links.
+  // Also verify the interactive five-stage wizard itself, not just its first
+  // page and deep-linked Explore mode. These states are not separate apps.
+  await evaluate('location.hash="#/playground"');
+  await wait('!!document.querySelector(".wb-capability-grid")','wizard chooser for AX audit unavailable');
+  const axSteps=['Choose','Understand','Prepare','Explore','Implement'];
+  for(let i=0;i<axSteps.length;i++){
+    if(i===1){
+      await click('.wb-capability-card:nth-child(3)');
+    }else if(i>1){
+      await click('.wb-wizard-step:nth-child('+(i+1)+')');
+    }
+    await wait('document.querySelectorAll(".wb-wizard-step[aria-current=step]").length===1 && document.querySelector(".wb-wizard-step:nth-child('+(i+1)+')")?.getAttribute("aria-current")==="step" && !!document.querySelector("#wb-wizard-panel-title")',
+      'wizard step is not a meaningful accessible state '+axSteps[i]);
+    await checkAXTree('wizard '+axSteps[i]);
+  }
+  // Further sample the contract-only path with a different accessible
+  // control surface; no code execution or WCAG claim is implied.
+  await click('.wb-wizard-change');
+  await wait('!!document.querySelector(".wb-capability-grid")','contract-only chooser unavailable');
+  await click('.wb-capability-card:nth-child(8)');
+  await wait('!!document.querySelector(".wb-phase-understand")','file reference guide unavailable');
+  await click('.wb-wizard-step:nth-child(4)');
+  await wait('!!document.querySelector(".wb-guide-only")','contract-only Explore guide unavailable');
+  await checkAXTree('contract-only File references Explore');
   // Reduced-motion preference must disable state transition animation on the
   // existing mode controls; still requires an actual OS/browser human check.
   await send('Emulation.setEmulatedMedia',{features:[{name:'prefers-reduced-motion',value:'reduce'}]});
@@ -476,7 +520,7 @@ try{
       dclMs:nav?Math.round(nav.domContentLoadedEventEnd):null,
       loadMs:nav?Math.round(nav.loadEventEnd):null};
   })()`);
-  console.log('SITE_BROWSER_QA '+JSON.stringify({routeCount:matrix.length,inspectedControls,checkedInternalLinks,reducedMotion:true,perf}));
+  console.log('SITE_BROWSER_QA '+JSON.stringify({routeCount:matrix.length,inspectedControls,inspectedAXControls,checkedInternalLinks,reducedMotion:true,perf}));
 
   // Baseline semantic and small-text contrast checks. This is not an AT or WCAG certification.
   const computedContrast=async selector=>{
