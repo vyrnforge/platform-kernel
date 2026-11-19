@@ -315,7 +315,7 @@ try{
   // explore and implementation phases, without changing the chosen capability.
   await click('.wb-capability-card:nth-child(6)');
   await wait('location.hash.includes("cap=events") && document.querySelector("#wb-wizard-panel-title")?.textContent.includes("Understand Events")','capability choose must advance to understanding');
-  assert.ok((await evaluate(q('.wb-phase-understand')+'.textContent')).includes('JdbcReliabilityTransaction'),'understanding describes the real released contract');
+  assert.ok((await evaluate(q('.wb-phase-understand')+'.textContent')).includes('audit/event intents atomic'),'understanding describes the published reliability guarantee without exposing implementation sequence');
   assert.ok((await evaluate(q('.wb-phase-understand')+'.textContent')).includes('What stays with your product'),'ownership visible in same guide');
   await click('.wb-wizard-next');
   await wait('!!document.querySelector(".wb-phase-prepare")','wizard must progress to prerequisites');
