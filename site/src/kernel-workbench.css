@@ -390,3 +390,9 @@
    320px and barely below it at 390/720px. Preserve visible keyboard focus. */
 @media(max-width:850px){.wb-wizard-panel-heading h3{scroll-margin-top:145px}}
 @media(max-width:360px){.wb-wizard-panel-heading h3{scroll-margin-top:175px}}
+
+/* Keep code actions reachable when a browser or policy denies async clipboard. */
+.wb-code-tabs>.wb-code-actions{display:flex;flex:0 1 auto;min-width:0;flex-wrap:wrap;justify-content:flex-end;gap:5px;margin-left:auto}
+.wb-code-tabs button.wb-select-code{border-color:#71849c;color:#f2f7ff;background:#273f5c;white-space:nowrap}
+.wb-phase-implement .wb-code-tabs>.wb-code-actions{flex:0 1 auto}
+@media(max-width:610px){.wb-code-tabs>.wb-code-actions{justify-content:flex-start;margin-left:0}}
