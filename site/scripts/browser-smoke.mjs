@@ -220,10 +220,40 @@ try{
   assert.ok((await evaluate(q('#wb-wizard-panel-title')+'.textContent')).includes('API standards'),'HTTP route must open its corresponding capability');
   assert.equal(await evaluate('document.querySelectorAll(".wb-track li[data-state=blocked]").length'),1,'first failing gate must be unambiguous');
   assert.ok((await evaluate(q('.wb-result-facts')+'.textContent')).includes('Establish request scope'),'HTTP example stops at correct gate');
+  assert.ok((await evaluate(q('.wb-request-recovery')+'.textContent')).includes('TENANT_CONTEXT_MISMATCH'),'cross-tenant denial uses published KernelFailure');
+  assert.ok((await evaluate(q('.wb-request-recovery')+'.textContent')).includes('HTTP 404'),'cross-tenant response stays existence-safe');
+  assert.ok((await evaluate(q('.wb-request-recovery')+'.textContent')).includes('authoritative product storage'),'cross-tenant recovery retains authoritative product ownership');
+  assert.equal(await evaluate('document.querySelector(".wb-request-recovery a").getAttribute("href")'),'#/docs/request?section=failures','failure recovery links to existing published request guide');
   await click('.wb-result-primary');
   await wait('document.activeElement?.id==="wb-inspection-heading" && document.querySelector(".wb-inspection-tag")?.textContent.includes("2 OF 6")','inspector jump must focus blocking decision');
   await click('.wb-trace-actions button:first-child');
   assert.ok((await evaluate(q('.wb-inspection-tag')+'.textContent')).includes('1 OF 6'),'previous decision works');
+  await click('.wb-wizard-step:nth-child(5)');
+  await wait('!!document.querySelector(".wb-code-tabs [role=group] button:last-child")','request implementation tabs unavailable');
+  assert.equal(await evaluate('document.querySelectorAll(".wb-code-tabs [role=group] button").length'),3,'request needs Maven + endpoint excerpt + four-port wiring');
+  await click('.wb-code-tabs [role=group] button:last-child');
+  const publishedWiring=developerGuides.find(item=>item.id==='request').samples.find(item=>item.label==='Wiring');
+  assert.equal(await evaluate(q('.wb-code-pane code')+'.textContent'),publishedWiring.code,'request wiring must exactly reuse the published version-safe constructor');
+  assert.ok((await evaluate(q('.wb-code-kind')+'.textContent')).includes('Integration excerpt'),'real token verifier and ports must remain application-owned');
+
+  // Check representative first-stop failures and safe remediation in the same
+  // wizard rather than sending the reader back to an unrelated simulator.
+  await evaluate('location.hash="#/playground?cap=identity&mode=request&scope=scoped&scenario=unverified"');
+  await wait('!!document.querySelector(".wb-request-recovery")','unverified denial mapping missing');
+  assert.ok((await evaluate(q('.wb-request-recovery')+'.textContent')).includes('AUTHENTICATION_FAILED'),'unverified actor needs published failure code');
+  assert.ok((await evaluate(q('.wb-request-recovery')+'.textContent')).includes('HTTP 401'),'unverified actor must map to 401');
+  await evaluate('location.hash="#/playground?cap=identity&mode=request&scope=scoped&scenario=membership"');
+  await wait('document.querySelector(".wb-request-recovery")?.textContent.includes("TENANT_MEMBERSHIP_REQUIRED")','membership 403 diagnosis missing');
+  assert.ok((await evaluate(q('.wb-request-recovery')+'.textContent')).includes('HTTP 403'),'membership denial must be HTTP 403');
+  await evaluate('location.hash="#/playground?cap=http&mode=request&scope=tenantless&scenario=scope"');
+  await wait('document.querySelector(".wb-request-recovery")?.textContent.includes("INVALID_CONTEXT")','tenantless 400 diagnosis missing');
+  assert.ok((await evaluate(q('.wb-request-recovery')+'.textContent')).includes('HTTP 400'),'tenantless active tenant must map 400');
+  await evaluate('location.hash="#/playground?cap=http&mode=request&scope=tenantless&scenario=denied"');
+  await wait('document.querySelector(".wb-request-recovery")?.textContent.includes("DOMAIN_ACCESS_DENIED")','tenantless product authorization diagnosis missing');
+  assert.ok((await evaluate(q('.wb-request-recovery')+'.textContent')).includes('HTTP 403'),'tenantless domain denial must map 403');
+  await evaluate('location.hash="#/playground?cap=http&mode=request&scope=tenantless&scenario=success"');
+  await wait('document.querySelector(".wb-outcome")?.textContent.includes("REQUEST ALLOWED")','valid tenantless request route not restored');
+  assert.equal(await evaluate('document.querySelector(".wb-request-recovery")===null'),true,'allowed tenantless operation must not invent failure');
 
   // A new Playground visit opens a single capability-selection stage.
   await click('.primary-nav a[href="#/playground"]');

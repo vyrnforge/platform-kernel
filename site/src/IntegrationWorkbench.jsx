@@ -55,6 +55,15 @@ export function IntegrationWorkbench({mode='core',scope='scoped',scenario='succe
   // Keep the first runnable program and OS commands identical to the tested
   // published website guide; never fork these samples into wizard-owned text.
   const firstProgram=developerGuides.find(item=>item.id==='first');
+  // Use the same published request failure matrix as the Documentation guide.
+  // Failure/HTTP mappings are only explanatory; the browser never validates IAM
+  // credentials or queries a consuming product's records.
+  const requestGuide=developerGuides.find(item=>item.id==='request');
+  const failureInfo=guide.mode==='request'&&blocked?
+    requestGuide.failureCases.find(item=>
+      (item.scenario||item.id)===activeScenario&&item.scope===scope)||
+    (activeScenario==='unverified'?requestGuide.failureCases.find(item=>item.id==='unverified'):null):null;
+  const requestWiring=requestGuide.samples.find(item=>item.label==='Wiring');
   const runnableCore=guide.id==='ids';
   const codeChoices=[
     {id:'maven',label:'pom.xml',filename:'pom.xml (fragment)',kind:'Maven dependency fragment · existing project',language:'xml',code:recipe.maven},
@@ -63,6 +72,10 @@ export function IntegrationWorkbench({mode='core',scope='scoped',scenario='succe
       filename:runnableCore?'FirstKernelProgram.java':'Java integration excerpt',
       kind:runnableCore?'Complete runnable Java 21 program':recipe.javaKind,
       language:'java',code:runnableCore?firstProgram.samples.find(item=>item.label==='Java 21').code:recipe.java
+    }]:[]),
+    ...(guide.mode==='request'?[{
+      id:'wiring',label:'Wiring excerpt',filename:requestWiring.filename,
+      kind:requestWiring.kind,language:requestWiring.language,code:requestWiring.code
     }]:[]),
     ...(runnableCore?firstProgram.samples.filter(item=>item.label==='Run'||item.label==='Windows').map(item=>({
       id:item.label==='Run'?'unix':'windows',
@@ -232,6 +245,19 @@ export function IntegrationWorkbench({mode='core',scope='scoped',scenario='succe
                   <div><span>{blocked?'Stopped at':'Focus decision'}</span><strong>{spotlight.name}</strong></div>
                   <div><span>Responsible owner</span><strong>{spotlight.owner}</strong></div>
                 </div>
+                {failureInfo&&<aside className="wb-request-recovery" aria-label="Failure diagnosis and safe recovery">
+                  <div className="wb-request-recovery-head">
+                    <strong>Diagnosis: {failureInfo.failure}</strong>
+                    <span>HTTP {failureInfo.http}</span>
+                  </div>
+                  <dl>
+                    <div><dt>Stopped at</dt><dd>{failureInfo.gate}</dd></div>
+                    <div><dt>Responsible owner</dt><dd>{failureInfo.owner}</dd></div>
+                  </dl>
+                  <p><strong>How to recover:</strong> {failureInfo.recovery}</p>
+                  <p className="wb-request-safe-ids">Use safe request_id and correlation_id to trace this denial. Never log tokens, raw claims or sensitive resource payloads.</p>
+                  <a href="#/docs/request?section=failures">Review published failure mapping and recovery →</a>
+                </aside>}
                 <div className="wb-result-actions">
                   <button type="button" className="wb-result-primary" onClick={inspectSpotlight}>Inspect this decision <span aria-hidden="true">→</span></button>
                   <button type="button" onClick={()=>setPhase(4)}>Get implementation steps <span aria-hidden="true">→</span></button>
@@ -296,6 +322,7 @@ export function IntegrationWorkbench({mode='core',scope='scoped',scenario='succe
                   <span className="wb-overline">CHECK IN YOUR APPLICATION</span>
                   <ul>{guide.verify.map(item=><li key={item}>{item}</li>)}</ul>
                   <p><strong>Application supplies</strong>{capability.needs}</p>
+                  {guide.mode==='request'&&<p><strong>Request wiring</strong>Select the Wiring excerpt tab to see the published four-port RequestContextPipeline constructor. The real verifier, membership, entitlement and domain authorization ports must be supplied by your application.</p>}
                   {guide.mode&&<p><strong>Example scope</strong>{runnableCore?
                     'The complete FirstKernelProgram.java is runnable against the published JAR. The browser does not execute it.':
                     'The Java snippet is an integration excerpt for the '+(guide.mode==='request'?'request':'JDBC')+' pattern, not a complete executable application or execution of the selected scenario.'}</p>}
