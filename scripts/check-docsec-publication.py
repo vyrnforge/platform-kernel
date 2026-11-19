@@ -23,7 +23,7 @@ CREDENTIAL_LITERALS = (
     re.compile(rb"xox[baprs]-[A-Za-z0-9-]{20,}"),
     re.compile(rb"sk_live_[A-Za-z0-9]{16,}"),
 )
-PROHIBITED_SUFFIXES = (".mmd", ".mermaid", ".drawio", ".puml", ".pem", ".key", ".env")
+PROHIBITED_SUFFIXES = (".mmd", ".mermaid", ".drawio", ".puml", ".pem", ".key", ".env", ".p12", ".pfx", ".jks", ".keystore")
 RETIRED_UI_STRINGS = (
     b"Not evaluated: the previous gate stopped this request.",
     b"Does ACQUIRED receive one leased transaction and its Connection?",
@@ -86,9 +86,10 @@ def inspect_jar(path: Path) -> tuple[list[str], int]:
             if entry.file_size > 4_000_000:
                 errors.append(f"{path.name}: oversized entry requires manual inspection")
                 continue
-            if name.endswith((".java", ".html", ".js", ".json", ".xml", ".sql", ".properties", ".txt", ".md", ".yaml", ".yml")):
-                inspected += 1
-                errors.extend(violations(f"{path.name}/{entry.filename}", archive.read(entry)))
+            # Scan binary .class constants as well: public JAR bytecode is inspectable,
+            # and token/marker strings need not live in separate resource files.
+            inspected += 1
+            errors.extend(violations(f"{path.name}/{entry.filename}", archive.read(entry)))
     return errors, inspected
 
 
