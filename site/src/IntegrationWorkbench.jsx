@@ -45,6 +45,7 @@ export function IntegrationWorkbench({mode='core',scope='scoped',scenario='succe
   const activeScenario=scenarioList.some(s=>s.id===scenario)?scenario:(scenarioList[0]?.id||'success');
   const result=guide.mode?getPublicOutcome(guide.mode,scope,activeScenario):null;
   const blocked=result?/^(DENIED|REJECTED|NOT FOUND|CONFLICT)/.test(result.outcome):false;
+  const recipe=getWorkbenchRecipe(guide.mode||'core',scope,guide.testkit===true);
   const readyCount=guide.prepare.filter((_,i)=>readiness[guide.id+':'+i]).length;
   // Keep the first runnable program and OS commands identical to the tested
   // published website guide; never fork these samples into wizard-owned text.
