@@ -181,3 +181,15 @@ h3{font-size:19px;letter-spacing:-.4px}
   .reference-nav a{flex:0 0 auto;white-space:nowrap;scroll-snap-align:start}
   .reference-aside-note{display:none}
 }
+
+/* UX-01/UX-05: the Docs rail becomes one column below 870px. The shared
+   sticky-sidebar selector is bundled after the Docs CSS and previously
+   re-enabled stickiness, covering deep-linked headings/focus on small screens.
+   Give the focused section enough clearance below the wrapping site header. */
+@media(max-width:870px){
+  .docs-layout>.docs-sidebar{position:static}
+  .guide-article :is(h2,h3,summary)[id]{scroll-margin-top:145px}
+}
+@media(max-width:360px){
+  .guide-article :is(h2,h3,summary)[id]{scroll-margin-top:175px}
+}

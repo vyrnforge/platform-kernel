@@ -658,6 +658,23 @@ try{
         assert.ok(await evaluate('document.documentElement.scrollWidth<=window.innerWidth+1'),'section navigation must not cause whole-page overflow at '+width);
       }
     }
+    // Focused section links must remain in front of (not behind) sticky
+    // navigation. A prior CSS cascade restored .docs-sidebar{position:sticky}
+    // at single-column widths, obscuring the headings despite green reflow QA.
+    assert.equal(await evaluate('getComputedStyle(document.querySelector(".docs-sidebar")).position'),
+      'static','single-column Docs sidebar must not overlay the article at '+width);
+    for(const [hash,focused] of [
+      ['#/docs/request?section=failures','request-denials-heading'],
+      ['#/docs/jdbc?section=troubleshooting','guide-troubleshooting-summary']
+    ]){
+      await evaluate('location.hash='+JSON.stringify(hash));
+      await wait('location.hash==='+JSON.stringify(hash)+' && document.activeElement?.id==='+JSON.stringify(focused),
+        'Docs deep-link focus missing for '+hash+' at '+width);
+      const hit=await evaluate('(()=>{const el=document.getElementById('+JSON.stringify(focused)+');const r=el.getBoundingClientRect(),header=document.querySelector(".site-header").getBoundingClientRect();const x=Math.max(1,Math.min(window.innerWidth-1,r.left+Math.min(r.width/2,16)));const y=Math.max(1,Math.min(window.innerHeight-1,r.top+Math.min(r.height/2,15)));const front=document.elementFromPoint(x,y);return {top:r.top,headerBottom:header.bottom,front:front===el||el.contains(front),overflow:document.documentElement.scrollWidth>window.innerWidth+1}})()');
+      assert.ok(hit.top>=hit.headerBottom+12,'focused heading obscured by site header at '+width+': '+hash+' '+JSON.stringify(hit));
+      assert.ok(hit.front,'focused heading covered by overlapping UI at '+width+': '+hash+' '+JSON.stringify(hit));
+      assert.equal(hit.overflow,false,'Docs deep link must not overflow whole page at '+width);
+    }
     await evaluate('location.hash="#/docs/first"');
     await wait('!!document.querySelector(".guide-article")','return to first guide after reflow tests');
     if(width<=640){
