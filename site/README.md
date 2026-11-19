@@ -10,6 +10,8 @@ All four website destinations use the viewport width with responsive side gutter
 
 ## Information architecture
 
+The root [README](../README.md) now explains the same public integration responsibilities without publishing an internal execution-order diagram. Keep public contract error and reliability semantics linked to the on-site request/JDBC guides rather than recreating a hidden flow simulator.
+
 Four separate destinations use hash routes, so deep links and browser Back/Forward work on GitHub Pages:
 
 | Destination | Route | Purpose |
