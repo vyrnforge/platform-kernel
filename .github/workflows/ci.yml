@@ -105,6 +105,10 @@ jobs:
           CAPAUD_SOURCE_SHA: ${{ github.event.pull_request.head.sha }}
         run: python3 scripts/capaud-abi-compare.py
 
+      - name: Compare released vs development constructor behavior (audit only)
+        if: steps.scope.outputs.library == 'true' && startsWith(github.head_ref, 'audit/capaud-01-')
+        run: python3 scripts/capaud-behavior-compare.py
+
       - name: Verify three physical JARs and packaged consumer
         if: steps.scope.outputs.library == 'true'
         run: python3 scripts/check-distribution.py --release-docs
