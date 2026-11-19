@@ -2,7 +2,8 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {documentationVersion, developerGuides, searchDeveloperGuides, searchDeveloperGuideMatches} from './docs-data.mjs';
 import {version, candidateVersion, capabilities, source} from './data.mjs';
-import {getWorkbenchTrace,scenariosFor} from './workbench-data.mjs';
+import {scenariosFor} from './workbench-data.mjs';
+import {getPublicOutcome} from './public-outcomes.mjs';
 
 test('developer documentation targets the released distribution only', () => {
   assert.equal(documentationVersion, version);
@@ -85,15 +86,14 @@ test('published request guide matches scoped and tenantless Kernel failure seman
     assert.equal(entry.failure,code);
     assert.equal(entry.http,status);
     assert.ok(scenariosFor('request',scope).some(x=>x.id===(entry.scenario||entry.id)));
-    const trace=getWorkbenchTrace('request',scope,entry.scenario||entry.id);
-    assert.equal(trace.steps.findIndex(s=>s.state==='blocked'),blockedStep,id);
-    assert.ok(trace.outcome.includes(status),id+' Playground status drift');
-    assert.ok(trace.steps.slice(blockedStep+1).every(s=>s.state==='pending'),id+' later gates must not run');
+    const result=getPublicOutcome('request',scope,entry.scenario||entry.id);
+    assert.ok(result.outcome.includes(status),id+' public outcome status drift');
+    assert.ok(result.owner&&result.verify,id+' must name consumer responsibilities');
+    assert.ok(!('steps' in result),id+' must not publish the internal gate sequence');
   }
-  const tenantless=getWorkbenchTrace('request','tenantless','success');
-  assert.equal(tenantless.steps[2].state,'skipped');
-  assert.equal(tenantless.steps[3].state,'skipped');
-  assert.equal(tenantless.steps[4].state,'done');
+  const tenantless=getPublicOutcome('request','tenantless','success');
+  assert.equal(tenantless.outcome,'REQUEST ALLOWED');
+  assert.match(tenantless.detail,/resource/);
   const wiring=request.samples.find(s=>s.label==='Wiring');
   assert.match(wiring.kind,/Integration excerpt/);
   assert.match(wiring.code,/new RequestContextPipeline<>/);
@@ -113,8 +113,8 @@ test('published JDBC decisions and consumer conformance connect to one Playgroun
   assert.deepEqual(jdbc.decisionStates.map(x=>x.id),['success','replay','in-progress','conflict']);
   assert.equal(jdbc.recoveryPaths.length,6);
   for(const state of jdbc.decisionStates){
-    const trace=getWorkbenchTrace('mutation','scoped',state.id);
-    assert.ok(trace.outcome, state.type);
+    const result=getPublicOutcome('mutation','scoped',state.id);
+    assert.ok(result.outcome&&result.verify, state.type);
     assert.ok(state.effect&&state.owner&&state.next&&state.recovery);
   }
   for(const id of ['replay','in-progress','conflict']){
