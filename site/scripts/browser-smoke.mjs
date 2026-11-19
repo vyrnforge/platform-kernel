@@ -104,9 +104,22 @@ try{
   await send('Input.dispatchKeyEvent',{type:'keyDown',key:'Enter',code:'Enter',windowsVirtualKeyCode:13,nativeVirtualKeyCode:13,text:'\r',unmodifiedText:'\r'});
   await send('Input.dispatchKeyEvent',{type:'char',key:'Enter',code:'Enter',windowsVirtualKeyCode:13,nativeVirtualKeyCode:13,text:'\r',unmodifiedText:'\r'});
   await send('Input.dispatchKeyEvent',{type:'keyUp',key:'Enter',code:'Enter',windowsVirtualKeyCode:13,nativeVirtualKeyCode:13});
-  await wait('location.hash==="#/docs/assure"','keyboard guide navigation failed');
-  // React controlled search: use the native setter to simulate the browser input path.
-  const setSearch=async text=>evaluate('(()=>{const el=document.querySelector("#guide-search");const setter=Object.getOwnPropertyDescriptor(HTMLInputElement.prototype,"value").set;setter.call(el,'+JSON.stringify(text)+');el.dispatchEvent(new Event("input",{bubbles:true}));return true})()');
+  await wait('location.hash==="#/docs/assure" && document.querySelector("#guide-heading")?.textContent.includes("Verify your consumer")',
+    'keyboard guide navigation must finish rendering before search input');
+  // Type through Chromium's real keyboard/editing pipeline, not by changing
+  // the value property between React effects. The latter sometimes raced a
+  // route transition and never committed the search state at all.
+  const setSearch=async text=>{
+    await wait('!!document.querySelector("#guide-search")','search field missing');
+    await evaluate('document.querySelector("#guide-search").focus()');
+    await send('Input.dispatchKeyEvent',{type:'keyDown',key:'Control',code:'ControlLeft',windowsVirtualKeyCode:17,modifiers:2});
+    await send('Input.dispatchKeyEvent',{type:'keyDown',key:'a',code:'KeyA',windowsVirtualKeyCode:65,modifiers:2});
+    await send('Input.dispatchKeyEvent',{type:'keyUp',key:'a',code:'KeyA',windowsVirtualKeyCode:65,modifiers:2});
+    await send('Input.dispatchKeyEvent',{type:'keyUp',key:'Control',code:'ControlLeft',windowsVirtualKeyCode:17});
+    await send('Input.insertText',{text});
+    await wait('document.querySelector("#guide-search")?.value==='+JSON.stringify(text),
+      'Chrome keyboard failed to enter search query: '+text);
+  };
   await setSearch('retriable');
   // A visible JDBC link exists even before filtering, so checking link
   // presence alone races the React controlled-input update. Require both the
