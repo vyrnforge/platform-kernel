@@ -108,9 +108,14 @@ try{
   // React controlled search: use the native setter to simulate the browser input path.
   const setSearch=async text=>evaluate('(()=>{const el=document.querySelector("#guide-search");const setter=Object.getOwnPropertyDescriptor(HTMLInputElement.prototype,"value").set;setter.call(el,'+JSON.stringify(text)+');el.dispatchEvent(new Event("input",{bubbles:true}));return true})()');
   await setSearch('retriable');
-  await wait('[...document.querySelectorAll(".docs-guide-group a")].some(a=>a.getAttribute("href")?.startsWith("#/docs/jdbc"))','search must find the relevant JDBC guide');
+  // A visible JDBC link exists even before filtering, so checking link
+  // presence alone races the React controlled-input update. Require both the
+  // current search value and a genuinely filtered result before typing again.
+  await wait('document.querySelector("#guide-search")?.value==="retriable" && document.querySelectorAll(".docs-guide-group a").length<5 && [...document.querySelectorAll(".docs-guide-group a")].some(a=>a.getAttribute("href")?.startsWith("#/docs/jdbc"))',
+    'search must actually filter to the relevant JDBC guide');
   await setSearch('classpath separator');
-  await wait('document.querySelectorAll(".docs-guide-group a").length===1','search did not index troubleshooting content');
+  await wait('document.querySelector("#guide-search")?.value==="classpath separator" && document.querySelectorAll(".docs-guide-group a").length===1',
+    'search did not index troubleshooting content');
   // Search can rerender as a previous guide effect settles. Find and focus
   // the *current* button in the same CDP evaluation, not across two calls.
   // Repeat twice to exercise the search/clear mount-unmount transition.
