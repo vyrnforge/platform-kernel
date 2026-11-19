@@ -247,8 +247,8 @@ try{
   await wait('location.hash.includes("mode=request") && !!document.querySelector(".wb-result-card")','legacy request outcome link failed');
   assert.ok((await evaluate(q('#wb-wizard-panel-title')+'.textContent')).includes('Identity & tenancy'),'legacy request route must map to correct capability guide');
   assert.equal(await evaluate('document.querySelectorAll(".wb-wizard-step").length'),5,'wizard must expose five sequenced stages');
-  assert.ok((await evaluate(q('.wb-result-facts')+'.innerText')).includes('Responsible owner'),'public outcome retains clear application responsibility');
-  assert.ok((await evaluate(q('.wb-result-facts')+'.innerText')).includes('Consumer verification'),'public outcome states consumer tests');
+  assert.ok((await evaluate(q('.wb-result-facts')+'.textContent')).includes('Responsible owner'),'public outcome retains clear application responsibility');
+  assert.ok((await evaluate(q('.wb-result-facts')+'.textContent')).includes('Consumer verification'),'public outcome states consumer tests');
   assert.equal(await evaluate('document.querySelectorAll(".wb-status-announcement[role=status]").length'),1,'exactly one concise public outcome status');
 
   // A domain-specific failure is part of the HTTP guide, not a generic mode switch.
