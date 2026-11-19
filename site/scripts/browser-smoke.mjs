@@ -96,14 +96,18 @@ try{
   await wait('[...document.querySelectorAll(".docs-guide-group a")].some(a=>a.getAttribute("href")?.startsWith("#/docs/jdbc"))','search must find the relevant JDBC guide');
   await setSearch('classpath separator');
   await wait('document.querySelectorAll(".docs-guide-group a").length===1','search did not index troubleshooting content');
-  await setSearch('unlikely-search-xyz');
-  await wait('!!document.querySelector(".docs-search-empty")','search empty state not visible');
-  // Reset unmounts its own button: focus must return to the labeled search field.
-  await evaluate('document.querySelector(".docs-search-empty button").focus()');
-  await send('Input.dispatchKeyEvent',{type:'keyDown',key:'Enter',code:'Enter',windowsVirtualKeyCode:13,nativeVirtualKeyCode:13,text:'\r',unmodifiedText:'\r'});
-  await send('Input.dispatchKeyEvent',{type:'keyUp',key:'Enter',code:'Enter',windowsVirtualKeyCode:13,nativeVirtualKeyCode:13});
-  await wait('document.querySelectorAll(".docs-guide-group a").length===5','clear search did not restore topics');
-  assert.equal(await evaluate('document.activeElement.id'),'guide-search','clearing search returns keyboard focus to search input');
+  // Search can rerender as a previous guide effect settles. Find and focus
+  // the *current* button in the same CDP evaluation, not across two calls.
+  // Repeat twice to exercise the search/clear mount-unmount transition.
+  for(const term of ['unlikely-search-xyz','no-matching-kernel-guide-123']){
+    await setSearch(term);
+    await wait('(()=>{const field=document.querySelector("#guide-search");const reset=document.querySelector(".docs-search-empty button");if(field?.value!=='+JSON.stringify(term)+'||!reset?.isConnected)return false;reset.focus();return document.activeElement===reset})()',
+      'search reset button missing or not keyboard-focusable for '+term);
+    await send('Input.dispatchKeyEvent',{type:'keyDown',key:'Enter',code:'Enter',windowsVirtualKeyCode:13,nativeVirtualKeyCode:13,text:'\r',unmodifiedText:'\r'});
+    await send('Input.dispatchKeyEvent',{type:'keyUp',key:'Enter',code:'Enter',windowsVirtualKeyCode:13,nativeVirtualKeyCode:13});
+    await wait('document.querySelectorAll(".docs-guide-group a").length===5 && document.querySelector("#guide-search")?.value==="" && document.activeElement?.id==="guide-search"',
+      'clear search did not restore topics and keyboard focus for '+term);
+  }
 
 
   // One best matching passage per guide, not a second search or another page.
