@@ -98,6 +98,20 @@ jobs:
         if: steps.scope.outputs.library == 'true'
         run: mvn --batch-mode --no-transfer-progress --strict-checksums -Prelease-docs clean verify
 
+      # CAPAUD-01: permanent fail-closed selected-API regression gate. The
+      # exact immutable v0.3.2 release is distinguished from main-built 0.3.2
+      # candidate bytes. Passing the existing six-delta baseline does NOT
+      # authorize publication; Product/API must disposition those separately.
+      - name: Verify published vs candidate JVM ABI compatibility
+        if: steps.scope.outputs.library == 'true'
+        env:
+          CAPAUD_SOURCE_SHA: ${{ github.sha }}
+        run: python3 scripts/capaud-abi-compare.py
+
+      - name: Verify known constructor behavior matrix has no new drift
+        if: steps.scope.outputs.library == 'true'
+        run: python3 scripts/capaud-behavior-compare.py
+
       - name: Verify three physical JARs and packaged consumer
         if: steps.scope.outputs.library == 'true'
         run: python3 scripts/check-distribution.py --release-docs
