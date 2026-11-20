@@ -33,6 +33,11 @@ jobs:
       - name: Test change-scope routing
         run: python3 -m unittest discover -s scripts/tests -p test_ci_scope.py -v
 
+      # Always test the release preflight's fail-closed semantics, including
+      # documentation-only PRs; it does not require any release approvals.
+      - name: Test release acceptance control offline
+        run: python3 -m unittest discover -s scripts/tests -p test_release_acceptance.py -v
+
       - name: Verify public disclosure source gate
         run: |
           python3 -m unittest discover -s scripts/tests -p test_docsec_publication.py -v
