@@ -77,6 +77,20 @@ def execute(jar: Path, directory: Path) -> dict[str,str]:
     raise AssertionError(f"unexpected Java results (case names only): {sorted(observed)}")
   return observed
 
+def require_expected_matrix(before: dict[str, str], after: dict[str, str]) -> list[dict[str, str]]:
+  """Reject all unreviewed drift while retaining the six *unapproved* known deltas."""
+  if set(before) != set(EXPECTED) or set(after) != set(EXPECTED):
+    raise AssertionError("unexpected comparison vector names")
+  divergences = []
+  for name, expected_pair in EXPECTED.items():
+    observed = (before[name], after[name])
+    if observed != expected_pair:
+      raise AssertionError(f"unexpected behavior for {name}: {observed}")
+    if observed[0] != observed[1]:
+      divergences.append({"case": name, "released": observed[0], "candidate": observed[1]})
+  return divergences
+
+
 def main() -> None:
   candidate = ROOT/"platform-kernel/target/platform-kernel-0.3.2.jar"
   if not candidate.is_file():
@@ -97,13 +111,7 @@ def main() -> None:
                    check=True,capture_output=True,text=True,timeout=60)
     before = execute(released,folder)
     after = execute(candidate,folder)
-    divergences=[]
-    for name,(old_expected,new_expected) in EXPECTED.items():
-      result=(before[name],after[name])
-      if result!=(old_expected,new_expected):
-        raise AssertionError(f"unexpected behavior for {name}: {result}")
-      if result[0]!=result[1]:
-        divergences.append({"case":name,"released":result[0],"candidate":result[1]})
+    divergences = require_expected_matrix(before, after)
     print("CAPAUD_BEHAVIOR "+json.dumps({
       "released_sha256":RELEASE_SHA,
       "candidate_sha256":hashlib.sha256(candidate.read_bytes()).hexdigest(),
