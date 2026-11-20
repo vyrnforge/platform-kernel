@@ -102,6 +102,10 @@ jobs:
       # exact immutable v0.3.2 release is distinguished from main-built 0.3.2
       # candidate bytes. Passing the existing six-delta baseline does NOT
       # authorize publication; Product/API must disposition those separately.
+      - name: Test permanent compatibility-gate baseline offline
+        if: steps.scope.outputs.library == 'true'
+        run: python3 -m unittest discover -s scripts/tests -p test_capaud_compatibility.py -v
+
       - name: Verify published vs candidate JVM ABI compatibility
         if: steps.scope.outputs.library == 'true'
         env:
