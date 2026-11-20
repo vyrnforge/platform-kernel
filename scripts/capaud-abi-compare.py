@@ -56,7 +56,7 @@ def classes(path: Path) -> set[str]:
     with zipfile.ZipFile(path) as jar:
         result = set()
         for item in jar.namelist():
-            if not item.endswith(".class") or item.endswith("/module-info.class") or item.endswith("/package-info.class"):
+            if not item.endswith(".class") or item.rsplit("/", 1)[-1] in ("module-info.class", "package-info.class"):
                 continue
             result.add(item[:-6].replace("/", "."))
         return result
