@@ -33,6 +33,13 @@ jobs:
       - name: Test change-scope routing
         run: python3 -m unittest discover -s scripts/tests -p test_ci_scope.py -v
 
+      # ADR-0005 Option A — architectural evidence only. This guards Java
+      # source package imports but does not add/repackage a Maven artifact.
+      - name: Validate proposed contracts-to-runtime package boundaries
+        run: |
+          python3 -m unittest discover -s scripts/tests -p test_package_boundaries.py -v
+          python3 scripts/check-package-boundaries.py
+
       - name: Verify public disclosure source gate
         run: |
           python3 -m unittest discover -s scripts/tests -p test_docsec_publication.py -v
