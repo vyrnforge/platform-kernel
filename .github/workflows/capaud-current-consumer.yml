@@ -5,6 +5,8 @@ on:
     branches: [main]
     paths:
       - 'scripts/verify-file-storage-published-consumer.sh'
+      - 'scripts/check-file-storage-security-evidence.py'
+      - 'scripts/tests/test_capaud_fs_security_evidence.py'
       - '.github/workflows/capaud-current-consumer.yml'
   workflow_dispatch:
 
