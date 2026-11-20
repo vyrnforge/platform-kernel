@@ -58,13 +58,6 @@ jobs:
           python3 -m unittest discover -s scripts/tests -p test_docsec_publication.py -v
           python3 scripts/check-docsec-publication.py --source
 
-      - name: Reserve exact source tag before publication
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          set -euo pipefail
-          version="$(tr -d '[:space:]' < VERSION)"
-          gh api --method POST "repos/$GITHUB_REPOSITORY/git/refs" -f ref="refs/tags/v$version" -f sha="$GITHUB_SHA" >/dev/null
       - name: Build and verify once
         run: |
           python3 scripts/check-contract-compatibility.py
@@ -75,6 +68,19 @@ jobs:
       - name: DOCSEC inspect exact release JAR, source and Javadoc contents
         run: python3 scripts/check-docsec-publication.py --jars
 
+      # Fail closed before reserving any new public tag or using publishing secrets.
+      # This enforces presence/consistency of version-specific decision evidence;
+      # reviewer authenticity remains a human governance responsibility.
+      - name: Require explicit version-specific release acceptance
+        run: python3 scripts/check-release-acceptance.py --root .
+
+      - name: Reserve exact source tag after verified build and acceptance
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          version="$(tr -d '[:space:]' < VERSION)"
+          gh api --method POST "repos/$GITHUB_REPOSITORY/git/refs" -f ref="refs/tags/v$version" -f sha="$GITHUB_SHA" >/dev/null
       - name: Sign release bundle
         env:
           GPG_PRIVATE_KEY: ${{ secrets.GPG_PRIVATE_KEY }}
