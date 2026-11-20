@@ -19,6 +19,20 @@ Dependabot covers Maven, GitHub Actions and site npm. The one-time signing boots
 - [v0.4.0 website developer preview](https://vyrnforge.github.io/platform-kernel/#/docs/preview) lives in the website source (not duplicated in this repository's release-operations folder), is prepared **before publication** and is explicitly marked **NOT RELEASED**. It documents candidate-only APIs, dependency coordinates for future use, compatibility and migration tests. The site's default installation guidance stays pinned to published v0.3.2 until v0.4.0 is independently approved and publication is verified.
 - Keep pre-release developer documentation ready and reviewed *before* requesting release authorization. Publication and consumer adoption remain separate gates.
 
+## CAPAUD pre-publication acceptance gate (proposed)
+
+The publication workflow now has a proposed fail-closed preflight before tag reservation. It requires a **new, reviewed** `docs/releases/acceptance/<VERSION>.json` file for the proposed release. No such approved record is currently present; this is intentional. Do not put a synthetic approval record into the repository or publish the unpublished candidate as v0.3.2.
+
+After the real owner, API/Architecture, Security, consumer and operations reviews are completed, an approved version-specific record must contain:
+
+- `schema_version: 1`, the exact `VERSION`, `status: "approved"`, a **new release-specific** canonical `decision_id`, and an HTTPS `decision_evidence` link.
+- An exact `reviews` mapping with `product`, `architecture`, `api_compatibility`, `security`, `consumer_conformance` and `operational_recovery`. Each review must have `status: "accepted"`, `reviewer` (human GitHub login), ISO `reviewed_on`, and a usable HTTPS `evidence` link. Security/API reviewer identities must be different from the Product reviewer's.
+- An exact `compatibility_deltas` mapping for `module_underscore`, `module_129`, `policy_upper`, `operation_193`, `key_513` and `fingerprint_513`. Each must explicitly say `resolution: "retain"` or `"rework"` and provide HTTPS `migration_evidence`. A proposed/pending/deferred case is not accepted.
+
+The workflow only validates manifest **structure and declared approval state**. It cannot authenticate reviewer identity, confirm the evidence links' contents, certify independent Security/JDBC review, or validate an actual production restore. Reviewers and Product/Architecture must verify those facts outside the parser before the version-changing PR is approved. Prior single-maintainer exceptions do not transfer to this release. Approval of this gate is not release authorization.
+
+Run `python3 -m unittest discover -s scripts/tests -p test_release_acceptance.py -v` to exercise negative gate cases offline. The real `python3 scripts/check-release-acceptance.py --root .` must remain blocked for current published v0.3.2. For a future release, update `VERSION` and all Maven versions only in a separately approved release PR, align the permanent ABI/behavior comparator with the approved baseline, and provide the fully reviewed acceptance record. The normal protected checks, sign/publish, Central immutability and recovery safeguards remain mandatory. **The source tag is now reserved only after build, DOCSEC package inspection and acceptance preflight succeed**, rather than reserving a tag on a failed build.
+
 ## Release checklist
 
 Before approving a version-changing PR, require the following DOCSEC classification evidence in addition to contract compatibility and release readiness. These are **human review decisions**, not automatic release permission:
