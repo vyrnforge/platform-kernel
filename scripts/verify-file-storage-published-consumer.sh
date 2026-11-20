@@ -40,6 +40,9 @@ export MAVEN_OPTS="${MAVEN_OPTS:-} -Dmaven.repo.local=$work/maven-repository"
   make ci
 )
 
+# CAPAUD-03: verify named real consumer negative tests actually executed.
+python3 "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/check-file-storage-security-evidence.py" "$work/file-storage/backend"
+
 resolved="$work/maven-repository/io/github/vyrnforge/platform-kernel/$KERNEL_VERSION/platform-kernel-$KERNEL_VERSION.jar"
 test -s "$resolved"
 cmp --silent "$work/published-kernel.jar" "$resolved"
@@ -49,4 +52,4 @@ echo "CAPAUD04_RESULT=SOURCE_CI_PASS"
 echo "CAPAUD04_CONSUMER_SHA=$CONSUMER_SHA"
 echo "CAPAUD04_KERNEL_RELEASE=$KERNEL_VERSION"
 echo "CAPAUD04_RESOLVED_KERNEL_SHA256=$(sha256sum "$resolved" | cut -d' ' -f1)"
-echo 'CAPAUD04_LIMITATIONS=no-live-IdP,no-deployed-application,no-independent-review,no-restore-proof'
+echo 'CAPAUD04_LIMITATIONS=no-live-IdP,no-deployed-application,no-independent-review,no-deployed-restore-proof'
