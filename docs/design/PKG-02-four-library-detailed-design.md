@@ -270,3 +270,122 @@ Open D-6: Who signs deployed IAM/Storage and restore evidence? Product and indep
 - Source baseline: https://github.com/vyrnforge/platform-kernel/tree/706db703ea2a2e98f036d397b9e7d1e7f75291a0
 
 **Document status:** detailed PROPOSAL ONLY. Does not approve four-JAR publication, Java movement, new SQL, a fourth live service, or any bypass of protected release gates.
+
+
+## 12. PKG-02 v2 — Detailed component catalog and database connector policy
+
+**Revision:** 2026-11-20, component-scope clarification requested by Product Owner. **Status:** DESIGN PROPOSAL; this section clarifies and supersedes broad responsibility descriptions above, but does not authorize new code, a fourth published JAR, or any database other than existing PostgreSQL. All catalog entries use three status labels: **IMPLEMENTED ON CURRENT MAIN**, **PROPOSED PACKAGING** (physical relocation only), or **FUTURE CANDIDATE** (not implemented).
+
+### 12.1 Library A — platform-kernel-contracts (proposed new fourth published artifact)
+
+**Purpose:** portable Java 21 API vocabulary shared by products that must not depend on request runtime or database technology. Existing source implementation: **41 Java classes** residing today inside the published-name \`platform-kernel\` core; the *standalone contracts JAR is not implemented*. Proposed public artifact: \`io.github.vyrnforge:platform-kernel-contracts:<approved-version>\`. The contract includes pure helpers where required, not merely interfaces.
+
+| Component | Functionality to own | Exact current Java surface | Status / guardrails |
+| --- | --- | --- | --- |
+| **C-A Context & tenant vocabulary** | Actor, tenant, identity and authentication projections, tenant scope, correlation and cross-product references; no authentication | Whole \`context\` package: 11 classes, \`ActorContext\`, \`TenantContext\`, \`AuthenticationContext\`, \`AuthorizationProjection\`, \`ActorReference\`, \`IdentityReference\`, \`ResourceReference\`, \`TenantScope\`, \`CorrelationContext\`, \`ActorType\`, \`ModuleEntitlement\` | Implemented main; IAM/IdP remains identity authority; no JWT signing/validation |
+| **C-B Portable IDs & references** | UUIDv7, cross-product file pointer and configuration namespace key utility | \`ids.UuidV7\`, \`file.FileReference\`, \`controls.NamespacedKey\`: 3 classes | Implemented main; file bytes and access grants remain File Storage-owned |
+| **C-C Public error contract** | Stable, safe error/value model for HTTP or other adapters; no wire-server implementation | Whole \`errors\` package: \`ApiError\`, \`FieldError\`, \`KernelAccessException\`, \`KernelFailure\` (4) | Implemented main; HTTP status translation lives in Core |
+| **C-D Provider and authorization ports** | Authenticate through a provider-owned port, membership, current entitlement and product-domain authorization decision | Whole \`ports\` package: \`IdentityAdapter\`, \`TenantMembershipPort\`, \`ModuleEntitlementPort\`, \`DomainAuthorizationHook\` (4) | Implemented main; a port is NOT an implemented IAM/client/provider |
+| **C-E Modules & entitlement names** | Module identity grammar, module registry abstraction and pure static registry | Whole \`module\` package: \`ModuleKeys\`, \`ProductModule\`, \`ProductModuleRegistry\`, \`StaticProductModuleRegistry\` (4) | Implemented main; no hosted licensing service or entitlement authority; maintain existing validator behavior gates |
+| **C-F Configuration & feature contract** | Namespaced configuration and flags; distinguish feature activation from authorization | \`config.ConfigurationKey\`, \`ConfigurationPort\`; \`feature.FeatureFlagKey\`, \`FeatureFlagPort\` (4) | Implemented main; no hosted config/secret store, flags never act as permissions |
+| **C-G Events & audit intents** | Versioned domain-neutral event envelopes; audit evidence intents and outcomes; no broker, record store or scheduler | \`event.EventEnvelope\`, \`EventIntentPort\`; \`audit.AuditEvent\`, \`AuditIntentPort\`, \`AuditOutcome\` (5) | Implemented main; meanings distinct even if grouped in G6 |
+| **C-H Idempotency SPI** | Tenant-scoped begin/lease/replay/complete/abort result vocabulary | \`idempotency.IdempotencyRequest\`, \`IdempotencyPort\`, \`IdempotencyDecision\`, \`IdempotencyDecisionType\`, \`IdempotencyLease\`, \`IdempotencyReplay\` (6) | Implemented main; keys never authorize replay; durable implementation lives in JDBC |
+| **C-I Versioned wire assets** | Portable published JSON schemas, examples and manifests | 26 files: 13 at \`contracts/phase0/v0.1/\` and 13 at \`contracts/phase0/v0.2/\` | Existing resources physically in core; moving to contracts is PROPOSED, requires byte-identical paths and actual classloader/JarFile compatibility evidence |
+
+**Contracts total = 11 + 3 + 4 + 4 + 4 + 4 + 5 + 6 = 41 Java source files**. C-I resources are not Java files. Proposed contracts dependencies: **JDK 21 only**. Forbidden: imports on \`http\`, \`pipeline\`, \`identity\`, \`observability\`, \`health\`, \`persistence.jdbc\`, testkit, framework SDK, IAM implementation or domain DB.
+
+### 12.2 Library B — platform-kernel (retained embedded runtime, 24 Java classes)
+
+**Purpose:** in-process request/security composition and technology-neutral HTTP/operability adapters. Existing published artifact coordinates remain \`io.github.vyrnforge:platform-kernel\`. Physical separation from contracts remains **proposed**; all 24 runtime classes already exist on main.
+
+| Component | Owns and performs | Exact Java classes | Not owned |
+| --- | --- | --- | --- |
+| **K-A Identity bridge** | Typed validated-credential projection and provider integration | \`identity.ValidatedIdentityAdapter\`, \`ValidatedIdentityCredential\` (2) | Credential issuer, JWKS provider, external cryptographic verification |
+| **K-B Endpoint policy declaration** | Declares whether tenant is required and module/resource policy | \`pipeline.EndpointPolicy\` (1) | Product authorization rules or membership source |
+| **K-C Request/authorization pipeline** | Composes actor, tenant membership, current entitlement and product-owned domain hook; rejects invalid/tenantless/cross-tenant conditions | \`pipeline.RequestContextInput\`, \`RequestContextPipeline\`, \`ResolvedRequestContext\` (3) | Persisted domain resource access or permissive fallback |
+| **K-D HTTP transport integration** | Extracts bearer credentials safely, selects configured headers, maps incoming/outgoing HTTP metadata to the pipeline | \`http.BearerTokenCredentialExtractor\`, \`HttpCredentialExtractor\`, \`HttpHeaderConfiguration\`, \`HttpRequestContextAdapter\`, \`HttpRequestMetadata\`, \`HttpResponseMetadata\` (6) | HTTP server, REST controller framework, middleware installation by itself |
+| **K-E Safe HTTP error mapping** | Converts typed Kernel failures to safe transport errors, controls status and sanitized messages | \`http.HttpContextException\`, \`HttpErrorResponse\`, \`HttpKernelErrorMapper\` (3) | Domain-specific localization/response extensions without product approval |
+| **K-F Correlation and telemetry** | Propagates correlation context and safe telemetry attribute selection | \`observability.CorrelationPropagation\`, \`TelemetryAttributePolicy\`, \`TelemetryAttributes\` (3) | Tracing collector, metrics backend, exporter, retention and alerting |
+| **K-G Health and readiness** | Synchronous liveness/readiness aggregation with safe probe results | \`health.HealthAggregator\`, \`HealthProbe\`, \`HealthSnapshot\`, \`ProbeResult\`, \`ProbeStatus\`, \`ProbeType\` (6) | Probe deadlines, deployed health endpoint, infrastructure orchestration |
+
+**Runtime total = 2 + 1 + 3 + 6 + 3 + 3 + 6 = 24 Java source files**. Proposed dependencies: \`platform-kernel-contracts\` plus JDK 21. **No dependency on optional JDBC or testkit**. Products choose actual runtime wiring; this is not a remotely deployed Kernel authentication service.
+
+### 12.3 Library C — platform-kernel-jdbc (existing optional PostgreSQL reliability adapter)
+
+**Purpose:** implement the Kernel's narrow event/audit/idempotency persistence contracts using JDBC, without becoming the product's general-purpose ORM, data layer or a cross-domain database. Existing Maven artifact \`io.github.vyrnforge:platform-kernel-jdbc\` contains **14 Java source files** and three PostgreSQL migration resources.
+
+| Component | Existing implementation | Exact Java surface | Ownership |
+| --- | --- | --- | --- |
+| **J-A Atomic transaction composition** | Product mutation + required audit/event intents + replay result in one JDBC transaction | \`JdbcReliabilityTransaction\` (1) | Product writes its own SQL, schema and transaction-domain work |
+| **J-B Durable idempotency** | Tenant-scoped acquire/replay/lease and result encoding | \`JdbcIdempotencyPort\`, \`IdempotencyResultCodec\` (2) | Product reauthenticates/reauthorizes before begin and replay |
+| **J-C Audit intent persistence** | Writes required audit intent using supplied datasource/transaction | \`JdbcAuditIntentPort\`, \`JdbcAuditIntentWriter\` (2) | Not a hosted compliance-evidence retention service |
+| **J-D Event intent persistence** | Writes event envelope/intents for later delivery | \`JdbcEventIntentPort\`, \`JdbcEventIntentWriter\` (2) | Does not own broker or consumer receipt |
+| **J-E Outbox delivery adapter** | Claim, lease fencing, bounded retry/dead-letter state, pluggable transport callback | \`JdbcOutboxPublisher\`, \`OutboxPublishResult\`, \`EventTransport\` (3) | Receiver idempotency, broker credentials and scheduling external |
+| **J-F Serialization and SQL internals** | JSON codec, stable intent fingerprints, SQL failure helpers | \`JacksonRecordCodec\`, \`IntentFingerprint\`, \`SqlSupport\` (3) | No generic ORM or metadata query builder |
+| **J-G Migration integration** | Optional Flyway convenience API, current Postgres schema V1–V3 | \`KernelJdbcMigrator\` (1); SQL resources \`V1__kernel_reliability.sql\`, \`V2__audit_append_only.sql\`, \`V3__outbox_claim_fencing.sql\` | Host owns Flyway execution/history, existing database and restore |
+
+**JDBC total = 1 + 2 + 2 + 2 + 3 + 3 + 1 = 14 Java source files**. Existing implementation is **PostgreSQL-specific**, despite \`JDBC\` in the artifact name: the source uses \`JSONB\`, \`TIMESTAMPTZ\`, PL/pgSQL audit triggers, \`payload_json::text\`, and \`FOR UPDATE SKIP LOCKED\`. Current POM explicitly includes Flyway PostgreSQL integration, PostgreSQL JDBC driver and PostgreSQL Testcontainers. No MySQL production connector or MySQL migration currently exists.
+
+#### J-H Connector/provider matrix: current versus future
+
+| Database connector | Status | Required capability | Design disposition |
+| --- | --- | --- | --- |
+| **PostgreSQL** | **IMPLEMENTED ON CURRENT MAIN and released** | JDBC transactions, V1–V3 migration, JSONB, PostgreSQL row locks, outbox, idempotency | Remains the default supported backend for the current JDBC artifact |
+| **MySQL (InnoDB)** | **FUTURE CANDIDATE — NOT IMPLEMENTED** | Separate dialect SQL, JSON read/write, UUID binding/storage, UTC timestamp semantics, migration scripts, claim locking/lease fencing, retry/rollback, dead-letter and Testcontainers tests | Requires a concrete Asset/ITSM consumer use case, compatibility design and explicit approval |
+| **MariaDB** | **FUTURE CANDIDATE — NOT IMPLEMENTED** | Independent SQL-version/locking/JSON/trigger validation; do not assume identical behavior to MySQL | Separate decision if demanded |
+| **SQL Server** | **FUTURE CANDIDATE — NOT IMPLEMENTED** | SQL Server data types, row-lock hints/claims, migration semantics, driver behavior and failover tests | Deferred |
+| **Oracle / SQLite / others** | **NOT SUPPORTED / NOT IN CURRENT SCOPE** | No tested dialect, migration or operational guarantees | No roadmap commitment |
+
+**Proposed internal connector architecture (NOT code committed):**
+- \`jdbc.portable\`: narrow transaction/claim/replay algorithm **only after** proven reusable across two real dialect implementations; no premature universal SQL builder.
+- \`jdbc.postgresql\`: current implementation ownership in a *future* decomposition. Initially keep the published \`persistence.jdbc\` FQCNs unchanged for ABI continuity.
+- \`jdbc.mysql\`: optional MySQL-specific implementation **if approved**. Must not load PostgreSQL migration scripts, must select MySQL-specific Flyway locations/DDL, and must not silently share database schema or claims across products.
+- Database configuration is **product-owned**: injected \`DataSource\`, credentials, pool, transaction isolation, host migration history, monitoring and backups. Kernel never configures a universal connection to other product databases.
+- For the **first four-artifact extraction**, keep only the **existing PostgreSQL implementation**. Do not simultaneously add MySQL or move the PostgreSQL JDBC classes; those are separate workstreams.
+- If a later MySQL connector requires another published JDBC-specific artifact to avoid pulling multiple drivers, that would **exceed the proposed four-artifact distribution** and needs another Architecture/Product decision. Otherwise optional provider packages inside the one JDBC JAR still need classpath, driver and Flyway isolation tests.
+- **Dialect test contract:** migration-from-empty and upgrade; lease takeover/stale claim fencing; same-tenant and cross-tenant replay; rollback audit/event/domain atomicity; outbox crash after transport success; duplicate delivery; dead-letter recovery; UTC timestamp precision; locks/concurrency across separate processes; DB reconnect and permission errors. A JDBC interface alone cannot establish these guarantees.
+
+#### PostgreSQL-to-MySQL compatibility hazards (must be validated before claiming support)
+
+1. **Types:** \`JSONB\` and PostgreSQL \`UUID\`/TIMESTAMPTZ need explicit MySQL storage/driver mappings. Never auto-truncate IDs or fingerprints.
+2. **SQL:** \`payload_json::text\` and PL/pgSQL audit append-only trigger cannot be reused unchanged.
+3. **Concurrency:** \`FOR UPDATE SKIP LOCKED\` exists in relevant MySQL versions but its transaction/ordering/lease behavior must be tested, not presumed identical.
+4. **Flyway:** V1–V3 are immutable PostgreSQL history. A MySQL installation needs its **own** migration path and version history; do not patch existing PostgreSQL migration bytes.
+5. **Failure semantics:** SQLState/retry deadlocks, constraint failures, autocommit behavior, timezone precision and DB driver conversions need real integration tests.
+6. **Authority:** these tables contain *Kernel reliability bookkeeping only*. Asset, ITSM and File Storage remain authoritative for their business records.
+
+### 12.4 Library D — platform-kernel-testkit (existing, test-scoped)
+
+**Purpose:** let consumer teams prove their implementation of Kernel ports without live IAM/database/broker prerequisites; do not use these fakes in production.
+
+| Component | Exact implemented test helpers | Test purpose |
+| --- | --- | --- |
+| **T-A Fake identity** | \`StaticIdentityAdapter\` | Deterministic actor/credential projection and invalid-identity paths |
+| **T-B Tenant membership** | \`InMemoryTenantMembershipPort\` | Same-tenant/cross-tenant membership and missing lookup |
+| **T-C Domain permission** | \`PermissionAuthorizationHook\` | Product-owned action/resource denials |
+| **T-D Module entitlements** | \`InMemoryModuleEntitlementPort\` | Module denial and effective entitlement fixtures |
+| **T-E Feature/config** | \`InMemoryFeatureFlagPort\`, \`InMemoryConfigurationPort\` | Isolation and configuration states, not real permission grants |
+| **T-F Event/audit intents** | \`InMemoryEventIntentPort\`, \`InMemoryAuditIntentPort\` | Evidence of accepted intents in deterministic tests; not durable compliance storage |
+| **T-G Idempotency** | \`InMemoryIdempotencyPort\` | Lease/replay/conflict negative scenarios; not crash-durable storage |
+
+**Testkit total = 1 + 1 + 1 + 1 + 2 + 2 + 1 = 9 Java source files**. Maven scope must remain \`test\` in product applications. Additional hypothetical MySQL integration fixtures/driver Testcontainers belong in JDBC connector test sources, not testkit production classes. Existing repository test suites and scripts remain CI/test infrastructure, not another published Kernel artifact.
+
+### 12.5 Application dependency profiles
+
+| Consumer use | Minimum proposed library | Optional addition | Example |
+| --- | --- | --- | --- |
+| Typed references, event/audit payloads, provider interfaces only | \`platform-kernel-contracts\` | \`platform-kernel-testkit\` for unit tests | Product SDK / cross-product event producer |
+| Standard embedded request validation/HTTP/health | \`platform-kernel\` (transitively contracts) | Testkit | Asset or ITSM API |
+| Durable replay, atomic audit/event/outbox on PostgreSQL | \`platform-kernel\` plus \`platform-kernel-jdbc\` | Testkit; product-owned database/transport | Product-specific PostgreSQL adoption |
+| A product already providing its own equivalent reliable storage | Contracts/core as needed | **No JDBC** | File Storage may retain its own persistence ownership |
+| MySQL-backed product | Contracts/core without Kernel JDBC until dialect is validated | **NO purported MySQL Kernel adapter today** | Future evaluation only |
+
+Do not require the entire Kernel for a product that only needs portable DTOs *once* the contracts JAR is actually available. Today the only published portable surface remains through the existing \`platform-kernel\` core artifact.
+
+### 12.6 What changes now vs later
+
+**Now:** clarify the component ownership in PKG-02, keep the current three published JARs untouched, maintain the separate draft PKG-01 source import-check PR. Treat PostgreSQL as the only currently implemented JDBC connector. No generated MySQL classes, schemas, Maven artifacts, API/SQL migration or fourth service.
+
+**After approval:** (1) record an explicit change to DEC-K022 for a fourth JAR; (2) prove consumer need, review migration/resource ABI plan; (3) implement one focused contracts extraction PR; (4) run composite ABI and actual File Storage/Asset/ITSM builds; (5) obtain separate independent security and release approval. A MySQL connector is an **independent proposal** requiring DB-specific tests, migrations and ownership approval. Do not combine it with the first contracts extraction simply to fill a package category.
+
+**Boundary principle:** **a named Java component in this catalogue is not a hosted platform service and not a database connector by itself**. Provider authority, domain SQL, credentials, deployment, operational recovery and compliance signoff stay with the relevant product teams.
