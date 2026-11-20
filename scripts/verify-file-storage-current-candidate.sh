@@ -45,6 +45,9 @@ cmp --silent "$jar" "$installed"
   make ci
 )
 
+# CAPAUD-03: fail when a required consumer security/JDBC/restore test is skipped.
+python3 "$root/scripts/check-file-storage-security-evidence.py" "$work/file-storage/backend"
+
 # Confirm the consumer ran against exactly these *candidate* bytes, not the
 # similarly named immutable published 0.3.2 jar.
 cmp --silent "$jar" "$installed"
