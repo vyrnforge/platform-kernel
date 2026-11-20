@@ -59,6 +59,10 @@ jobs:
           else
             echo 'No Kernel/runtime/contract/release changes: Java, PostgreSQL, schema and consumer checks not applicable.'
           fi
+      - name: Test consumer security evidence verifier offline
+        if: steps.scope.outputs.library == 'true'
+        run: python3 -m unittest discover -s scripts/tests -p test_capaud_fs_security_evidence.py -v
+
       - name: Set up Java 21
         if: steps.scope.outputs.library == 'true'
         uses: actions/setup-java@77dd5b2ce225ea11469928ac317850245a74ae78 # v6.2.0
